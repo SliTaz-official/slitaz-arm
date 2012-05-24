@@ -1,0 +1,5 @@
+packages/
+spk/
+linux-arm
+distro-arm.gz
+vdisk.img
