@@ -1,0 +1,27 @@
+#!/bin/sh
+#
+. /lib/libtaz.sh
+
+PATH=/bin:/sbin:/usr/bin:/usr/sbin
+LD_LIBRARY_PATH=/usr/lib:/lib
+export PATH LD_LIBRARY_PATH
+
+sleep 2
+boldify "Executing: /etc/init.d/rcS"
+
+/bin/mount proc
+/bin/mount -a
+
+/bin/hostname -F /etc/hostname
+/sbin/ifconfig lo 127.0.0.1 up
+/sbin/ifconfig eth0 up
+/sbin/udhcpc -i eth0
+
+if [ -f "/usr/share/kmap/default.kmap" ]; then
+	echo "Loading keymap..."
+	/sbin/loadkmap < /usr/share/kmap/default.kmap
+fi
+
+newline
+colorize 32 "Welcome to SliTaz ARM"
+newline
