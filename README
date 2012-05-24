@@ -5,15 +5,26 @@ SliTaz ARM
 SliTaz ARM tools, files and
 
 
+Sat howto
+---------
+Sat is a toll in the spirit of all SliTaz tool, all commands and options are
+accessible via the usage or help command. To create a distro you first need
+to have some ARM packages. You can use custom cook the one from SliTaz mirror,
+put them all in a packages/ directory and sat will install them. Then run
+'sat gen' with your custom --options to build an initramfs. To boot the distro
+with Qemu you can run: sat emu
+
+
 History
 -------
 While I was porting SliTaz to ARM I ended by creating a lot of initramfs to
-test the SliTaz boot, packages and so on. Si I first wrote a small script,
-then improved it so I just have to put include packages in a single directory
-and all custom files in a rootfs directory. I also wanted virtual disk
-suport so I can code under Qemu and save my work. So this how sat is born,
-one we may have use TazLito or a new SliTaz Live tool, but at the time being
-sta and the way it work feet all my needs
+test the SliTaz boot, packages and so on. So I first wrote a small script,
+then improved it so just have to put include packages in a single directory
+and all custom files in a rootfs directory. I also wanted virtual disk support
+so I can code under Qemu and save my work. This is how sat is born, one day
+we may use TazLito or have a new SliTaz Live tool, but at the time being 'sat'
+and the way it work feet all my needs to buils custom distro and boot then
+with qemu-system-arm.
 
 - Pankso 24 May 2012
 
