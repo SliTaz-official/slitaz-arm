@@ -6,11 +6,15 @@
 # Author: Christophe Lincoln <pankso@slitaz.org>
 #
 . /lib/libtaz.sh
+#. /usr/lib/slitaz/libpkg.sh
+. /etc/slitaz/slitaz.conf
 
 # Internal variables.
 : ${work=$(pwd)}
 packages=$work/packages
 distro=$work/distro
+# http://mirror.slitaz.org/packages/cooking/arm/
+mirror="http://cook.slitaz.org/cross/arm/packages/"
 
 # Help and usage
 usage() {
@@ -23,6 +27,7 @@ $(boldify "Commands:")
   clean      Clean up the work directory
   vdisk      Create a virtual disk to be used by Qemu
   emu        Emulate the distro with qemu-system-arm
+  mirror     Download or sync the SliTaz ARM mirror
 
 $(boldify "Options:")
   --kmap     Dump current keymap and include it in distro
@@ -31,6 +36,24 @@ $(boldify "Options:")
   --size=    Specify optional vdisk size (default 20Mb)
 
 EOT
+}
+
+# --> use libpkg.sh when release (function is shared with spk)
+# Check mirror ID: return 1 if no changes or mirror unreachable
+check_mirror_id() {
+	[ "$forced" ] && rm -f ID
+	[ -f "ID" ] || echo $$ > ID
+	mv ID ID.bak
+	if wget -qs ${mirror%/}/ID; then
+		wget -q ${mirror%/}/ID
+	else
+		gettext "Mirror is unreachable"; false
+		status && return 1
+	fi
+	if [ "$(cat ID)" == "$(cat ID.bak)" ]; then
+		gettext "Mirror is up-to-date"; true
+		status && return 1
+	fi
 }
 
 #
@@ -50,13 +73,15 @@ case "$1" in
 		for pkg in $packages/*.tazpkg
 		do
 			pkgdir=$(basename $pkg .tazpkg)
+			db=$distro/var/lib/tazpkg
 			echo -n "Installing: $(basename $pkg)"
 			tazpkg extract $pkg >/dev/null
 			. $pkgdir/receipt
-			mkdir -p $distro/var/lib/tazpkg/installed/$PACKAGE
+			mkdir -p $db/installed/$PACKAGE
 			cp $pkgdir/receipt $pkgdir/files.list \
-				$distro/var/lib/tazpkg/installed/$PACKAGE
+				$db/installed/$PACKAGE
 			cp -a $pkgdir/fs/* $distro && rm -rf $pkgdir
+			md5sum $(basename $pkg) >> $db/installed.md5
 			status
 		done
 
@@ -94,11 +119,8 @@ case "$1" in
 			$distro/etc/slitaz/slitaz.conf
 		status
 
-		# Mirror --> http://mirror.slitaz.org/packages/cooking/arm/
-		echo 'http://cook.slitaz.org/cross/arm/packages/' \
-			> $distro/var/lib/tazpkg/mirror
-		#wget -q http://cook.slitaz.org/cross/arm/packages/packages.desc \
-			#-O $distro/var/lib/tazpkg/packages.desc
+		# Mirror
+		echo "$mirror" > $distro/var/lib/tazpkg/mirror
 
 		# /usr/cross/arm/lib: Must be FIXED when cross-compiling
 		# Only used by Busybox before LD_LIBRARY_PATH is set.
@@ -149,6 +171,41 @@ case "$1" in
 			-M versatilepb -cpu arm1176 \
 			-kernel linux-arm \
 			-initrd distro-arm.gz ;;
+	mirror)
+		#
+		# --> spk-mirror $mirror --sync --dest=/path ???
+		#
+		# Just dl lists/packages for now, we can add a --rsync option to
+		# have all mirrored packages locally to build distro's.
+		count=0
+		mkdir -p $work/mirror && cd $work/mirror
+		if ! check_mirror_id; then
+			exit 0
+		fi
+		for list in packages.list packages.desc packages.md5; do
+			echo -n "Fetching: $list"
+			rm -f $list && wget -q ${mirror%/}/$list
+			status
+		done
+		echo -n "Checking packages $SUM..."
+		for pkg in $(cat $work/mirror/packages.list); do
+			pkg=${pkg}.tazpkg
+			pkgsum=$($CHECKSUM $pkg)
+			debug "$pkgsum"
+			[ "$pkgsum" ] || pkgsum=$$
+			mirsum=$(fgrep -h $pkgsum packages.$SUM)
+			debug "$mirsum"
+			if [ ! "$pkgsum" == "$mirsum" ] || [ ! -f "$pkg" ] ; then
+				count=$($count + 1)
+				[ "$count" == 1 ] && newline
+				echo -n "Fetching: ${pkg}.tazpkg"
+				rm -f $pkg
+				wget -q ${mirror%/}/$pkg
+				status
+			fi
+		done
+		[ "$count" == 0 ] && status
+		;;
 	*) usage ;;
 esac
 exit 0
