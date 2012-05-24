@@ -1,0 +1,154 @@
+#!/bin/sh
+#
+# Sat - SliTaz ARM Tool
+#
+# Copyright (C) 2012 SliTaz GNU/Linux - BSD License
+# Author: Christophe Lincoln <pankso@slitaz.org>
+#
+. /lib/libtaz.sh
+
+# Internal variables.
+: ${work=$(pwd)}
+packages=$work/packages
+distro=$work/distro
+
+# Help and usage
+usage() {
+	cat << EOT
+
+$(boldify "Usage:") $(basename $0) [command|--options]
+
+$(boldify "Commands:")
+  gen        Generate a disto cpio/gzip initramfs
+  clean      Clean up the work directory
+  vdisk      Create a virtual disk to be used by Qemu
+  emu        Emulate the distro with qemu-system-arm
+
+$(boldify "Options:")
+  --kmap     Dump current keymap and include it in distro
+  --spk      Include Spk package manager in the distro
+  --work=    Path to work dir with packages and rootfs
+  --size=    Specify optional vdisk size (default 20Mb)
+
+EOT
+}
+
+#
+# Commands
+#
+
+case "$1" in
+	gen)
+		time=$(date +%s)
+		check_root
+		rm -rf $distro distro-arm.gz
+		mkdir -p $distro
+
+		# Packages. Dep install it not well handled by tazpkg/spk actually
+		# so simply install all packages and dont resolv deps or use equiv.
+		cd $packages
+		for pkg in $packages/*.tazpkg
+		do
+			pkgdir=$(basename $pkg .tazpkg)
+			echo -n "Installing: $(basename $pkg)"
+			tazpkg extract $pkg >/dev/null
+			. $pkgdir/receipt
+			mkdir -p $distro/var/lib/tazpkg/installed/$PACKAGE
+			cp $pkgdir/receipt $pkgdir/files.list \
+				$distro/var/lib/tazpkg/installed/$PACKAGE
+			cp -a $pkgdir/fs/* $distro && rm -rf $pkgdir
+			status
+		done
+
+		# Install spk if requested. Spk multiarch support must be tested
+		if [ "$spk" ]; then
+			hg=http://hg.slitaz.org
+			echo -n "Installing: spk ($hg)"
+			cd $work
+			[ -d "spk" ] || hg clone $hg/spk >/dev/null
+			cd spk
+			[ "$noup" ] || hg pull -u >/dev/null
+			make DESTDIR=$distro install >/dev/null
+			status
+		fi
+
+		# Move kernel outside the distro
+		cd $work && mv -f $distro/boot/linux-* linux-arm
+
+		# Get a default kmap
+		if [ "$kmap" ]; then
+			echo -n "Dumping current keymap..."
+			mkdir $distro/usr/share/kmap
+			/bin/busybox dumpkmap > $distro/usr/share/kmap/default.kmap
+			status
+		fi
+
+		# Fixes: udev not yet cross-compiled
+		echo -n "Applying SliTaz ARM fixes..."
+		sed -i s"/UDEV=.*/UDEV=\"\"/" $distro/etc/rcS.conf
+		status
+
+		# SLITAZ_ARCH
+		echo -n "Setting SliTaz arch to: arm"
+		sed -i s"/SLITAZ_ARCH=.*/SLITAZ_ARCH=\"arm\"/" \
+			$distro/etc/slitaz/slitaz.conf
+		status
+
+		# Mirror --> http://mirror.slitaz.org/packages/cooking/arm/
+		echo 'http://cook.slitaz.org/cross/arm/packages/' \
+			> $distro/var/lib/tazpkg/mirror
+		#wget -q http://cook.slitaz.org/cross/arm/packages/packages.desc \
+			#-O $distro/var/lib/tazpkg/packages.desc
+
+		# /usr/cross/arm/lib: Must be FIXED when cross-compiling
+		# Only used by Busybox before LD_LIBRARY_PATH is set.
+		mkdir -p $distro/usr/cross/arm/lib
+		cd $distro/usr/cross/arm/lib
+		ln -s /lib/libc-2.13.so libc.so.6
+		ln -s /lib/ld-2.13.so ld-linux.so.3
+		cd $distro
+
+		# /init
+		rm init && ln -s /bin/busybox init
+
+		# Update modules.dep
+		depmod -b . 3.2.14-slitaz
+
+		# Custom rootfs
+		if [ -d "$work/rootfs" ]; then
+			echo -n "Copying custom ARM rootfs..."
+			cp -r $work/rootfs/* $distro
+			status
+		fi
+
+		# Rootfs cpio/gzip
+		echo -n "Compressing initramfs: cpio/gzip"
+		find . -print | cpio -o -H newc | gzip -9 > ../distro-arm.gz
+		status
+		time=$(($(date +%s) - $time))
+		echo "Build time  : ${time}s"
+		echo -n "Distro size : "
+		cd $work && du -sh distro-arm.gz | awk '{print $1}';;
+	clean)
+		check_root
+		echo -n "Cleaning: $work"
+		rm -rf distro linux-arm distro-arm.gz spk
+		status ;;
+	vdisk)
+		# Let use and HD in Qemu to store files|packages|whatever
+		vdisk="vdisk.img"
+		: ${size=20}
+		cd $work
+		dd if=/dev/zero of=$vdisk bs=1M count=$size
+		mkfs.ext4 -q -T ext4 -L "SliTaz" -F $vdisk ;;
+	emu)
+		: ${mem=256}
+		cd $work
+		[ -f "vdisk.img" ] && opts="-hda vdisk.img"
+		qemu-system-arm -m $mem $opts \
+			-M versatilepb -cpu arm1176 \
+			-kernel linux-arm \
+			-initrd distro-arm.gz ;;
+	*) usage ;;
+esac
+exit 0
