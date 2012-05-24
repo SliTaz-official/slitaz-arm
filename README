@@ -1,0 +1,21 @@
+SliTaz ARM
+================================================================================
+
+
+SliTaz ARM tools, files and
+
+
+History
+-------
+While I was porting SliTaz to ARM I ended by creating a lot of initramfs to
+test the SliTaz boot, packages and so on. Si I first wrote a small script,
+then improved it so I just have to put include packages in a single directory
+and all custom files in a rootfs directory. I also wanted virtual disk
+suport so I can code under Qemu and save my work. So this how sat is born,
+one we may have use TazLito or a new SliTaz Live tool, but at the time being
+sta and the way it work feet all my needs
+
+- Pankso 24 May 2012
+
+
+================================================================================
