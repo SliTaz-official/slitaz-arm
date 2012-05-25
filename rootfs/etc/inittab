@@ -1,8 +1,9 @@
-# /etc/inittab: init configuration for SliTaz GNU/Linux.
+# /etc/inittab: init configuration for SliTaz ARM.
 #
 ::sysinit:/etc/init.d/rcS
-#tty1::respawn:/sbin/getty 38400 tty1
 ::respawn:-/bin/sh -l
-tty2::askfirst:-/bin/sh
+#tty1::respawn:/sbin/getty 38400 tty1
+tty2::respawn:/sbin/getty 38400 tty2
+tty3::askfirst:-/bin/sh
 ::ctrlaltdel:/bin/umount -a -r
 ::ctrlaltdel:/sbin/reboot
