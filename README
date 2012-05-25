@@ -7,12 +7,22 @@ SliTaz ARM tools, files and
 
 Sat howto
 ---------
-Sat is a toll in the spirit of all SliTaz tool, all commands and options are
-accessible via the usage or help command. To create a distro you first need
-to have some ARM packages. You can use custom cook the one from SliTaz mirror,
-put them all in a packages/ directory and sat will install them. Then run
-'sat gen' with your custom --options to build an initramfs. To boot the distro
-with Qemu you can run: sat emu
+Sat is a tool in the spirit of all SliTaz tools, all commands and options are
+accessible via: sat usage or help. To create a distro you first need to have
+some ARM packages. You can use custom cook the one from SliTaz mirror, put
+them all in a packages/ directory and sat will install them. Then generate the
+distro initramfs with your custom --options:
+
+# sat gen
+
+To boot the distro with Qemu you can run:
+
+# sat emu
+
+Sata le you clone the ARM cooking repo to let you debug and try official ARM
+packages. Sat will creat a mirror directory in the working path, douwnlod all
+list and packages. After a first clone it will only check the repo ID file
+and download the modified or new packages.
 
 
 History
