@@ -91,7 +91,7 @@ case "$1" in
 			echo -n "Installing: spk ($hg)"
 			cd $work
 			[ -d "spk" ] || hg clone $hg/spk >/dev/null
-			cd spk
+			cd $work/spk
 			[ "$noup" ] || hg pull -u >/dev/null
 			make DESTDIR=$distro install >/dev/null
 			status
@@ -190,13 +190,20 @@ case "$1" in
 		echo -n "Checking packages $SUM..."
 		for pkg in $(cat $work/mirror/packages.list); do
 			pkg=${pkg}.tazpkg
+			if [ ! -f "$pkg" ]; then
+				count=$(($count + 1))
+				[ "$count" == 1 ] && newline
+				echo -n "Fetching: ${pkg}.tazpkg"
+				wget -q ${mirror%/}/$pkg
+				status
+			fi
 			pkgsum=$($CHECKSUM $pkg)
 			debug "$pkgsum"
 			[ "$pkgsum" ] || pkgsum=$$
 			mirsum=$(fgrep -h $pkgsum packages.$SUM)
 			debug "$mirsum"
-			if [ ! "$pkgsum" == "$mirsum" ] || [ ! -f "$pkg" ] ; then
-				count=$($count + 1)
+			if [ ! "$pkgsum" == "$mirsum" ]; then
+				count=$(($count + 1))
 				[ "$count" == 1 ] && newline
 				echo -n "Fetching: ${pkg}.tazpkg"
 				rm -f $pkg
