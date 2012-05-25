@@ -32,7 +32,6 @@ $(boldify "Commands:")
   mirror     Download or sync the SliTaz ARM mirror
 
 $(boldify "Options:")
-  --kmap     Dump current keymap and include it in distro
   --spk      Include Spk package manager in the distro
   --work=    Path to work dir with packages and rootfs
   --size=    Specify optional vdisk size (default 20Mb)
@@ -102,14 +101,6 @@ case "$1" in
 
 		# Move kernel outside the distro
 		cd $work && mv -f $distro/boot/linux-* linux-arm
-
-		# Get a default kmap: we kbd-base and tazkeymap working now :-)
-		if [ "$kmap" ]; then
-			echo -n "Dumping current keymap..."
-			mkdir $distro/usr/share/kmap
-			/bin/busybox dumpkmap > $distro/usr/share/kmap/default.kmap
-			status
-		fi
 
 		# Fixes: udev not yet cross-compiled
 		echo -n "Applying SliTaz ARM fixes..."
