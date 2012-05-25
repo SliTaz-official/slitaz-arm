@@ -9,15 +9,14 @@
 #. /usr/lib/slitaz/libpkg.sh
 . /etc/slitaz/slitaz.conf
 
-# Internal variables.
-: ${work=$(pwd)}
+# Internal variables: libtaz.sh set: --work= --init=
+[ "$work" ] || work="$(pwd)"
+[ "$init" ] || init="gz"
+initramfs="slitaz-arm.$init"
 packages=$work/packages
 distro=$work/distro
 # http://mirror.slitaz.org/packages/cooking/arm/
 mirror="http://cook.slitaz.org/cross/arm/packages/"
-# libtaz.sh handle: --init=
-[ "$init" ] || init="gz"
-initramfs="slitaz-arm.$init"
 
 # Help and usage
 usage() {
@@ -37,7 +36,7 @@ $(boldify "Options:")
   --spk      Include Spk package manager in the distro
   --work=    Path to work dir with packages and rootfs
   --size=    Specify optional vdisk size (default 20Mb)
-  --init=    Specify the initramfs compression: gz xz
+  --init=   Specify the initramfs compression: gz xz
 
 EOT
 }
@@ -140,19 +139,23 @@ case "$1" in
 		# Update modules.dep
 		depmod -b . 3.2.14-slitaz
 
-		# Custom rootfs
+		# Custom rootfs: make sure all files belong to root.
 		if [ -d "$work/rootfs" ]; then
 			echo -n "Copying custom ARM rootfs..."
-			cp -r $work/rootfs/* $distro
+			tmp=$work/tmp-$$
+			mkdir -p $tmp
+			cp -r $work/rootfs/* $tmp
+			chown -R root.root $tmp
+			cp -a $tmp/* $distro && rm -rf $tmp
 			status
 		fi
 
-		# Rootfs cpio: gzip xz
-		echo -n "Compressing initramfs: slitaz-arm.$format"
-		case $format in
-			bz) find . | cpio -o -H newc | bzip2 > ../$initramfs ;;
-			gz) find . | cpio -o -H newc | gzip -9 > ../$initramfs ;;
-			xz) find . | cpio -o -H newc | xz -9 --format=lzma \
+		# Rootfs cpio: gzip xz --> /usr/lib/slitaz/liblive.sh ???
+		echo -n "Compressing initramfs: $initramfs"
+		case $initramfs in
+			*.bz) find . | cpio -o -H newc | bzip2 > ../$initramfs ;;
+			*.gz) find . | cpio -o -H newc | gzip -9 > ../$initramfs ;;
+			*.xz) find . | cpio -o -H newc | xz -9 --format=lzma \
 					> ../$initramfs ;;
 		esac
 		status
