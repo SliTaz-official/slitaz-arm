@@ -1,9 +1,18 @@
-# /etc/inittab: init configuration for SliTaz ARM.
+# /etc/inittab: Init configuration for SliTaz ARM
 #
 ::sysinit:/etc/init.d/rcS
+
+# Autologin
 ::respawn:-/bin/sh -l
-#tty1::respawn:/sbin/getty 38400 tty1
+
+# SHell invocations for selected ttys
+#tty1::respawn:/sbin/getty 38400 tty2
 tty2::respawn:/sbin/getty 38400 tty2
 tty3::askfirst:-/bin/sh
+
+# Stuff to do before rebooting or shuting down
+::restart:/etc/init.d/shutdown.sh
+::restart:/sbin/init
+::shutdown:/etc/init.d/shutdown.sh
 ::ctrlaltdel:/bin/umount -a -r
 ::ctrlaltdel:/sbin/reboot

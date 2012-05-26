@@ -1,27 +1,77 @@
 #!/bin/sh
 #
+# /etc/init.d/rcS : Initial boot script for SliTaz ARM
+# Config file is  : /etc/rcS.conf
+#
+# rcS is the main initialization script used to check fs, mount, clean,
+# run scripts and start daemons. This is a custom script for ARM to get
+# fast boot under Qemu and skip things like handling cdrom.
+#
+# Copyright (C) 2012 SliTaz ARM - BSD License
+#
 . /lib/libtaz.sh
+. /etc/rcS.conf
 
+# We still have busybox searching for .so file in /usr/cross/arm but after
+# initialization all is fine. Use a static busybox build and have mdev ???
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
 LD_LIBRARY_PATH=/usr/lib:/lib
 export PATH LD_LIBRARY_PATH
 
-sleep 2
-boldify "Executing: /etc/init.d/rcS"
+echo $(colorize 34 "Processing:") "/etc/init.d/rcS"
 
-/bin/mount proc
-/bin/mount -a
+# Mount /proc
+echo -n "Mounting proc filesystem..."
+mount proc
+status
 
-/bin/hostname -F /etc/hostname
-/sbin/ifconfig lo 127.0.0.1 up
-/sbin/ifconfig eth0 up
-/sbin/udhcpc -i eth0
+# Populate /dev
+#mdev -s
+#echo "/sbin/mdev" > /proc/sys/kernel/hotplug
 
-if [ -f "/usr/share/kmap/default.kmap" ]; then
-	echo "Loading keymap..."
-	/sbin/loadkmap < /usr/share/kmap/default.kmap
+# Mount all from: /etc/fstab
+echo "Mounting filesystems in fstab..."
+mount -a
+
+# Be quiet
+echo "0 0 0 0" > /proc/sys/kernel/printk
+
+# Clean up
+echo -n "Cleaning up the system..."
+find /var/run -name "*.pid" -type f | xargs /bin/rm -f
+rm -rf /tmp && mkdir /tmp && chmod 1777 /tmp
+status
+
+# Start syslogd and klogd.
+echo -n "Starting system log deamons: syslogd/klogd..."
+syslogd -s $SYSLOGD_SIZE && klogd
+status
+
+# Load all modules from config file
+if [ "$LOAD_MODULES" ]; then
+	colorize 33 "Loading Kernel modules..."
+	for mod in $LOAD_MODULES; do
+		modprobe -v $mod
+	done
+fi
+
+# Start all init scripts
+for script in $RUN_SCRIPTS; do
+	echo $(colorize 34 "Processing:") "/etc/init.d/$script"
+	/etc/init.d/$script
+done
+
+# Start all daemons
+if [ "$RUN_DAEMONS" ]; then
+	colorize 33 "Starting all daemons..."
+	for daemon in $RUN_DAEMONS; do
+		/etc/init.d/$daemon start
+	done
 fi
 
 newline
-colorize 32 "Welcome to SliTaz ARM"
+colorize 32 "$MESSAGE"
 newline
+
+# Back to a verbose mode.
+echo "7 4 1 7" > /proc/sys/kernel/printk

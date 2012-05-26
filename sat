@@ -2,7 +2,7 @@
 #
 # Sat - SliTaz ARM Tool
 #
-# Copyright (C) 2012 SliTaz GNU/Linux - BSD License
+# Copyright (C) 2012 SliTaz ARM - BSD License
 # Author: Christophe Lincoln <pankso@slitaz.org>
 #
 . /lib/libtaz.sh
@@ -33,9 +33,10 @@ $(boldify "Commands:")
 
 $(boldify "Options:")
   --spk      Include Spk package manager in the distro
+  --kmap     Include the system keymap config in the distro
   --work=    Path to work dir with packages and rootfs
   --size=    Specify optional vdisk size (default 20Mb)
-  --init=   Specify the initramfs compression: gz xz
+  --init=    Specify the initramfs compression: gz xz
 
 EOT
 }
@@ -136,6 +137,9 @@ case "$1" in
 			tmp=$work/tmp-$$
 			mkdir -p $tmp
 			cp -r $work/rootfs/* $tmp
+			if [ "$kmap" ]; then
+				cp /etc/keymap.conf $tmp/etc
+			fi
 			chown -R root.root $tmp
 			cp -a $tmp/* $distro && rm -rf $tmp
 			status
