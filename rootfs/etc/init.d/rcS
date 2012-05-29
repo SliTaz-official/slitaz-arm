@@ -12,10 +12,8 @@
 . /lib/libtaz.sh
 . /etc/rcS.conf
 
-# Set default paths
-PATH=/bin:/sbin:/usr/bin:/usr/sbin
-LD_LIBRARY_PATH=/usr/lib:/lib
-export PATH LD_LIBRARY_PATH
+# Set default path
+export PATH=/bin:/sbin:/usr/bin:/usr/sbin
 
 echo $(colorize 34 "Processing:") "/etc/init.d/rcS"
 
@@ -24,13 +22,15 @@ echo -n "Mounting proc filesystem..."
 mount proc
 status
 
-# Populate /dev
-#mdev -s
-#echo "/sbin/mdev" > /proc/sys/kernel/hotplug
-
 # Mount all from: /etc/fstab
 echo "Mounting filesystems in fstab..."
 mount -a
+
+# Populate /dev
+echo -n "Creating devives nodes..."
+mdev -s
+echo "/sbin/mdev" > /proc/sys/kernel/hotplug
+status
 
 # Be quiet
 echo "0 0 0 0" > /proc/sys/kernel/printk

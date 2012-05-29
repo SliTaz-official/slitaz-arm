@@ -103,11 +103,6 @@ case "$1" in
 		# Move kernel outside the distro
 		cd $work && mv -f $distro/boot/linux-* linux-arm
 
-		# Fixes: udev not yet cross-compiled
-		echo -n "Applying SliTaz ARM fixes..."
-		sed -i s"/UDEV=.*/UDEV=\"\"/" $distro/etc/rcS.conf
-		status
-
 		# SLITAZ_ARCH
 		echo -n "Setting SliTaz arch to: arm"
 		sed -i s"/SLITAZ_ARCH=.*/SLITAZ_ARCH=\"arm\"/" \
