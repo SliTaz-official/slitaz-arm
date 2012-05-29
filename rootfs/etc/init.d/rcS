@@ -12,8 +12,7 @@
 . /lib/libtaz.sh
 . /etc/rcS.conf
 
-# We still have busybox searching for .so file in /usr/cross/arm but after
-# initialization all is fine. Use a static busybox build and have mdev ???
+# Set default paths
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
 LD_LIBRARY_PATH=/usr/lib:/lib
 export PATH LD_LIBRARY_PATH
@@ -70,14 +69,12 @@ if [ "$RUN_DAEMONS" ]; then
 fi
 
 # System time
+echo -n "Setting system date..."
 rdate -s 203.129.68.14
-
-#Attemp to fix root login
-echo -e "root\nroot\n" | passwd root
+status
 
 newline
 colorize 32 "$MESSAGE"
-newline
 
 # Back to a verbose mode.
 echo "7 4 1 7" > /proc/sys/kernel/printk

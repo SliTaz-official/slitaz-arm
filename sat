@@ -117,15 +117,8 @@ case "$1" in
 		# Mirror
 		echo "$mirror" > $distro/var/lib/tazpkg/mirror
 
-		# /usr/cross/arm/lib: Must be FIXED when cross-compiling
-		# Only used by Busybox before LD_LIBRARY_PATH is set.
-		mkdir -p $distro/usr/cross/arm/lib
-		cd $distro/usr/cross/arm/lib
-		ln -s /lib/libc-2.13.so libc.so.6
-		ln -s /lib/ld-2.13.so ld-linux.so.3
-		cd $distro
-
 		# /init
+		cd $distro
 		rm init && ln -s /bin/busybox init
 
 		# Update modules.dep

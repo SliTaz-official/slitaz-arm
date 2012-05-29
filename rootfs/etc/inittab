@@ -2,11 +2,8 @@
 #
 ::sysinit:/etc/init.d/rcS
 
-# Autologin
-::respawn:-/bin/sh -l
-
 # SHell invocations for selected ttys
-#tty1::respawn:/sbin/getty 38400 tty2
+tty1::respawn:/sbin/getty 38400 tty1
 tty2::respawn:/sbin/getty 38400 tty2
 tty3::askfirst:-/bin/sh
 
