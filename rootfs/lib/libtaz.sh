@@ -16,7 +16,7 @@
 
 # xgettext (from Makefile) can't extract strings from above example:
 # gettext -d 'slitaz-base' 'Done'
-# so, I define own function (and add it as option to xgettext to Makefile)
+# so, I defined own function (and added it as option to xgettext in Makefile)
 lgettext() {
 	gettext -d 'slitaz-base' $1
 }

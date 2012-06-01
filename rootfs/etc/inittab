@@ -7,7 +7,7 @@ tty1::respawn:/sbin/getty 38400 tty1
 tty2::respawn:/sbin/getty 38400 tty2
 tty3::askfirst:-/bin/sh
 
-# Stuff to do before rebooting or shuting down
+# Stuff to do before rebooting or shutting down
 ::restart:/etc/init.d/shutdown.sh
 ::restart:/sbin/init
 ::shutdown:/etc/init.d/shutdown.sh

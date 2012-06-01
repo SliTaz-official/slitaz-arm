@@ -5,7 +5,7 @@
 #
 # rcS is the main initialization script used to check fs, mount, clean,
 # run scripts and start daemons. This is a custom script for ARM to get
-# fast boot under Qemu and skip things like handling cdrom.
+# a faster boot under Qemu and skip things like handling cdrom.
 #
 # Copyright (C) 2012 SliTaz ARM - BSD License
 #
@@ -27,7 +27,7 @@ echo "Mounting filesystems in fstab..."
 mount -a
 
 # Populate /dev
-echo -n "Creating devives nodes..."
+echo -n "Creating device nodes..."
 mdev -s
 echo "/sbin/mdev" > /proc/sys/kernel/hotplug
 status

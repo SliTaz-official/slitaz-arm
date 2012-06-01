@@ -25,7 +25,7 @@ usage() {
 $(boldify "Usage:") $(basename $0) [command|--options]
 
 $(boldify "Commands:")
-  gen        Generate a disto cpio/gzip initramfs
+  gen        Generate a distro cpio/gzip initramfs
   clean      Clean up the work directory
   vdisk      Create a virtual disk to be used by Qemu
   emu        Emulate the distro with qemu-system-arm
@@ -41,7 +41,7 @@ $(boldify "Options:")
 EOT
 }
 
-# --> use libpkg.sh when release (function is shared with spk)
+# --> use libpkg.sh when released (function is shared with spk)
 # Check mirror ID: return 1 if no changes or mirror unreachable
 check_mirror_id() {
 	[ "$forced" ] && rm -f ID
@@ -70,8 +70,8 @@ case "$1" in
 		rm -rf $distro slitaz-arm.xz
 		mkdir -p $distro
 
-		# Packages. Dep install it not well handled by tazpkg/spk actually
-		# so simply install all packages and dont resolv deps or use equiv.
+		# Packages. Dep install is not well handled by tazpkg/spk actually.
+		# So simply install all packages and don't resolve deps or use equiv.
 		cd $packages
 		for pkg in $packages/*.tazpkg
 		do
@@ -153,7 +153,7 @@ case "$1" in
 			rm -rf $work/$r && status
 		done ;;
 	vdisk)
-		# Let use and HD in Qemu to store files|packages|whatever
+		# Lets use and HD in Qemu to store files|packages|whatever
 		vdisk="vdisk.img"
 		: ${size=20}
 		cd $work
