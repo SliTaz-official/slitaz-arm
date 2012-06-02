@@ -15,7 +15,7 @@
 # Set default path
 export PATH=/bin:/sbin:/usr/bin:/usr/sbin
 
-echo $(colorize 34 "Processing:") "/etc/init.d/rcS"
+echo $(colorize 34 "Processing: /etc/init.d/rcS")
 
 # Mount /proc
 echo -n "Mounting proc filesystem..."
@@ -56,7 +56,7 @@ fi
 
 # Start all init scripts
 for script in $RUN_SCRIPTS; do
-	echo $(colorize 34 "Processing:") "/etc/init.d/$script"
+	echo $(colorize 34 "Processing: /etc/init.d/$script")
 	/etc/init.d/$script
 done
 
@@ -70,7 +70,7 @@ fi
 
 # System time
 echo -n "Setting system date..."
-rdate -s 203.129.68.14
+rdate -s 203.129.68.14 2>/dev/null
 status
 
 newline
