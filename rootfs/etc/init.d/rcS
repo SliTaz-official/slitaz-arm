@@ -18,8 +18,13 @@ export PATH=/bin:/sbin:/usr/bin:/usr/sbin
 echo $(colorize 34 "Processing: /etc/init.d/rcS")
 
 # Mount /proc
-echo -n "Mounting proc filesystem..."
+echo -n "Mounting proc filesystem on: /proc"
 mount proc
+status
+
+# Mount /run as tmpfs so runtime data are not written to disk
+echo -n "Mounting tmpfs filesystem on: /run"
+mount -t tmpfs tmpfs /run
 status
 
 # Mount all from: /etc/fstab
@@ -37,8 +42,8 @@ echo "0 0 0 0" > /proc/sys/kernel/printk
 
 # Clean up
 echo -n "Cleaning up the system..."
-find /var/run -name "*.pid" -type f | xargs /bin/rm -f
-rm -rf /tmp && mkdir /tmp && chmod 1777 /tmp
+rm -rf /tmp /var/run && ln -s /run /var/run
+mkdir /tmp && chmod 1777 /tmp
 status
 
 # Start syslogd and klogd.

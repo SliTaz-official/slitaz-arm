@@ -112,9 +112,10 @@ case "$1" in
 		# Mirror
 		echo "$mirror" > $distro/var/lib/tazpkg/mirror
 
-		# /init
+		# /init & /run
 		cd $distro
 		rm init && ln -s /bin/busybox init
+		mkdir run
 
 		# Update modules.dep
 		depmod -b . 3.2.14-slitaz
