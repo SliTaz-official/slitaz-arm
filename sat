@@ -36,7 +36,7 @@ $(boldify "Options:")
   --kmap     Include the system keymap config in the distro
   --work=    Path to work dir with packages and rootfs
   --size=    Specify optional vdisk size (default 20Mb)
-  --init=    Specify the initramfs compression: gz xz
+  --init=    Specify the initramfs compression: gz bz2 xz
 
 EOT
 }
@@ -47,8 +47,8 @@ check_mirror_id() {
 	[ "$forced" ] && rm -f ID
 	[ -f "ID" ] || echo $$ > ID
 	mv ID ID.bak
-	if wget -qs ${mirror%/}/ID; then
-		wget -q ${mirror%/}/ID
+	if busybox wget -qs ${mirror%/}/ID 2>/dev/null; then
+		busybox wget -q ${mirror%/}/ID
 	else
 		gettext "Mirror is unreachable"; false
 		status && return 1
@@ -118,7 +118,8 @@ case "$1" in
 		mkdir run
 
 		# Update modules.dep
-		depmod -b . 3.2.14-slitaz
+		. var/lib/tazpkg/installed/linux/receipt
+		depmod -b . ${VERSION}-slitaz
 
 		# Custom rootfs: make sure all files belong to root.
 		if [ -d "$work/rootfs" ]; then
@@ -137,7 +138,7 @@ case "$1" in
 		# Rootfs cpio: gzip xz --> /usr/lib/slitaz/liblive.sh ???
 		echo -n "Compressing initramfs: $initramfs"
 		case $initramfs in
-			*.bz) find . | cpio -o -H newc | bzip2 > ../$initramfs ;;
+			*.bz2) find . | cpio -o -H newc | bzip2 > ../$initramfs ;;
 			*.gz) find . | cpio -o -H newc | gzip -9 > ../$initramfs ;;
 			*.xz) find . | cpio -o -H newc | xz -9 --format=lzma \
 					> ../$initramfs ;;
@@ -187,7 +188,7 @@ case "$1" in
 			if [ ! -f "$pkg" ]; then
 				count=$(($count + 1))
 				[ "$count" == 1 ] && newline
-				echo -n "Fetching: ${pkg}.tazpkg"
+				echo -n "Fetching: ${pkg}"
 				wget -q ${mirror%/}/$pkg
 				status
 			fi
