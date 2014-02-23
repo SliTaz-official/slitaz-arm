@@ -71,7 +71,20 @@ case "$1" in
 		mkdir -p $distro
 
 		# Packages. Dep install is not well handled by tazpkg/spk actually.
-		# So simply install all packages and don't resolve deps or use equiv.
+		# So simply install all packages and don't resolve deps.
+		if [ -f "packages.list" ]; then
+			for pkg in $(cat $packages.list)
+			do
+				IFS="|"
+				grep "^$pkg |" $work/mirror/packages.desc | while read pkg version desc
+				do
+					echo ${pkg}-${version}.tazpkg | sed s'/ //'g
+				done
+				unset IFS
+			done
+			exit 0
+		else
+		[ ! -d "$packages" ] && echo "Missing: $packages" && exit 1
 		cd $packages
 		for pkg in $packages/*.tazpkg
 		do
@@ -87,6 +100,7 @@ case "$1" in
 			md5sum $(basename $pkg) >> $db/installed.md5
 			status
 		done
+		fi
 
 		# Install spk if requested. Spk multiarch support must be tested
 		if [ "$spk" ]; then
@@ -101,7 +115,12 @@ case "$1" in
 		fi
 
 		# Move kernel outside the distro
-		cd $work && mv -f $distro/boot/linux-* linux-arm
+		if [ -d "$distro/boot" ]; then
+			cd $work && mv -f $distro/boot/linux-* linux-arm
+		else
+			echo -n "Missing: $distro/boot"; false
+			status && exit 1
+		fi
 
 		# SLITAZ_ARCH
 		echo -n "Setting SliTaz arch to: arm"
@@ -115,7 +134,7 @@ case "$1" in
 		# /init & /run
 		cd $distro
 		rm init && ln -s /bin/busybox init
-		mkdir run
+		mkdir -p run
 
 		# Update modules.dep
 		. var/lib/tazpkg/installed/linux/receipt
@@ -148,12 +167,14 @@ case "$1" in
 		echo "Build time  : ${time}s"
 		echo -n "Distro size : "
 		cd $work && du -sh $initramfs | awk '{print $1}' ;;
+	
 	clean)
 		check_root
 		for r in distro linux-arm *.*z spk; do
 			echo -n "Cleaning: $r"
 			rm -rf $work/$r && status
 		done ;;
+	
 	vdisk)
 		# Lets use and HD in Qemu to store files|packages|whatever
 		vdisk="vdisk.img"
@@ -161,6 +182,7 @@ case "$1" in
 		cd $work
 		dd if=/dev/zero of=$vdisk bs=1M count=$size
 		mkfs.ext4 -q -T ext4 -L "SliTaz" -F $vdisk ;;
+	
 	emu)
 		cd $work
 		[ -f "vdisk.img" ] && opts="-hda vdisk.img"
@@ -168,6 +190,7 @@ case "$1" in
 			-M versatilepb -cpu arm1176 \
 			-kernel linux-arm \
 			-initrd $initramfs ;;
+	
 	mirror)
 		#
 		# --> spk-mirror $mirror --sync --dest=/path ???
@@ -206,8 +229,8 @@ case "$1" in
 				status
 			fi
 		done
-		[ "$count" == 0 ] && status
-		;;
+		[ "$count" == 0 ] && status ;;
+	
 	*) usage ;;
 esac
 exit 0
