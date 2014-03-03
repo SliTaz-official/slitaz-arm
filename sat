@@ -43,7 +43,7 @@ $(boldify "Options:")
   --work=    Path to work dir with packages and rootfs
   --size=    Specify optional vdisk size (default 20Mb)
   --init=    Specify the initramfs compression: gz bz2 xz
-  --flavor=  Generate specified SliTaz ARM flavor
+  --flavor=  Generate specific SliTaz ARM flavor
   --append=  SliTaz and Kernel bootime arguments for Qemu
 
 EOT
@@ -266,7 +266,7 @@ case "$1" in
 		fi
 		echo ""
 		echo -n "$(boldify 'Package name')"
-		indent 24 "$(boldify 'Missing dependencie')"
+		indent 24 "$(boldify 'Missing dependencies')"
 		separator
 		for pkg in ${installed}/*
 		do

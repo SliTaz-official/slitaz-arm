@@ -19,7 +19,7 @@ colorize 32 $(uptime)
 
 # Stop all daemons started at boot time
 if [ "$RUN_DAEMONS" ]; then
-	colorize 33 "Stoping all daemons..."
+	colorize 33 "Stopping all daemons..."
 	for daemon in $RUN_DAEMONS; do
 		/etc/init.d/$daemon stop
 	done

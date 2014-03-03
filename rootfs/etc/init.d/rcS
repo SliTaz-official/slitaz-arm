@@ -47,7 +47,7 @@ mkdir /tmp && chmod 1777 /tmp
 status
 
 # Start syslogd and klogd.
-echo -n "Starting system log deamons: syslogd/klogd..."
+echo -n "Starting system log daemons: syslogd/klogd..."
 syslogd -s $SYSLOGD_SIZE && klogd
 status
 
