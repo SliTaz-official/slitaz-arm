@@ -13,10 +13,11 @@
 [ "$work" ] || work="$(pwd)"
 [ "$init" ] || init="gz"
 initramfs="slitaz-arm.$init"
-packages=$work/packages
-distro=$work/distro
-flavors=$work/flavors
-cache=$work/cache
+packages="$work/packages"
+distro="$work/distro"
+flavors="$work/flavors"
+rootfs="$distro/rootfs"
+
 # http://mirror.slitaz.org/packages/cooking/arm/
 mirror="http://cook.slitaz.org/cross/arm/packages/"
 
@@ -29,7 +30,7 @@ $(boldify "Usage:") $(basename $0) [command|--options]
 $(boldify "Commands:")
   gen        Generate a distro cpio/gzip initramfs
   flavors    List and give info about flavors
-  pkgs       Distro packages check and count
+  ckpkgs     Distro packages dependencies check
   clean      Clean up the work directory
   vdisk      Create a virtual disk to be used by Qemu
   emu        Emulate the distro with qemu-system-arm
@@ -55,12 +56,12 @@ check_mirror_id() {
 	if busybox wget -qs ${mirror%/}/ID 2>/dev/null; then
 		busybox wget -q ${mirror%/}/ID
 	else
-		gettext "Mirror is unreachable"; false
-		status && return 1
+		gettext "Mirror is unreachable"; newline
+		return 1
 	fi
 	if [ "$(cat ID)" == "$(cat ID.bak)" ]; then
-		gettext "Mirror is up-to-date"; true
-		status && return 1
+		gettext "Mirror is up-to-date"; newline
+		return 1
 	fi
 }
 
@@ -72,54 +73,54 @@ case "$1" in
 	gen)
 		time=$(date +%s)
 		check_root
-		echo ""
-		boldify "Generating SliTaz ARM distro"
+		newline && boldify "Generating SliTaz ARM distro"
 		separator
-		rm -rf $distro $initramfs
-		mkdir -p $distro $cache
+		rm -rf $distro && mkdir -p ${rootfs}
 		
 		# Get --flavor= packages lists
 		if [ "$flavor" ]; then
 			echo -n "Getting $flavor packages.list..."
-			cp -f $flavors/$flavor/packages.list .
+			cp -f $flavors/$flavor/packages.list $distro 2>/dev/null
 			status
 		fi
 
 		# Packages
-		rm -f $cache/packages.full
-		if [ -f "packages.list" ]; then
-			for pkg in $(cat $packages.list)
+		rm -f $distro/packages.full
+		if [ -f "$distro/packages.list" ]; then
+			for pkg in $(cat $distro/packages.list)
 			do
 				IFS="|"
 				grep "^$pkg |" $work/mirror/packages.desc | while read pkg version desc
 				do
 					echo ${pkg}-${version}-arm.tazpkg | sed s'/ //'g \
-						>> $cache/packages.full
+						>> $distro/packages.full
 				done
 				unset IFS
 			done
 			cd ${work}/mirror
 		else
-			[ ! -d "$packages" ] && \
-				echo "Missing packages.list or packages/ directory" && exit 1
+			if [ ! -d "$packages" ]; then
+				echo "Missing distro/packages.list or packages/ directory"
+				echo "" && exit 1
+			fi
 			echo -n "Using packages directory..."
-			cd $packages && ls -1 > $cache/packages.full
+			cd $packages && ls -1 > $distro/packages.full
 			status
 		fi
 		
 		# Deps install is not well handled by tazpkg/spk actually.
 		# So simply install all packages and don't resolve deps.
-		for pkg in $(cat $cache/packages.full)
+		for pkg in $(cat $distro/packages.full)
 		do
 			pkgdir=$(basename $pkg .tazpkg)
-			db=$distro/var/lib/tazpkg
+			db=${rootfs}/var/lib/tazpkg
 			echo -n "Installing: $(basename $pkg)"
 			tazpkg extract $pkg >/dev/null
 			. $pkgdir/receipt
 			mkdir -p $db/installed/$PACKAGE
 			cp $pkgdir/receipt $pkgdir/files.list \
 				$db/installed/$PACKAGE
-			cp -a $pkgdir/fs/* $distro && rm -rf $pkgdir
+			cp -a $pkgdir/fs/* $distro/rootfs && rm -rf $pkgdir
 			md5sum $(basename $pkg) >> $db/installed.md5
 			status
 		done
@@ -129,32 +130,33 @@ case "$1" in
 			hg=http://hg.slitaz.org
 			echo -n "Installing: spk ($hg)"
 			cd $work
-			[ -d "spk" ] || hg clone $hg/spk >/dev/null
+			[ -d "spk" ] || hg clone $hg/spk >/dev/null 2>/dev/null
 			cd $work/spk
 			[ "$noup" ] || hg pull -u >/dev/null
-			make DESTDIR=$distro install >/dev/null
+			make DESTDIR=${rootfs} install >/dev/null
 			status
 		fi
 
 		# Move kernel outside the distro
-		if [ -d "$distro/boot" ]; then
-			cd $work && mv -f $distro/boot/linux-* linux-arm
+		if [ -d "$distro/rootfs/boot" ]; then
+			mv -f ${rootfs}/boot/linux-* ${distro}/linux-arm
+			chmod -x ${distro}/linux-arm
 		else
-			echo -n "Missing: $distro/boot"; false
+			echo -n "Missing: ${rootfs}/boot"; false
 			status && exit 1
 		fi
 
 		# SLITAZ_ARCH
 		echo -n "Setting SliTaz arch to: arm"
 		sed -i s"/SLITAZ_ARCH=.*/SLITAZ_ARCH=\"arm\"/" \
-			$distro/etc/slitaz/slitaz.conf
+			${rootfs}/etc/slitaz/slitaz.conf
 		status
 
 		# Mirror
-		echo "$mirror" > $distro/var/lib/tazpkg/mirror
+		echo "$mirror" > ${rootfs}/var/lib/tazpkg/mirror
 
 		# /init & /run
-		cd $distro
+		cd ${rootfs}
 		rm init && ln -s /bin/busybox init
 		mkdir -p run
 
@@ -162,23 +164,38 @@ case "$1" in
 		. var/lib/tazpkg/installed/linux/receipt
 		depmod -b . ${VERSION}-slitaz
 
-		# Custom rootfs: make sure all files belong to root.
+		# Custom rootfs: make sure all files belong to root
 		if [ -d "$work/rootfs" ]; then
-			echo -n "Copying custom ARM rootfs..."
-			tmp=$work/tmp-$$
+			echo -n "Copying custom ARM: rootfs"
+			tmp=$distro/tmp-$$
 			mkdir -p $tmp
 			cp -r $work/rootfs/* $tmp
-			if [ "$kmap" ]; then
-				cp /etc/keymap.conf $tmp/etc
-			fi
 			chown -R root.root $tmp
-			cp -a $tmp/* $distro && rm -rf $tmp
+			cp -a $tmp/* ${rootfs} && rm -rf $tmp
+			status
+		fi
+		
+		# Custom flavor rootfs
+		if [ -d "$flavors/$flavor/rootfs" ]; then
+			echo -n "Copying $flavor ARM: rootfs"
+			tmp=$distro/tmp-$$
+			mkdir -p $tmp
+			cp -r $flavors/$flavor/rootfs/* $tmp
+			chown -R root.root $tmp
+			cp -a $tmp/* ${rootfs} && rm -rf $tmp
+			status
+		fi
+		
+		# --kmap
+		if [ "$kmap" ]; then
+			echo -n "Copying local: /etc/keymap.conf"
+			cp -a /etc/keymap.conf ${rootfs}
 			status
 		fi
 
 		# Rootfs cpio: gzip xz --> /usr/lib/slitaz/liblive.sh ???
 		echo -n "Compressing initramfs: $initramfs"
-		case $initramfs in
+		case "$initramfs" in
 			*.bz2) find . | cpio -o -H newc | bzip2 > ../$initramfs ;;
 			*.gz) find . | cpio -o -H newc | gzip -9 > ../$initramfs ;;
 			*.xz) find . | cpio -o -H newc | xz -9 --format=lzma > ../$initramfs ;;
@@ -191,28 +208,32 @@ case "$1" in
 		separator
 		time=$(($(date +%s) - $time))
 		echo -n "Build time     : " && echo "${time}s"
-		echo -n "Initramfs size : " && du -sh $work/$initramfs | awk '{print $1}'
-		echo -n "Rootfs size    : " && du -sh $distro | awk '{print $1}'
+		echo -n "Initramfs size : " && du -sh $distro/$initramfs | awk '{print $1}'
+		echo -n "Rootfs size    : " && du -sh ${rootfs} | awk '{print $1}'
 		echo -n "Packages       : " && ls $db/installed | wc -l
-		separator && echo "" ;;
+		separator && newline ;;
 		
 	flavors)
-		echo ""
-		echo -n "Flavor" && indent 16 "Packages"
+		newline
+		echo -n "$(boldify 'Flavor')" && indent 14 "$(boldify 'Packages')"
 		separator
 		for flavor in $(ls $flavors)
 		do
 			pkgs=$(cat $flavors/$flavor/packages.list | wc -l)
-			echo -n "$flavor" && indent 16 "$pkgs"
+			echo -n "$flavor" && indent 14 "$pkgs"
 		done
-		echo "" ;;
+		newline ;;
 	
-	pkgs)
-		installed="$distro/var/lib/tazpkg/installed"
+	ckpkgs)
+		installed="${rootfs}/var/lib/tazpkg/installed"
 		SLITAZ_ARCH="arm"
 		count=0
+		if [ ! -d "$installed" ]; then
+			echo "Missing distro rootfs" && exit 1
+		fi
 		echo ""
-		echo -n "Package name" && indent 24 "Missing dependencie"
+		echo -n "$(boldify 'Package name')"
+		indent 24 "$(boldify 'Missing dependencie')"
 		separator
 		for pkg in ${installed}/*
 		do
@@ -231,14 +252,16 @@ case "$1" in
 		fi
 		separator
 		echo -n "Installed packages: "; colorize 32 $(ls $installed | wc -l)
-		echo "" ;;
+		newline ;;
 	
 	clean)
 		check_root
-		for r in distro cache linux-arm slitaz-arm.*z; do
-			echo -n "Cleaning: $r"
-			rm -rf $work/$r && status
-		done ;;
+		echo -n "Cleaning: distro"
+		rm -rf $distro && status
+		if [ "$spk" ]; then
+			echo -n "Cleaning: spk"
+			rm -rf $work/spk && status
+		fi ;;
 	
 	vdisk)
 		# Lets use and HD in Qemu to store files|packages|whatever
@@ -253,17 +276,21 @@ case "$1" in
 		[ -f "vdisk.img" ] && opts="-hda vdisk.img"
 		qemu-system-arm -m 256 $opts \
 			-M versatilepb -cpu arm1176 \
-			-kernel linux-arm \
-			-initrd $initramfs ;;
+			-kernel ${distro}/linux-arm \
+			-initrd ${distro}/${initramfs} ;;
 	
 	mirror)
 		#
 		# --> spk-mirror $mirror --sync --dest=/path ???
 		#
 		count=0
+		newline && boldify "Syncing SliTaz ARM mirror"
+		separator
 		mkdir -p $work/mirror && cd $work/mirror
+		
+		echo -n "URL: " && colorize 34 "$mirror"
 		if ! check_mirror_id; then
-			exit 0
+			newline && exit 0
 		fi
 		for list in packages.list packages.desc packages.md5; do
 			echo -n "Fetching: $list"
@@ -294,7 +321,8 @@ case "$1" in
 				status
 			fi
 		done
-		[ "$count" == 0 ] && status ;;
+		[ "$count" == 0 ] && status 
+		separator && newline ;;
 	
 	*) usage ;;
 esac
