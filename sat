@@ -17,6 +17,7 @@ packages="$work/packages"
 distro="$work/distro"
 flavors="$work/flavors"
 rootfs="$distro/rootfs"
+data="$distro/data"
 
 # http://mirror.slitaz.org/packages/cooking/arm/
 mirror="http://cook.slitaz.org/cross/arm/packages/"
@@ -37,7 +38,7 @@ $(boldify "Commands:")
   mirror     Download or sync the SliTaz ARM mirror
 
 $(boldify "Options:")
-  --spk      Include Spk package manager in the distro
+  --spk      Clean or include Spk package manager in the distro
   --kmap     Include the system keymap config in the distro
   --work=    Path to work dir with packages and rootfs
   --size=    Specify optional vdisk size (default 20Mb)
@@ -75,25 +76,26 @@ case "$1" in
 		check_root
 		newline && boldify "Generating SliTaz ARM distro"
 		separator
-		rm -rf $distro && mkdir -p ${rootfs}
+		rm -rf $distro && mkdir -p ${rootfs} ${data}
 		
 		# Get --flavor= packages lists
 		if [ "$flavor" ]; then
 			echo -n "Getting $flavor packages.list..."
-			cp -f $flavors/$flavor/packages.list $distro 2>/dev/null
+			cp $flavors/$flavor/packages.list ${data} 2>/dev/null &&
+			cp $flavors/$flavor/flavor.conf ${data} 2>/dev/null
 			status
 		fi
 
 		# Packages
-		rm -f $distro/packages.full
-		if [ -f "$distro/packages.list" ]; then
-			for pkg in $(cat $distro/packages.list)
+		rm -f ${data}/packages.full
+		if [ -f "${data}/packages.list" ]; then
+			for pkg in $(cat ${data}/packages.list)
 			do
 				IFS="|"
 				grep "^$pkg |" $work/mirror/packages.desc | while read pkg version desc
 				do
 					echo ${pkg}-${version}-arm.tazpkg | sed s'/ //'g \
-						>> $distro/packages.full
+						>> ${data}/packages.full
 				done
 				unset IFS
 			done
@@ -104,13 +106,13 @@ case "$1" in
 				echo "" && exit 1
 			fi
 			echo -n "Using packages directory..."
-			cd $packages && ls -1 > $distro/packages.full
+			cd $packages && ls -1 >${data}/packages.full
 			status
 		fi
 		
 		# Deps install is not well handled by tazpkg/spk actually.
 		# So simply install all packages and don't resolve deps.
-		for pkg in $(cat $distro/packages.full)
+		for pkg in $(cat ${data}/packages.full)
 		do
 			pkgdir=$(basename $pkg .tazpkg)
 			db=${rootfs}/var/lib/tazpkg
@@ -138,19 +140,24 @@ case "$1" in
 		fi
 
 		# Move kernel outside the distro
-		if [ -d "$distro/rootfs/boot" ]; then
+		if [ -d "$rootfs/boot" ]; then
 			mv -f ${rootfs}/boot/linux-* ${distro}/linux-arm
 			chmod -x ${distro}/linux-arm
 		else
-			echo -n "Missing: ${rootfs}/boot"; false
-			status && exit 1
+			echo -n "Missing Kernel directory: rootfs/boot/"; false
+			status
 		fi
 
 		# SLITAZ_ARCH
-		echo -n "Setting SliTaz arch to: arm"
-		sed -i s"/SLITAZ_ARCH=.*/SLITAZ_ARCH=\"arm\"/" \
-			${rootfs}/etc/slitaz/slitaz.conf
-		status
+		if [ -f "${rootfs}/etc/slitaz/slitaz.conf" ]; then
+			echo -n "Setting SliTaz arch to: arm"
+			sed -i s"/SLITAZ_ARCH=.*/SLITAZ_ARCH=\"arm\"/" \
+				${rootfs}/etc/slitaz/slitaz.conf
+			status
+		else
+			echo -n "Missing distro: /etc/slitaz/slitaz.conf"; false
+			status && exit 1
+		fi
 
 		# Mirror
 		echo "$mirror" > ${rootfs}/var/lib/tazpkg/mirror
@@ -161,12 +168,15 @@ case "$1" in
 		mkdir -p run
 
 		# Update modules.dep
-		. var/lib/tazpkg/installed/linux/receipt
-		depmod -b . ${VERSION}-slitaz
+		if [ -f "var/lib/tazpkg/installed/linux/receipt" ]; then
+			. var/lib/tazpkg/installed/linux/receipt
+			depmod -b . ${VERSION}-slitaz
+		fi
 
 		# Custom rootfs: make sure all files belong to root
 		if [ -d "$work/rootfs" ]; then
-			echo -n "Copying custom ARM: rootfs"
+			size=$(du -sh $work/rootfs | awk '{print $1}')
+			echo -n "Copying custom ARM rootfs: $size"
 			tmp=$distro/tmp-$$
 			mkdir -p $tmp
 			cp -r $work/rootfs/* $tmp
@@ -176,11 +186,15 @@ case "$1" in
 		fi
 		
 		# Custom flavor rootfs
-		if [ -d "$flavors/$flavor/rootfs" ]; then
-			echo -n "Copying $flavor ARM: rootfs"
+		if [ -f "${data}/flavor.conf" ]; then
+			. ${data}/flavor.conf
+		fi
+		if [ -d "$flavors/${FLAVOR}/rootfs" ]; then
+			size=$(du -sh $flavors/${FLAVOR}/rootfs | awk '{print $1}')
+			echo -n "Copying ${FLAVOR} ARM rootfs: $size"
 			tmp=$distro/tmp-$$
 			mkdir -p $tmp
-			cp -r $flavors/$flavor/rootfs/* $tmp
+			cp -r $flavors/${FLAVOR}/rootfs/* $tmp
 			chown -R root.root $tmp
 			cp -a $tmp/* ${rootfs} && rm -rf $tmp
 			status
@@ -207,20 +221,30 @@ case "$1" in
 		boldify "SliTaz ARM distro summary"
 		separator
 		time=$(($(date +%s) - $time))
-		echo -n "Build time     : " && echo "${time}s"
-		echo -n "Initramfs size : " && du -sh $distro/$initramfs | awk '{print $1}'
-		echo -n "Rootfs size    : " && du -sh ${rootfs} | awk '{print $1}'
-		echo -n "Packages       : " && ls $db/installed | wc -l
+		initramfs_size="$(du -sh $distro/$initramfs | awk '{print $1}')"
+		rootfs_size="$(du -sh ${rootfs} | awk '{print $1}')"
+		pkgs_count="$(ls $db/installed | wc -l)"
+		[ "$FLAVOR" ] && echo "Flavor name    : $FLAVOR"
+		echo "Build time     : ${time}s"
+		echo "Initramfs      : $initramfs"
+		echo "Initramfs size : $initramfs_size"
+		echo "Rootfs size    : $rootfs_size" 
+		echo "Packages       : $pkgs_count"
 		separator && newline ;;
 		
 	flavors)
 		newline
-		echo -n "$(boldify 'Flavor')" && indent 14 "$(boldify 'Packages')"
+		echo -n "$(boldify 'Flavor')" && 
+		echo -n "$(indent 12 $(boldify 'Packages'))"
+		indent 24 $(boldify 'Description')
 		separator
 		for flavor in $(ls $flavors)
 		do
+			. $flavors/$flavor/flavor.conf
 			pkgs=$(cat $flavors/$flavor/packages.list | wc -l)
-			echo -n "$flavor" && indent 14 "$pkgs"
+			echo -n "$flavor" && 
+			echo -n "$(indent 12 $pkgs)" && indent 24 "$SHORT_DESC"
+			unset SHORT_DESC
 		done
 		newline ;;
 	
