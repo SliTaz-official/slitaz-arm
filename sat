@@ -16,6 +16,7 @@ initramfs="slitaz-arm.$init"
 packages=$work/packages
 distro=$work/distro
 flavors=$work/flavors
+cache=$work/cache
 # http://mirror.slitaz.org/packages/cooking/arm/
 mirror="http://cook.slitaz.org/cross/arm/packages/"
 
@@ -28,6 +29,7 @@ $(boldify "Usage:") $(basename $0) [command|--options]
 $(boldify "Commands:")
   gen        Generate a distro cpio/gzip initramfs
   flavors    List and give info about flavors
+  pkgs       Distro packages check and count
   clean      Clean up the work directory
   vdisk      Create a virtual disk to be used by Qemu
   emu        Emulate the distro with qemu-system-arm
@@ -70,8 +72,11 @@ case "$1" in
 	gen)
 		time=$(date +%s)
 		check_root
+		echo ""
+		boldify "Generating SliTaz ARM distro"
+		separator
 		rm -rf $distro $initramfs
-		mkdir -p $distro
+		mkdir -p $distro $cache
 		
 		# Get --flavor= packages lists
 		if [ "$flavor" ]; then
@@ -81,7 +86,7 @@ case "$1" in
 		fi
 
 		# Packages
-		rm -f $work/packages.full
+		rm -f $cache/packages.full
 		if [ -f "packages.list" ]; then
 			for pkg in $(cat $packages.list)
 			do
@@ -89,21 +94,22 @@ case "$1" in
 				grep "^$pkg |" $work/mirror/packages.desc | while read pkg version desc
 				do
 					echo ${pkg}-${version}-arm.tazpkg | sed s'/ //'g \
-						>> $work/packages.full
+						>> $cache/packages.full
 				done
 				unset IFS
 			done
 			cd ${work}/mirror
 		else
-			[ ! -d "$packages" ] && echo "Missing: $packages" && exit 1
+			[ ! -d "$packages" ] && \
+				echo "Missing packages.list or packages/ directory" && exit 1
 			echo -n "Using packages directory..."
-			cd $packages && ls -1 > $work/packages.full
+			cd $packages && ls -1 > $cache/packages.full
 			status
 		fi
 		
 		# Deps install is not well handled by tazpkg/spk actually.
 		# So simply install all packages and don't resolve deps.
-		for pkg in $(cat $work/packages.full)
+		for pkg in $(cat $cache/packages.full)
 		do
 			pkgdir=$(basename $pkg .tazpkg)
 			db=$distro/var/lib/tazpkg
@@ -175,14 +181,20 @@ case "$1" in
 		case $initramfs in
 			*.bz2) find . | cpio -o -H newc | bzip2 > ../$initramfs ;;
 			*.gz) find . | cpio -o -H newc | gzip -9 > ../$initramfs ;;
-			*.xz) find . | cpio -o -H newc | xz -9 --format=lzma \
-					> ../$initramfs ;;
+			*.xz) find . | cpio -o -H newc | xz -9 --format=lzma > ../$initramfs ;;
 		esac
+		
+		# Summary
 		status
+		separator && echo ""
+		boldify "SliTaz ARM distro summary"
+		separator
 		time=$(($(date +%s) - $time))
-		echo "Build time  : ${time}s"
-		echo -n "Distro size : "
-		cd $work && du -sh $initramfs | awk '{print $1}' ;;
+		echo -n "Build time     : " && echo "${time}s"
+		echo -n "Initramfs size : " && du -sh $work/$initramfs | awk '{print $1}'
+		echo -n "Rootfs size    : " && du -sh $distro | awk '{print $1}'
+		echo -n "Packages       : " && ls $db/installed | wc -l
+		separator && echo "" ;;
 		
 	flavors)
 		echo ""
@@ -195,9 +207,35 @@ case "$1" in
 		done
 		echo "" ;;
 	
+	pkgs)
+		installed="$distro/var/lib/tazpkg/installed"
+		SLITAZ_ARCH="arm"
+		count=0
+		echo ""
+		echo -n "Package name" && indent 24 "Missing dependencie"
+		separator
+		for pkg in ${installed}/*
+		do
+			. $pkg/receipt
+			for dep in $DEPENDS
+			do
+				if [ ! -d "${installed}/$dep" ]; then
+					echo -n "$(colorize 34 $PACKAGE)" && indent 24 "$dep"
+					count=$(($count + 1))
+				fi
+			done
+			unset DEPENDS
+		done
+		if [ "$count" == 0 ]; then
+			echo "No missing dependencies" 
+		fi
+		separator
+		echo -n "Installed packages: "; colorize 32 $(ls $installed | wc -l)
+		echo "" ;;
+	
 	clean)
 		check_root
-		for r in distro linux-arm slitaz-arm.*z spk packages.*; do
+		for r in distro cache linux-arm slitaz-arm.*z; do
 			echo -n "Cleaning: $r"
 			rm -rf $work/$r && status
 		done ;;

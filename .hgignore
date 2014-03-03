@@ -1,7 +1,9 @@
 distro/
+cache/
 mirror/
 packages/
 spk/
 linux-arm
-slitaz-arm.gz
+slitaz-arm.*
 vdisk.img
+packages.list

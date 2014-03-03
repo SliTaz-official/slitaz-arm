@@ -10,3 +10,8 @@ slitaz-tools
 tazirc
 util-linux-blkid
 util-linux-uuid
+ncurses-common
+ncursesw
+libcomerr
+e2fsprogs
+dialog
