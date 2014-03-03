@@ -3,5 +3,5 @@ mirror/
 packages/
 spk/
 linux-arm
-distro-arm.gz
+slitaz-arm.gz
 vdisk.img
