@@ -2,7 +2,7 @@
 #
 # Sat - SliTaz ARM Tool
 #
-# Copyright (C) 2012 SliTaz ARM - BSD License
+# Copyright (C) 2012-2014 SliTaz ARM - BSD License
 # Author: Christophe Lincoln <pankso@slitaz.org>
 #
 . /lib/libtaz.sh
@@ -15,6 +15,7 @@
 initramfs="slitaz-arm.$init"
 packages=$work/packages
 distro=$work/distro
+flavors=$work/flavors
 # http://mirror.slitaz.org/packages/cooking/arm/
 mirror="http://cook.slitaz.org/cross/arm/packages/"
 
@@ -26,6 +27,7 @@ $(boldify "Usage:") $(basename $0) [command|--options]
 
 $(boldify "Commands:")
   gen        Generate a distro cpio/gzip initramfs
+  flavors    List and give info about flavors
   clean      Clean up the work directory
   vdisk      Create a virtual disk to be used by Qemu
   emu        Emulate the distro with qemu-system-arm
@@ -37,6 +39,7 @@ $(boldify "Options:")
   --work=    Path to work dir with packages and rootfs
   --size=    Specify optional vdisk size (default 20Mb)
   --init=    Specify the initramfs compression: gz bz2 xz
+  --flavor=  Generate specified SliTaz ARM flavor
 
 EOT
 }
@@ -67,26 +70,40 @@ case "$1" in
 	gen)
 		time=$(date +%s)
 		check_root
-		rm -rf $distro slitaz-arm.xz
+		rm -rf $distro $initramfs
 		mkdir -p $distro
+		
+		# Get --flavor= packages lists
+		if [ "$flavor" ]; then
+			echo -n "Getting $flavor packages.list..."
+			cp -f $flavors/$flavor/packages.list .
+			status
+		fi
 
-		# Packages. Dep install is not well handled by tazpkg/spk actually.
-		# So simply install all packages and don't resolve deps.
+		# Packages
+		rm -f $work/packages.full
 		if [ -f "packages.list" ]; then
 			for pkg in $(cat $packages.list)
 			do
 				IFS="|"
 				grep "^$pkg |" $work/mirror/packages.desc | while read pkg version desc
 				do
-					echo ${pkg}-${version}.tazpkg | sed s'/ //'g
+					echo ${pkg}-${version}-arm.tazpkg | sed s'/ //'g \
+						>> $work/packages.full
 				done
 				unset IFS
 			done
-			exit 0
+			cd ${work}/mirror
 		else
-		[ ! -d "$packages" ] && echo "Missing: $packages" && exit 1
-		cd $packages
-		for pkg in $packages/*.tazpkg
+			[ ! -d "$packages" ] && echo "Missing: $packages" && exit 1
+			echo -n "Using packages directory..."
+			cd $packages && ls -1 > $work/packages.full
+			status
+		fi
+		
+		# Deps install is not well handled by tazpkg/spk actually.
+		# So simply install all packages and don't resolve deps.
+		for pkg in $(cat $work/packages.full)
 		do
 			pkgdir=$(basename $pkg .tazpkg)
 			db=$distro/var/lib/tazpkg
@@ -100,7 +117,6 @@ case "$1" in
 			md5sum $(basename $pkg) >> $db/installed.md5
 			status
 		done
-		fi
 
 		# Install spk if requested. Spk multiarch support must be tested
 		if [ "$spk" ]; then
@@ -167,10 +183,21 @@ case "$1" in
 		echo "Build time  : ${time}s"
 		echo -n "Distro size : "
 		cd $work && du -sh $initramfs | awk '{print $1}' ;;
+		
+	flavors)
+		echo ""
+		echo -n "Flavor" && indent 16 "Packages"
+		separator
+		for flavor in $(ls $flavors)
+		do
+			pkgs=$(cat $flavors/$flavor/packages.list | wc -l)
+			echo -n "$flavor" && indent 16 "$pkgs"
+		done
+		echo "" ;;
 	
 	clean)
 		check_root
-		for r in distro linux-arm *.*z spk; do
+		for r in distro linux-arm slitaz-arm.*z spk packages.*; do
 			echo -n "Cleaning: $r"
 			rm -rf $work/$r && status
 		done ;;
