@@ -1,0 +1,56 @@
+#!/bin/sh
+#
+# tazarm - A small tool designed to run on ARM devices.
+#
+. /lib/libtaz.sh
+
+[ "$log" ] || log=$(pwd)/slitaz-arm.log
+
+# Handle commands
+case "$1" in
+	info)
+		/usr/bin/slitaz
+		# To remove on next slitaz-base-file release
+		echo -n "Machine type : " && uname -m
+		echo -n "System date  : " && date
+		newline ;;
+	
+	flavor)
+		if [ -f "/etc/slitaz/flavor.conf" ]; then
+			. /etc/slitaz/flavor.conf
+			newline
+			boldify "SliTaz ARM flavor"
+			separator
+			echo "Flavor     : $FLAVOR"
+			echo "Build date : $BUILD_DATE"
+			echo "Maintainer : $MAINTAINER"
+			echo "Short desc : $SHORT_DESC"
+			echo "Web site   : $WEB_SITE"
+		else
+			echo "Missing: /etc/slitaz/flavor.conf"
+		fi 
+		separator && newline ;;
+	
+	report)
+		echo -e "--> uname:" | tee $log
+		uname -a | tee -a $log
+		
+		echo -e "--> ls[pci/usb]:" | tee -a $log
+		lspci | tee -a $log
+		lsusb 2>&1 | tee -a $log
+		
+		echo -e "--> dmesg:" | tee -a $log
+		dmesg | tee -a $log
+		
+		echo -e "--> ifconfig:" | tee -a $log
+		ifconfig -a | tee -a $log 
+		
+		newline
+		echo "Log path: $log" 
+		newline ;;
+	
+	*)
+		echo "Usage: $(basename $0) [info|flavor|report] [--log=]" ;;
+esac
+exit 0
+	

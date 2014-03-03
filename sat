@@ -44,6 +44,7 @@ $(boldify "Options:")
   --size=    Specify optional vdisk size (default 20Mb)
   --init=    Specify the initramfs compression: gz bz2 xz
   --flavor=  Generate specified SliTaz ARM flavor
+  --append=  SliTaz and Kernel bootime arguments for Qemu
 
 EOT
 }
@@ -203,7 +204,15 @@ case "$1" in
 		# --kmap
 		if [ "$kmap" ]; then
 			echo -n "Copying local: /etc/keymap.conf"
-			cp -a /etc/keymap.conf ${rootfs}
+			cp -f /etc/keymap.conf ${rootfs}/etc
+			status
+		fi
+		
+		# Distro: /etc/slitaz/flavor.conf
+		if [ -f "${data}/flavor.conf" ]; then
+			echo -n "Including $FLAVOR: flavor.conf"
+			echo "BUILD_DATE=\"$(date '+%Y%m%d')\"" >> ${data}/flavor.conf
+			cp -f ${data}/flavor.conf ${rootfs}/etc/slitaz
 			status
 		fi
 
@@ -291,17 +300,30 @@ case "$1" in
 		# Lets use and HD in Qemu to store files|packages|whatever
 		vdisk="vdisk.img"
 		: ${size=20}
+		echo "Creating virtual disk: $vdisk"
 		cd $work
 		dd if=/dev/zero of=$vdisk bs=1M count=$size
-		mkfs.ext4 -q -T ext4 -L "SliTaz" -F $vdisk ;;
+		#mkfs.ext3 -q -T ext3 -L "SliTaz" -F $vdisk 
+		# Partition
+		echo "Creating partition with: fdisk"
+		echo "
+o
+n
+p
+1
+
+
+w" \
+		| fdisk $vdisk >/dev/null 2>/dev/null && newline ;;
 	
 	emu)
 		cd $work
 		[ -f "vdisk.img" ] && opts="-hda vdisk.img"
-		qemu-system-arm -m 256 $opts \
+		[ "$append" ] && append="-append ${append}"
+		qemu-system-arm -m 256 ${opts} \
 			-M versatilepb -cpu arm1176 \
 			-kernel ${distro}/linux-arm \
-			-initrd ${distro}/${initramfs} ;;
+			-initrd ${distro}/${initramfs} ${append} ;;
 	
 	mirror)
 		#

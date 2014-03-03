@@ -74,9 +74,11 @@ if [ "$RUN_DAEMONS" ]; then
 fi
 
 # System time
-echo -n "Setting system date..."
-rdate -s 203.129.68.14 2>/dev/null
-status
+if fgrep -q 'rdate' /proc/cmdline; then
+	echo -n "Setting system date..."
+	rdate -s 203.129.68.14 2>/dev/null
+	status
+fi
 
 newline
 colorize 32 "$MESSAGE"
