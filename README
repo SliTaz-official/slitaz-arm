@@ -9,20 +9,32 @@ Sat howto
 ---------
 Sat is a tool in the spirit of all SliTaz tools, all commands and options are
 accessible via: sat usage or help. To create a distro you first need to have
-some ARM packages. You can use custom cook, the one from the SliTaz mirror, put
-them all in a packages/ directory and sat will install them. Then generate the
-distro initramfs with your custom --options:
+some ARM packages. You can use custom cook or the one from the SliTaz mirror.
+Put all your custom *.tazpkg in the packages/ directory and sat will install
+them. To use the official packages you need to sync the mirror with:
 
-# sat gen
+# sat mirror
+
+Generate the distro initramfs with your custom --options:
+
+# sat gen --flavor=base --kmap
 
 To boot the distro with Qemu you can run:
 
 # sat emu
 
-Sat lets you clone the ARM cooking repo to let you debug and try official ARM
+
+Mirror
+------
+Sat lets you clone the ARM cooking mirror to let you debug and try official ARM
 packages. Sat will create a mirror directory in the working path and download 
 all lists and packages. After a first clone it will only check the repo ID 
 file and download any modified or new packages.
+
+
+Bugs
+----
+Please report bug on the Slitaz Bug Tracker: http://bugs.slitaz.org/
 
 
 History
