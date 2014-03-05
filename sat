@@ -22,6 +22,10 @@ data="$distro/data"
 # http://mirror.slitaz.org/packages/cooking/arm/
 mirror="http://cook.slitaz.org/cross/arm/packages/"
 
+#
+# Functions
+#
+
 # Help and usage
 usage() {
 	cat << EOT
@@ -40,6 +44,7 @@ $(boldify "Commands:")
 $(boldify "Options:")
   --spk      Clean or include Spk package manager in the distro
   --kmap     Include the system keymap config in the distro
+  --noinit   Dont create the compressed initramfs
   --work=    Path to work dir with packages and rootfs
   --size=    Specify optional vdisk size (default 20Mb)
   --init=    Specify the initramfs compression: gz bz2 xz
@@ -82,8 +87,8 @@ case "$1" in
 		# Get --flavor= packages lists
 		if [ "$flavor" ]; then
 			echo -n "Getting $flavor packages.list..."
-			cp $flavors/$flavor/packages.list ${data} 2>/dev/null &&
-			cp $flavors/$flavor/flavor.conf ${data} 2>/dev/null
+			cp -f $flavors/$flavor/packages.list ${data} 2>/dev/null &&
+			cp -f $flavors/$flavor/flavor.conf ${data} 2>/dev/null
 			status
 		fi
 
@@ -145,8 +150,11 @@ case "$1" in
 			mv -f ${rootfs}/boot/linux-* ${distro}/linux-arm
 			chmod -x ${distro}/linux-arm
 		else
-			echo -n "Missing Kernel directory: rootfs/boot/"; false
-			status
+			# RPi use a custom Kernel: --rpi
+			if [ ! "$rpi" ]; then
+				echo -n "Missing Kernel directory: rootfs/boot/"; false
+				status
+			fi
 		fi
 
 		# SLITAZ_ARCH
@@ -217,16 +225,18 @@ case "$1" in
 		fi
 
 		# Rootfs cpio: gzip xz --> /usr/lib/slitaz/liblive.sh ???
-		echo -n "Compressing initramfs: $initramfs"
-		case "$initramfs" in
-			*.bz2) find . | cpio -o -H newc | bzip2 > ../$initramfs ;;
-			*.gz) find . | cpio -o -H newc | gzip -9 > ../$initramfs ;;
-			*.xz) find . | cpio -o -H newc | xz -9 --format=lzma > ../$initramfs ;;
-		esac
+		if [ ! "$noinit" ]; then
+			echo -n "Compressing initramfs: $initramfs"
+			case "$initramfs" in
+				*.bz2) find . | cpio -o -H newc | bzip2 > ../$initramfs ;;
+				*.gz) find . | cpio -o -H newc | gzip -9 > ../$initramfs ;;
+				*.xz) find . | cpio -o -H newc | xz -9 --format=lzma > ../$initramfs ;;
+			esac
+		fi
 		
 		# Summary
 		status
-		separator && echo ""
+		separator && newline
 		boldify "SliTaz ARM distro summary"
 		separator
 		time=$(($(date +%s) - $time))
@@ -300,21 +310,21 @@ case "$1" in
 		# Lets use and HD in Qemu to store files|packages|whatever
 		vdisk="vdisk.img"
 		: ${size=20}
+		newline
 		echo "Creating virtual disk: $vdisk"
 		cd $work
 		dd if=/dev/zero of=$vdisk bs=1M count=$size
 		#mkfs.ext3 -q -T ext3 -L "SliTaz" -F $vdisk 
 		# Partition
 		echo "Creating partition with: fdisk"
-		echo "
+		fdisk ${vdisk} >/dev/null << EOT
 o
 n
 p
 1
-
-
-w" \
-		| fdisk $vdisk >/dev/null 2>/dev/null && newline ;;
+w
+EOT
+		newline ;;
 	
 	emu)
 		cd $work
