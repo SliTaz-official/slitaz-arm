@@ -41,7 +41,7 @@ $(boldify "Commands:")
   info          Display paths and distro info
   install       Install SliTaz RPi to sdcard
   gen           Generate a new SliTaz RPi distro
-  linux         Build the Raspberry Pi Linux kernel
+  cooklinux     Build the Raspberry Pi Linux kernel
   get-fw        Download or update RPi Firmware
   get-tools     Download or update RPi Tools (mkimage)
   get-prebuilt  Get a prebuilt SliTaz ARM toolchain
@@ -215,7 +215,8 @@ case "$1" in
 		fi
 		[ "$clean" ] && sat clean --work="$work"
 		if [ ! -d "$distro/rootfs/etc" ]; then
-			sat gen --work="$work" --flavor="$flavor" --kmap --spk --rpi
+			sat gen --work="$work" --flavor="$flavor" \
+				--kmap --spk --noinit --rpi
 		fi
 		header "SliTaz Raspberry Pi distro"
 		dsize="$(du -sh ${distro}/rootfs | awk '{print $1}')"
@@ -269,6 +270,13 @@ EOT
 			echo "RPi Kernel: not used"
 		fi
 		mkdir -p ${rootfs}/boot
+		
+		# RPi VC libraries
+		if [ "$vc" ]; then
+			echo "Installing: VC libraries"
+			echo "TODO"
+		fi
+		
 		separator
 		echo -n "Boot: $(du -sh $boot | awk '{print $1}') "
 		echo "- Rootfs: $(du -sh $rootfs | awk '{print $1}')" 

@@ -3,7 +3,6 @@ gcc-lib-base
 gettext-base
 glibc-base
 kbd-base
-linux
 slitaz-base-files
 slitaz-boot-scripts
 slitaz-tools
@@ -16,3 +15,5 @@ libcomerr
 e2fsprogs
 dialog
 dropbear
+nano
+clex

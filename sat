@@ -232,21 +232,22 @@ case "$1" in
 				*.gz) find . | cpio -o -H newc | gzip -9 > ../$initramfs ;;
 				*.xz) find . | cpio -o -H newc | xz -9 --format=lzma > ../$initramfs ;;
 			esac
+			status
 		fi
 		
 		# Summary
-		status
 		separator && newline
 		boldify "SliTaz ARM distro summary"
 		separator
 		time=$(($(date +%s) - $time))
-		initramfs_size="$(du -sh $distro/$initramfs | awk '{print $1}')"
+		[ "$noinit" ] || \
+			initramfs_size="$(du -sh $distro/$initramfs | awk '{print $1}')"
 		rootfs_size="$(du -sh ${rootfs} | awk '{print $1}')"
 		pkgs_count="$(ls $db/installed | wc -l)"
 		[ "$FLAVOR" ] && echo "Flavor name    : $FLAVOR"
 		echo "Build time     : ${time}s"
-		echo "Initramfs      : $initramfs"
-		echo "Initramfs size : $initramfs_size"
+		[ "$noinit" ] || echo "Initramfs      : $initramfs"
+		[ "$noinit" ] || echo "Initramfs size : $initramfs_size"
 		echo "Rootfs size    : $rootfs_size" 
 		echo "Packages       : $pkgs_count"
 		separator && newline ;;
