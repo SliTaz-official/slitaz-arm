@@ -246,11 +246,11 @@ case "$1" in
 		cat > ${rootfs}/etc/fstab << EOT
 # /etc/fstab: Slitaz ARM static filesystems.
 #
-proc				/proc		proc	defaults			0 0
-sysfs				/sys		sysfs	defaults			0 0
-/dev/mmcblk0p1		/boot		auto	noauto,noatime		1 2
-/dev/mmcblk0p2		none		swap	sw					0 0
-/dev/mmcblk0p3		/			ext3	noatime				0 1
+proc              /proc       proc     defaults           0 0
+sysfs             /sys        sysfs    defaults           0 0
+/dev/mmcblk0p1    /boot       auto     noauto,noatime     1 2
+/dev/mmcblk0p2    none        swap     sw                 0 0
+/dev/mmcblk0p3    /           ext4     noatime            0 1
 EOT
 		status
 		

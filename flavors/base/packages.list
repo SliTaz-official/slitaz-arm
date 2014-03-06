@@ -15,4 +15,5 @@ ncursesw
 libcomerr
 e2fsprogs
 dialog
+zlib
 dropbear
