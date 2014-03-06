@@ -44,7 +44,7 @@ $(boldify "Commands:")
 $(boldify "Options:")
   --spk      Clean or include Spk package manager in the distro
   --kmap     Include the system keymap config in the distro
-  --noinit   Dont create the compressed initramfs
+  --noinit   Don't create the compressed initramfs
   --work=    Path to work dir with packages and rootfs
   --size=    Specify optional vdisk size (default 20Mb)
   --init=    Specify the initramfs compression: gz bz2 xz
@@ -150,7 +150,7 @@ case "$1" in
 			mv -f ${rootfs}/boot/linux-* ${distro}/linux-arm
 			chmod -x ${distro}/linux-arm
 		else
-			# RPi use a custom Kernel: --rpi
+			# RPi uses a custom Kernel: --rpi
 			if [ ! "$rpi" ]; then
 				echo -n "Missing Kernel directory: rootfs/boot/"; false
 				status

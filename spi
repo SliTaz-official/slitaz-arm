@@ -7,7 +7,7 @@
 #
 . /lib/libtaz.sh
 
-# Path's
+# Paths
 [ "$work" ] || work="$(pwd)"
 distro="$work/distro"
 data="$work/rpi/data"
@@ -17,13 +17,13 @@ kernel="$data/linux"
 firmware="$data/firmware"
 tools="$data/tools"
 
-# URL's
+# URLs
 rpi_url="http://mirror.slitaz.org/arm/rpi/"
 fw_url="https://github.com/raspberrypi/firmware/raw/master/boot/"
 tools_url="https://raw.github.com/raspberrypi/tools/master/mkimage/"
 lkgit_url="git://github.com/raspberrypi/linux.git"
 
-# List's
+# Lists
 fwlist="bootcode.bin fixup.dat start.elf"
 toolslist="imagetool-uncompressed.py args-uncompressed.txt \
 boot-uncompressed.txt" #first32k.bin
@@ -159,7 +159,7 @@ case "$1" in
 			> ${data}/sdcard.part
 		partnb=$(cat ${data}/sdcard.part | wc -l)
 		if [ "$partnb" != 3 ]; then
-			error "SliTaz RPi need 3 partitions on the sdcard" 
+			error "SliTaz RPi needs 3 partitions on the sdcard" 
 			newline && exit 1
 		fi
 		
@@ -343,7 +343,7 @@ EOT
 				-O ${data}/linux-version.txt || exit 1
 			status
 		else
-			echo "Mirror is unreatchable" && exit 1
+			echo "Mirror is unreachable" && exit 1
 		fi
 		kvers=$(cat $data/linux-version.txt)
 		[ "$up" ] && rm -rf ${data}/linux-${kvers}*
