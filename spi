@@ -44,7 +44,7 @@ $(boldify "Commands:")
   install       Install SliTaz RPi to sdcard
   gen           Generate a new SliTaz RPi distro
   cook-linux    Build the Raspberry Pi Linux kernel
-  get-linux     Get a the SliTaz RPi linux package
+  get-linux     Get the SliTaz RPi linux package
   get-fw        Download or update RPi Firmware
   clone-fw      Clone the RPi Firmware repository
   get-tools     Download or update RPi Tools (mkimage)

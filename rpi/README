@@ -7,13 +7,13 @@ SliTaz Raspberry Pi distro tools and files
 
 Spi quickstart
 --------------------------------------------------------------------------------
-The Raspberry Pi have a lot of specification SliTaz ARM provide 'spi' to build
-custom SliTaz Rpi distro's images ready to boot. To get the list of avalaible 
+The Raspberry Pi has a lot of specifications. SliTaz ARM provides 'spi' to build
+custom SliTaz Rpi distro images ready to boot. To get the list of available 
 commands and options:
 
 # spi help
 
-Slitaz RPi mirror host the prebuilt Linux kernel package. To get the
+Slitaz RPi mirror hosts the prebuilt Linux kernel package. To get the
 latest version and unpack it:
 
 # spi get-linux

@@ -15,7 +15,7 @@ To install 'sat' and 'spi' you must have make installed:
 rootfs/ directory
 --------------------------------------------------------------------------------
 Custom SliTaz ARM scripts and files used to generate a distro. These files
-and any other system file can be erased or added via the flavors support. The
+and any other system files can be erased or added via the flavors support. The
 rootfs files can also be directly modified before generating a new distro. 
 
 
