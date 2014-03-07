@@ -2,4 +2,5 @@ distro/
 mirror/
 packages/
 spk/
-rpi/
+rpi/git
+rpi/distro

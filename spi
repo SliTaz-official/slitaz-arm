@@ -10,23 +10,25 @@
 # Paths
 [ "$work" ] || work="$(pwd)"
 distro="$work/distro"
-data="$work/rpi/data"
-boot="$work/rpi/boot"
-rootfs="$work/rpi/rootfs"
-kernel="$data/linux"
-firmware="$data/firmware"
-tools="$data/tools"
+rpi="$work/rpi"
+data="$rpi/distro/data"
+boot="$rpi/distro/boot"
+rootfs="$rpi/distro/rootfs"
+rpi_git="$rpi/git"
+kernel="$rpi_git/linux"
+firmware="$rpi_git/firmware"
+tools="$rpi_git/tools"
 
 # URLs
-rpi_url="http://mirror.slitaz.org/arm/rpi/"
+rpi_mirror="http://mirror.slitaz.org/arm/rpi/"
 fw_url="https://github.com/raspberrypi/firmware/raw/master/boot/"
 tools_url="https://raw.github.com/raspberrypi/tools/master/mkimage/"
-lkgit_url="git://github.com/raspberrypi/linux.git"
+rpi_git_url="git://github.com/raspberrypi/"
 
 # Lists
 fwlist="bootcode.bin fixup.dat start.elf"
 toolslist="imagetool-uncompressed.py args-uncompressed.txt \
-boot-uncompressed.txt" #first32k.bin
+boot-uncompressed.txt"
 
 #
 # Functions
@@ -41,8 +43,10 @@ $(boldify "Commands:")
   info          Display paths and distro info
   install       Install SliTaz RPi to sdcard
   gen           Generate a new SliTaz RPi distro
-  cooklinux     Build the Raspberry Pi Linux kernel
+  cook-linux    Build the Raspberry Pi Linux kernel
+  get-linux     Get a the SliTaz RPi linux package
   get-fw        Download or update RPi Firmware
+  clone-fw      Clone the RPi Firmware repository
   get-tools     Download or update RPi Tools (mkimage)
   get-prebuilt  Get a prebuilt SliTaz ARM toolchain
   oclock        Display overclocking information
@@ -66,30 +70,37 @@ header() {
 	separator
 }
 
-# Get RPi firmware
+# Get minimal RPi firmware
 get_fw() {
-	mkdir -p $firmware
+	mkdir -p $firmware/boot
 	for fw in $fwlist
 	do
-		[ "$up" ] && rm -f $firmware/$fw
-		if [ ! -f "$firmware/$fw" ]; then
+		[ "$up" ] && rm -f $firmware/boot/$fw
+		if [ ! -f "$firmware/boot/$fw" ]; then
 			echo -n "Fetching: $fw"
 			wget -q --no-check-certificate ${fw_url}${fw} \
-				-O $firmware/${fw}; status
+				-O $firmware/boot/${fw}; status
 		fi
 	done
 }
 
+# Get all RPi firmware
+clone_fw() {
+	[ -d "${rpi_git}/firmware" ] && return 0
+	mkdir -p ${rpi_git} && cd ${rpi_git}
+	git clone --depth 1 ${rpi_git_url}firmware.git
+}
+
 # Get RPi tools
 get_tools() {
-	mkdir -p $data
+	mkdir -p $tools
 	for t in $toolslist
 	do
-		[ "$up" ] && rm -f $data/$t
+		[ "$up" ] && rm -f ${tools}/${t}
 		if [ ! -f "$data/$t" ]; then
 			echo -n "Fetching: $t"
 			wget -q --no-check-certificate ${tools_url}${t} \
-				-O $data/${t}; status
+				-O ${tools}/${t}; status
 		fi
 	done
 }
@@ -139,7 +150,7 @@ case "$1" in
 	info)
 		header "SliTaz Raspberry Pi info"
 		echo "Firmware : $fwlist" 
-		echo "RPi path : $work/rpi"
+		echo "RPi path : $rpi"
 		colorize 36 "/boot/cmdline.txt:"
 		cat ${boot}/cmdline.txt
 		colorize 36 "/boot/config.txt:"
@@ -220,18 +231,30 @@ case "$1" in
 		fi
 		header "SliTaz Raspberry Pi distro"
 		dsize="$(du -sh ${distro}/rootfs | awk '{print $1}')"
-		echo -n "Copying the rootfs: $dsize"
+		echo -n "Copying: rootfs ($dsize)"
 		cp -a ${distro}/rootfs ${rootfs}; status
 		
 		# Boot firmware
-		echo -n "Installing: firmware files"
+		echo -n "Copying: firmware files..."
 		get_fw
-		cp $firmware/* ${boot}; status
+		for fw in $fwlist
+		do
+			cp $firmware/boot/${fw} ${boot}
+		done
+		status
 		
-		# /boot/cmdline.txt
-		echo -n "Creating: /boot/cmdline.txt"
-		echo 'root=/dev/mmcblk0p3 rootwait quiet' >> \
-			${boot}/cmdline.txt; status
+		# SliTaz Raspberry Pi custom rootfs files. Make sure all files 
+		# belong to root
+		if [ -d "$work/rootfs" ]; then
+			size=$(du -sh $work/rootfs | awk '{print $1}')
+			echo -n "Copying: SliTaz RPi rootfs ($size)"
+			tmp=$distro/tmp-$$
+			mkdir -p $tmp
+			cp -r $work/rootfs/* $tmp
+			chown -R root.root $tmp
+			cp -a $tmp/* ${rootfs} && rm -rf $tmp
+			status
+		fi
 		
 		# /boot/config.txt
 		echo -n "Creating: /boot/config.txt"
@@ -258,7 +281,7 @@ EOT
 		kvers=$(ls $data/linux-*/fs/lib/modules)
 		kpkg="$rootfs/var/lib/tazpkg/installed/linux"
 		if [ -d "$data/linux-$kvers/fs" ]; then
-			echo -n "Installing: Linux Kernel $kvers"
+			echo -n "Copying: Linux Kernel $kvers"
 			rm -rf ${rootfs}/lib/modules
 			cp -rf ${data}/linux-${kvers}/fs/lib/* ${rootfs}/lib
 			cp -f  ${data}/linux-${kvers}/fs/boot/* ${boot}
@@ -282,7 +305,7 @@ EOT
 		echo "- Rootfs: $(du -sh $rootfs | awk '{print $1}')" 
 		newline ;;
 	
-	linux)
+	cook-linux)
 		# Native SliTaz Toolchain and cross toolchain must be installed
 		check_root
 		#: ${arch=armv6hf}
@@ -293,7 +316,7 @@ EOT
 			exit 1
 		fi
 		# Kernel source
-		[ -d "$kernel" ] || git clone --depth 1 ${lkgit_url}
+		[ -d "$kernel" ] || git clone --depth 1 ${rpi_git_url}linux.git
 		
 		if [ ! -d "$install" ]; then
 			cd ${kernel}
@@ -308,6 +331,10 @@ EOT
 			cp -a arch/arm/boot/zImage ${install}/boot
 		fi
 		
+		# Compress all modules
+		#echo -n "Searching all modules to compress them... "
+		#find . -name "*.ko" -exec xz '{}' \; 2> /dev/null
+		
 		# Pack
 		fs="$data/linux-$kvers/fs"
 		kvers=$(ls ${install}/lib/modules)
@@ -321,8 +348,9 @@ EOT
 		fi
 		get_tools
 		echo "Compressing: zImage to kernel.img"
-		cd ${data}
+		cd ${tools}
 		python imagetool-uncompressed.py ${fs}/boot/zImage
+		cd ${data}
 		mv kernel.img ${fs}/boot && rm ${fs}/boot/zImage
 		echo "Creating package: receipt"
 		cat > linux-$kvers/receipt << EOT
@@ -344,10 +372,11 @@ EOT
 		
 	get-linux)
 		# Precook RPi kernel
+		mkdir -p ${data}
 		rm -f ${data}/linux-version.txt
-		if busybox wget -q -s ${rpi_url}/last-linux.txt; then
+		if busybox wget -q -s ${rpi_mirror}/last-linux.txt; then
 			echo -n "Fetching latest Kernel string..."
-			wget -q ${rpi_url}/last-linux.txt \
+			wget -q ${rpi_mirror}/last-linux.txt \
 				-O ${data}/linux-version.txt || exit 1
 			status
 		else
@@ -359,7 +388,7 @@ EOT
 		# Download
 		if [ ! -f "$data/linux-$kvers.tazpkg" ]; then
 			echo -n "Fetching latest Linux package..."
-			wget -q ${rpi_url}/linux-${kvers}.tazpkg \
+			wget -q ${rpi_mirror}/linux-${kvers}.tazpkg \
 				-O ${data}/linux-${kvers}.tazpkg; status
 		fi
 		# Extract
@@ -391,6 +420,9 @@ EOT
 		mkdir -p ${arch}
 		cp -a ${name}-${vers}/${arch}/* ${arch} 
 		echo "Tools path: /cross/${arch}/tools/bin" ;;
+	
+	clone-fw)
+		clone_fw ;;
 	
 	oclock)
 		cat << EOT

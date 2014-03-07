@@ -1,0 +1,25 @@
+SliTaz RPi
+================================================================================
+
+
+SliTaz Raspberry Pi distro tools and files
+
+
+Spi quickstart
+--------------------------------------------------------------------------------
+The Raspberry Pi have a lot of specification SliTaz ARM provide 'spi' to build
+custom SliTaz Rpi distro's images ready to boot. To get the list of avalaible 
+commands and options:
+
+# spi help
+
+Slitaz RPi mirror host the prebuilt Linux kernel package. To get the
+latest version and unpack it:
+
+# spi get-linux
+
+The 'gen' command will generate a new SliTaz Raspberry Pi distro using 'sat'.
+I will also install needed firmware and boot configuration files.
+
+# spi gen
+

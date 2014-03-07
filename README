@@ -5,8 +5,22 @@ SliTaz ARM
 SliTaz ARM tools and files
 
 
-Sat howto
----------
+Installation
+--------------------------------------------------------------------------------
+To install 'sat' and 'spi' you must have make installed:
+
+# make install
+
+
+rootfs/ directory
+--------------------------------------------------------------------------------
+Custom SliTaz ARM scripts and files used to generate a distro. These files
+and any other system file can be erased or added via the flavors support. The
+rootfs files can also be directly modified before generating a new distro. 
+
+
+Sat quickstart
+--------------
 Sat is a tool in the spirit of all SliTaz tools, all commands and options are
 accessible via: sat usage or help. To create a distro you first need to have
 some ARM packages. You can use custom cook or the one from the SliTaz mirror.
@@ -25,7 +39,7 @@ To boot the distro with Qemu you can run:
 
 
 Mirror
-------
+--------------------------------------------------------------------------------
 Sat lets you clone the ARM cooking mirror to let you debug and try official ARM
 packages. Sat will create a mirror directory in the working path and download 
 all lists and packages. After a first clone it will only check the repo ID 
@@ -33,12 +47,12 @@ file and download any modified or new packages.
 
 
 Bugs
-----
+--------------------------------------------------------------------------------
 Please report bugs on the Slitaz Bug Tracker: http://bugs.slitaz.org/
 
 
 History
--------
+--------------------------------------------------------------------------------
 While I was porting SliTaz to ARM I ended up by creating a lot of initramfs' 
 to test the SliTaz boot, packages and so on. So I first wrote a small script,
 then improved it by just having to put include packages in a single directory

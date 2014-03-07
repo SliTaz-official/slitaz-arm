@@ -7,6 +7,7 @@ linux
 slitaz-base-files
 slitaz-boot-scripts
 slitaz-tools
+spk
 tazirc
 util-linux-blkid
 util-linux-uuid
