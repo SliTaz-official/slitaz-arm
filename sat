@@ -17,7 +17,7 @@ packages="$work/packages"
 distro="$work/distro"
 flavors="$work/flavors"
 rootfs="$distro/rootfs"
-data="$distro/data"
+cache="$distro/cache"
 
 # http://mirror.slitaz.org/packages/cooking/arm/
 mirror="http://cook.slitaz.org/cross/arm/packages/"
@@ -50,6 +50,7 @@ $(boldify "Options:")
   --init=    Specify the initramfs compression: gz bz2 xz
   --flavor=  Generate specific SliTaz ARM flavor
   --append=  SliTaz and Kernel bootime arguments for Qemu
+  --debug    Keep cache dir and display debugging info
 
 EOT
 }
@@ -63,11 +64,11 @@ check_mirror_id() {
 	if busybox wget -qs ${mirror%/}/ID 2>/dev/null; then
 		busybox wget -q ${mirror%/}/ID
 	else
-		gettext "Mirror is unreachable"; newline
+		echo "Mirror is unreachable"; newline
 		return 1
 	fi
 	if [ "$(cat ID)" == "$(cat ID.bak)" ]; then
-		gettext "Mirror is up-to-date"; newline
+		echo "Mirror is up-to-date"; newline
 		return 1
 	fi
 }
@@ -82,26 +83,26 @@ case "$1" in
 		check_root
 		newline && boldify "Generating SliTaz ARM distro"
 		separator
-		rm -rf $distro && mkdir -p ${rootfs} ${data}
+		rm -rf ${distro} && mkdir -p ${rootfs} ${cache}
 		
 		# Get --flavor= packages lists
 		if [ "$flavor" ]; then
 			echo -n "Getting $flavor packages.list..."
-			cp -f $flavors/$flavor/packages.list ${data} 2>/dev/null &&
-			cp -f $flavors/$flavor/flavor.conf ${data} 2>/dev/null
+			cp -f $flavors/$flavor/packages.list ${cache} 2>/dev/null &&
+			cp -f $flavors/$flavor/flavor.conf ${cache} 2>/dev/null
 			status
 		fi
 
 		# Packages
-		rm -f ${data}/packages.full
-		if [ -f "${data}/packages.list" ]; then
-			for pkg in $(cat ${data}/packages.list)
+		rm -f ${cache}/packages.full
+		if [ -f "${cache}/packages.list" ]; then
+			for pkg in $(cat ${cache}/packages.list)
 			do
 				IFS="|"
 				grep "^$pkg |" $work/mirror/packages.desc | while read pkg version desc
 				do
 					echo ${pkg}-${version}-arm.tazpkg | sed s'/ //'g \
-						>> ${data}/packages.full
+						>> ${cache}/packages.full
 				done
 				unset IFS
 			done
@@ -112,13 +113,13 @@ case "$1" in
 				echo "" && exit 1
 			fi
 			echo -n "Using packages directory..."
-			cd $packages && ls -1 >${data}/packages.full
+			cd $packages && ls -1 >${cache}/packages.full
 			status
 		fi
 		
 		# Deps install is not well handled by tazpkg/spk actually.
 		# So simply install all packages and don't resolve deps.
-		for pkg in $(cat ${data}/packages.full)
+		for pkg in $(cat ${cache}/packages.full)
 		do
 			pkgdir=$(basename $pkg .tazpkg)
 			db=${rootfs}/var/lib/tazpkg
@@ -195,8 +196,8 @@ case "$1" in
 		fi
 		
 		# Custom flavor rootfs
-		if [ -f "${data}/flavor.conf" ]; then
-			. ${data}/flavor.conf
+		if [ -f "${cache}/flavor.conf" ]; then
+			. ${cache}/flavor.conf
 		fi
 		if [ -d "$flavors/${FLAVOR}/rootfs" ]; then
 			size=$(du -sh $flavors/${FLAVOR}/rootfs | awk '{print $1}')
@@ -217,10 +218,10 @@ case "$1" in
 		fi
 		
 		# Distro: /etc/slitaz/flavor.conf
-		if [ -f "${data}/flavor.conf" ]; then
+		if [ -f "${cache}/flavor.conf" ]; then
 			echo -n "Including $FLAVOR: flavor.conf"
-			echo "BUILD_DATE=\"$(date '+%Y%m%d')\"" >> ${data}/flavor.conf
-			cp -f ${data}/flavor.conf ${rootfs}/etc/slitaz
+			echo "BUILD_DATE=\"$(date '+%Y%m%d')\"" >> ${cache}/flavor.conf
+			cp -f ${cache}/flavor.conf ${rootfs}/etc/slitaz
 			status
 		fi
 
@@ -234,6 +235,9 @@ case "$1" in
 			esac
 			status
 		fi
+		
+		# Clean if no debug mode
+		[ "$debug" ] || rm -rf ${cache}
 		
 		# Summary
 		separator && newline
@@ -250,7 +254,8 @@ case "$1" in
 		[ "$noinit" ] || echo "Initramfs size : $initramfs_size"
 		echo "Rootfs size    : $rootfs_size" 
 		echo "Packages       : $pkgs_count"
-		separator && newline ;;
+		separator
+		[ "$rpi" ] || newline ;;
 		
 	flavors)
 		newline

@@ -3,4 +3,4 @@ mirror/
 packages/
 spk/
 rpi/git
-rpi/distro
+rpi/data
