@@ -14,7 +14,9 @@ package is hosted on SliTaz mirror. To get the latest version and unpack it:
 # spi get-linux
 
 The 'gen' command will generate a new SliTaz Raspberry Pi distro using 'sat'.
-I will also install needed firmware and boot configuration files.
+I will also install needed firmware and boot configuration files from the 
+directory: rpi/rootfs. Dont forget to sync your local packages mirror before
+generating the distro to get latest versions and fixes:
 
 # spi gen
 
@@ -33,6 +35,30 @@ Spi commands and options
 To get the list of commands and options with a short help simply run:
 
 $ spi
+
+Overclocking
+------------
+To enable overclocking select one of the suggest modes from the list. Choosing 
+medium is generally a good starting point without risks:
+
+# spi oclock
+# spi gen --oclock=medium
+
+SliTaz RPi Kernel
+-----------------
+To build the Slitaz RPi Linux Kernel Spi use SliTaz prebuild ARM cross 
+toolchain and a small patch to modify the kernel configuration. You can browse
+the RPi SliTaz Mirror for previews version or get the latest toolchain with spi
+and build the kernel:
+
+# spi get-prebuilt
+# spi cook-linux
+
+Spi Options
+-----------
+
+  --turbo: The force turbo option turns off the dynamic clocks and runs the 
+           Raspberry Pi constantly at the highest arm_freq.
 
 
 ================================================================================
