@@ -14,7 +14,7 @@ package is hosted on the SliTaz mirror. To get the latest version and unpack it:
 # spi get-linux
 
 The 'gen' command will generate a new SliTaz Raspberry Pi distro using 'sat'.
-I will also install needed firmware and boot configuration files from the 
+It will also install needed firmware and boot configuration files from the 
 directory: rpi/rootfs. Don't forget to sync your local packages mirror before
 generating the distro to get the latest versions and fixes:
 
