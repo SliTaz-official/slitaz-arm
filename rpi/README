@@ -8,13 +8,8 @@ SliTaz Raspberry Pi distro tools and files
 Spi quickstart
 --------------------------------------------------------------------------------
 The Raspberry Pi has a lot of specifications. SliTaz ARM provides 'spi' to build
-custom SliTaz Rpi distro images ready to boot. To get the list of available 
-commands and options:
-
-# spi help
-
-Slitaz RPi mirror hosts the prebuilt Linux kernel package. To get the
-latest version and unpack it:
+custom SliTaz Rpi distro images ready to boot. SliTaz RPi prebuilt Linux kernel
+package is hosted on SliTaz mirror. To get the latest version and unpack it:
 
 # spi get-linux
 
@@ -23,3 +18,21 @@ I will also install needed firmware and boot configuration files.
 
 # spi gen
 
+Then you can install the distro the the sdcard. It is recommended to use
+3 partitions, one for /boot formated in FAT32, second for the swap memory
+and third for the root filesystem. You can you gparted of 'fdisk' to create
+the needed partitions. Main advantages are: more memory for the RPi and 
+better security with files permissions. When ready and you know you disk
+path (spi ls-dev) you can install SliTaz RPi with:
+
+# spi install --dev=/dev/sdX
+
+
+Spi commands and options
+--------------------------------------------------------------------------------
+To get the list of commands and options with a short help simply run:
+
+$ spi
+
+
+================================================================================

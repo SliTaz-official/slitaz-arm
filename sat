@@ -32,6 +32,8 @@ usage() {
 
 $(boldify "Usage:") $(basename $0) [command|--options]
 
+SliTaz ARM Tool - http://arm.slitaz.org
+
 $(boldify "Commands:")
   gen        Generate a distro cpio/gzip initramfs
   flavors    List and give info about flavors
@@ -42,8 +44,8 @@ $(boldify "Commands:")
   mirror     Download or sync the SliTaz ARM mirror
 
 $(boldify "Options:")
-  --spk      Clean or include Spk package manager in the distro
   --kmap     Include the system keymap config in the distro
+  --spk      Clean or include Spk package manager in the distro
   --noinit   Don't create the compressed initramfs
   --work=    Path to work dir with packages and rootfs
   --size=    Specify optional vdisk size (default 20Mb)
