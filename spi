@@ -61,7 +61,7 @@ $(boldify "Options:")
   --turbo       Force the RPi to run at the highest arm_freq
   --oclock=     Set the RPi overclocking mode in config.txt
   --vc          Install the RPi VC libraries in /opt/vc
-  --nosat       Dont regenerate the distro with sat
+  --nosat       Don't regenerate the distro with sat
 
 EOT
 }
@@ -272,8 +272,8 @@ case "$1" in
 			status
 		fi
 		
-		# Overcloking
-		echo -n "Setting: Overcloking..."
+		# Overclocking
+		echo -n "Setting: Overclocking..."
 		set_oclock; status
 		
 		# Force turbo

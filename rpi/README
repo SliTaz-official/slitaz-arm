@@ -8,23 +8,23 @@ SliTaz Raspberry Pi distro tools and files
 Spi quickstart
 --------------------------------------------------------------------------------
 The Raspberry Pi has a lot of specifications. SliTaz ARM provides 'spi' to build
-custom SliTaz Rpi distro images ready to boot. SliTaz RPi prebuilt Linux kernel
-package is hosted on SliTaz mirror. To get the latest version and unpack it:
+custom SliTaz Rpi distro images ready to boot. A SliTaz RPi prebuilt Linux kernel
+package is hosted on the SliTaz mirror. To get the latest version and unpack it:
 
 # spi get-linux
 
 The 'gen' command will generate a new SliTaz Raspberry Pi distro using 'sat'.
 I will also install needed firmware and boot configuration files from the 
-directory: rpi/rootfs. Dont forget to sync your local packages mirror before
-generating the distro to get latest versions and fixes:
+directory: rpi/rootfs. Don't forget to sync your local packages mirror before
+generating the distro to get the latest versions and fixes:
 
 # spi gen
 
-Then you can install the distro the the sdcard. It is recommended to use
-3 partitions, one for /boot formated in FAT32, second for the swap memory
-and third for the root filesystem. You can you gparted of 'fdisk' to create
+Then you can install the distro on the sdcard. It is recommended to use
+3 partitions: one for /boot formatted in FAT32, second for the swap memory
+and third for the root filesystem. You can you use gparted or 'fdisk' to create
 the needed partitions. Main advantages are: more memory for the RPi and 
-better security with files permissions. When ready and you know you disk
+better security with file permissions. When ready and you know your disk
 path (spi ls-dev) you can install SliTaz RPi with:
 
 # spi install --dev=/dev/sdX
@@ -38,7 +38,7 @@ $ spi
 
 Overclocking
 ------------
-To enable overclocking select one of the suggest modes from the list. Choosing 
+To enable overclocking select one of the suggested modes from the list. Choosing 
 medium is generally a good starting point without risks:
 
 # spi oclock
@@ -46,9 +46,9 @@ medium is generally a good starting point without risks:
 
 SliTaz RPi Kernel
 -----------------
-To build the Slitaz RPi Linux Kernel Spi use SliTaz prebuild ARM cross 
+To build the Slitaz RPi Linux Kernel, Spi uses a SliTaz prebuilt ARM cross 
 toolchain and a small patch to modify the kernel configuration. You can browse
-the RPi SliTaz Mirror for previews version or get the latest toolchain with spi
+the RPi SliTaz Mirror for preview versions or get the latest toolchain with spi
 and build the kernel:
 
 # spi get-prebuilt
@@ -57,7 +57,7 @@ and build the kernel:
 Spi Options
 -----------
 
-  --turbo: The force turbo option turns off the dynamic clocks and runs the 
+  --turbo: The forced turbo option turns off the dynamic clocks and runs the 
            Raspberry Pi constantly at the highest arm_freq.
 
 
