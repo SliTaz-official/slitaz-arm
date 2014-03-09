@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Spi - SliTaz Raspberry Pi Tool
+# Spi - SliTaz Raspberry Pi Build Tool
 #
 # Copyright (C) 2012-2014 SliTaz ARM - BSD License
 # Author: Christophe Lincoln <pankso@slitaz.org>
@@ -54,7 +54,7 @@ $(boldify "Commands:")
   clone-fw      Clone the RPi firmware repository
   get-tools     Download or update RPi Tools (mkimage)
   get-prebuilt  Get a prebuilt SliTaz ARM toolchain
-  oclock        Display overclocking information
+  clean         Clean the current work directory
 
 $(boldify "Options:")
   --up          Update for commands: firmware, tools, kernel
@@ -62,6 +62,7 @@ $(boldify "Options:")
   --oclock=     Set the RPi overclocking mode in config.txt
   --vc          Install the RPi VC libraries in /opt/vc
   --nosat       Don't regenerate the distro with sat
+  --git         Remove RPi git files on clean up
 
 EOT
 }
@@ -111,20 +112,7 @@ get_tools() {
 	done
 }
 
-# RPi Overclocking
-show_oclock() {
-	cat << EOT
-
-$(boldify "Overclocking modes:")
-none    700MHz  ARM 250MHz core 400MHz SDRAM 0 overvolt
-modest  800MHz  ARM 300MHz core 400MHz SDRAM 0 overvolt
-medium  900MHz  ARM 333MHz core 450MHz SDRAM 2 overvolt
-high    950MHz  ARM 450MHz core 450MHz SDRAM 6 overvolt
-turbo   1000MHz ARM 500MHz core 500MHz SDRAM 6 overvolt
-
-EOT
-}
-
+# --> will move to tazberry
 set_oclock() {
 	case "$oclock" in
 		none)
@@ -272,18 +260,26 @@ case "$1" in
 			status
 		fi
 		
+		# TazBerry
+		echo -n "Installing TazBerry..."
+			cp -f ${rpi}/tazberry ${rootfs}/usr/bin
+		status
+		
 		# Overclocking
 		echo -n "Setting: Overclocking..."
 		set_oclock; status
 		
 		# Force turbo
 		if [ "$turbo" ]; then
-			echo -n "Config: force_turbo=1"
-			echo "force_turbo=1" >> ${boot}/config.txt; status
+			if ! fgrep 'force_turbo=1' ${boot}/config.txt; then
+				echo -n "Config: force_turbo=1"
+				echo "force_turbo=1" >> ${boot}/config.txt; status
+			fi
 		fi
 		
 		# Kernel
 		kvers=$(ls $data/linux-*/fs/lib/modules)
+		kvers=${kvers%-slitaz-rpi}
 		kpkg="$rootfs/var/lib/tazpkg/installed/linux"
 		fs="$data/linux-$kvers/fs"
 		ksize=$(du -sh $fs | awk '{print $1}')
@@ -313,9 +309,9 @@ case "$1" in
 			chown -R root.root ${rootfs}/opt
 			status
 			echo -n "Cleaning: VC libraries devel files"
-			cross_tools="/cross/arm/tools/bin"
+			cross_tools="/cross/${arch}/tools/bin"
 			rm -rf ${vc}/include ${vc}/src ${vc}/lib/*.a
-			${cross_tools}/arm-slitaz-linux-gnueabi-strip -s ${vc}/lib/*.so
+			${cross_tools}/${arch}-slitaz-linux-gnueabi-strip -s ${vc}/lib/*.so
 			status
 		fi
 		
@@ -342,7 +338,10 @@ case "$1" in
 			cd ${kernel}
 			export PATH=$PATH:/cross/${arch}/tools/bin
 			export HOST_SYSTEM=${arch}-slitaz-linux-gnueabi
-			make ARCH=arm bcmrpi_defconfig &&
+			make mrproper &&
+			make ARCH=arm bcmrpi_defconfig
+			echo "Patching SliTaz RPi Linux .config"
+			patch -p1 -i ${rpi}/linux-rpi.config || exit 1 
 			make ARCH=arm CROSS_COMPILE=${HOST_SYSTEM}- zImage &&
 			make ARCH=arm CROSS_COMPILE=${HOST_SYSTEM}- modules &&
 			make ARCH=arm CROSS_COMPILE=${HOST_SYSTEM}- \
@@ -359,8 +358,9 @@ case "$1" in
 		#find . -name "*.ko" -exec gz '{}' \; 2> /dev/null
 		
 		# Pack
-		fs="$data/linux-$kvers/fs"
 		kvers=$(ls ${install}/lib/modules)
+		kvers=${kvers%-slitaz-rpi}
+		fs="$data/linux-$kvers/fs"
 		newline
 		echo "Kernel version: $kvers"
 		if [ -d "$install" ]; then
@@ -396,9 +396,9 @@ EOT
 	get-linux)
 		# Precook RPi kernel
 		mkdir -p ${data}
-		rm -f ${data}/linux-version.txt
 		
 		# Last version
+		rm -f ${data}/linux-version.txt
 		if busybox wget -q -s ${rpi_mirror}/last-linux.txt; then
 			echo -n "Fetching latest Kernel string..."
 			wget -q ${rpi_mirror}/last-linux.txt \
@@ -452,13 +452,10 @@ EOT
 	clone-fw)
 		clone_fw ;;
 	
-	oclock)
-		show_oclock
-		if [ -f "$boot/config.txt" ]; then
-			boldify "Current config.txt:"
-			cat ${boot}/config.txt
-			newline
-		fi ;;
+	clean)
+		echo "Cleaning: $rpi"
+		rm -rf ${data} 
+		[ "$git" ] && rm -rf ${rpi_git} ;;
 	*) usage ;;
 esac
 exit 0
