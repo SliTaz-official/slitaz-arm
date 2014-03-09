@@ -462,6 +462,19 @@ EOT
 	
 	clone-fw)
 		clone_fw ;;
+		
+	release)
+		# Used to release official SliTaz RPi images
+		cd ${distro} || exit 1
+		if [ ! "$flavor" ]; then
+			. $distro/rootfs/etc/slitaz/flavor.conf || exit 1
+			flavor="$FLAVOR"
+		fi
+		dirname="slitaz-$flavor-$(date +%Y%m%d)"
+		dsize=$(du -sh $distro | awk '{print $1}' | cut -d "." -f 1)
+		mkdir ${dirname}
+		# To be continued...
+		;;
 	
 	clean)
 		echo "Cleaning: $rpi"
