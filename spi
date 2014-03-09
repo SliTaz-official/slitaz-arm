@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Spi - SliTaz Raspberry Pi Tool
+# Spi - SliTaz Raspberry Pi Build Tool
 #
 # Copyright (C) 2012-2014 SliTaz ARM - BSD License
 # Author: Christophe Lincoln <pankso@slitaz.org>
@@ -278,8 +278,10 @@ case "$1" in
 		
 		# Force turbo
 		if [ "$turbo" ]; then
-			echo -n "Config: force_turbo=1"
-			echo "force_turbo=1" >> ${boot}/config.txt; status
+			if ! fgrep 'force_turbo=1' ${boot}/config.txt; then
+				echo -n "Config: force_turbo=1"
+				echo "force_turbo=1" >> ${boot}/config.txt; status
+			fi
 		fi
 		
 		# Kernel
