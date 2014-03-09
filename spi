@@ -356,24 +356,29 @@ case "$1" in
 			cp -a arch/arm/boot/zImage ${install}/boot
 		fi
 		
-		# Compress modules
-		mods=$(find . -name "*.ko" | wc -l)
-		newline
-		echo "Kernel modules: $mods"
-		#echo -n "Compressing modules: $mods"
-		#find . -name "*.ko" -exec gz '{}' \; 2> /dev/null
-		
-		# Pack
+		# Kernel version
 		kvers=$(ls ${install}/lib/modules)
 		kvers=${kvers%-slitaz-rpi+}+
-		fs="$data/linux-$kvers/fs"
+		
+		# Compress modules
+		cd ${install}/lib/modules/${kvers%+}-slitaz-rpi+/ || exit 1
+		mods=$(find . -name "*.ko$" | wc -l)
 		newline
+		echo "Compressing kernel modules: $mods"
+		find . -name "*.ko$" -exec gzip '{}' \; #2> /dev/null
+		#find . -name "*.ko" -exec rm '{}' \;
+		# Rebuild modules.dep
+		cd ${install}
+		depmod -b . ${kvers%+}-slitaz-rpi+
+		
+		# Pack
+		fs="$data/linux-$kvers/fs"
 		echo "Kernel version: $kvers"
 		if [ -d "$install" ]; then
 			rm -rf ${data}/linux-${kvers}
 			mkdir -p ${data}/linux-${kvers}
 			cp -a ${install} ${fs}
-			rm -f ${fs}/lib/modules/build ${fs}/lib/modules/source
+			rm -f ${fs}/lib/modules/*/build ${fs}/lib/modules/*/source
 		fi
 		get_tools
 		echo "Compressing: zImage to kernel.img"
