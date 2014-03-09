@@ -104,7 +104,7 @@ get_tools() {
 	for t in $toolslist
 	do
 		[ "$up" ] && rm -f ${tools}/${t}
-		if [ ! -f "$data/$t" ]; then
+		if [ ! -f "$tools/$t" ]; then
 			echo -n "Fetching: $t"
 			wget -q --no-check-certificate ${tools_url}${t} \
 				-O ${tools}/${t}; status
@@ -169,7 +169,8 @@ case "$1" in
 		rpiroot="/media/rpi/rootfs"
 		header "SliTaz Raspberry Pi install"
 		if [ ! "$dev" ]; then
-			echo "Missing: --dev= cmdline option" && exit 1
+			echo "Missing: --dev= cmdline option"
+			newline && exit 1
 		fi
 		
 		# Store sdcard partition(s) list
@@ -191,6 +192,11 @@ case "$1" in
 		mkdir -p ${rpiboot} ${rpiroot}
 		mount /dev/${dev}1 ${rpiboot}
 		mount /dev/${dev}3 ${rpiroot}; status
+		echo -n "Cleaning: filesystem directories"
+		for dir in bin dev etc lib media mnt proc sbin sys tmp usr var run
+		do
+			rm -rf ${rpiroot}/${dir}
+		done; status
 		echo -n "Installing: boot files"
 		cp -rf ${boot}/* ${rpiboot}; status
 		echo -n "Installing: rootfs files"
@@ -277,25 +283,6 @@ case "$1" in
 			fi
 		fi
 		
-		# Kernel
-		kvers=$(ls $data/linux-*/fs/lib/modules)
-		kvers=${kvers%-slitaz-rpi}
-		kpkg="$rootfs/var/lib/tazpkg/installed/linux"
-		fs="$data/linux-$kvers/fs"
-		ksize=$(du -sh $fs | awk '{print $1}')
-		if [ -d "$fs" ]; then
-			echo -n "Copying: kernel $kvers ($ksize)"
-			rm -rf ${rootfs}/lib/modules
-			cp -rf ${fs}/lib/* ${rootfs}/lib
-			cp -f  ${fs}/boot/* ${boot}
-			mkdir -p ${kpkg}
-			cd ${data}/linux-${kvers}
-			cp -f files.list md5sum receipt ${kpkg}
-			status
-		else
-			echo "RPi Kernel: not used"
-		fi
-		
 		# RPi VC libraries
 		if [ "$vc" ]; then
 			vc="${rootfs}/opt/vc"
@@ -313,6 +300,25 @@ case "$1" in
 			rm -rf ${vc}/include ${vc}/src ${vc}/lib/*.a
 			${cross_tools}/${arch}-slitaz-linux-gnueabi-strip -s ${vc}/lib/*.so
 			status
+		fi
+		
+		# Kernel at last
+		. $data/linux-*/receipt
+		kvers="$VERSION"
+		kpkg="$rootfs/var/lib/tazpkg/installed/linux"
+		fs="$data/linux-$kvers/fs"
+		ksize=$(du -sh $fs | awk '{print $1}')
+		if [ -d "$fs" ]; then
+			echo -n "Copying: kernel $kvers ($ksize)"
+			rm -rf ${rootfs}/lib/modules
+			cp -rf ${fs}/lib/* ${rootfs}/lib
+			cp -f  ${fs}/boot/* ${boot}
+			mkdir -p ${kpkg}
+			cd ${data}/linux-${kvers}
+			cp -f files.list md5sum receipt ${kpkg}
+			status
+		else
+			echo "RPi Kernel: not used"
 		fi
 		
 		separator
@@ -359,7 +365,7 @@ case "$1" in
 		
 		# Pack
 		kvers=$(ls ${install}/lib/modules)
-		kvers=${kvers%-slitaz-rpi}
+		kvers=${kvers%-slitaz-rpi+}+
 		fs="$data/linux-$kvers/fs"
 		newline
 		echo "Kernel version: $kvers"
@@ -367,14 +373,14 @@ case "$1" in
 			rm -rf ${data}/linux-${kvers}
 			mkdir -p ${data}/linux-${kvers}
 			cp -a ${install} ${fs}
-			rm ${fs}/lib/modules/build ${fs}/lib/modules/source
+			rm -f ${fs}/lib/modules/build ${fs}/lib/modules/source
 		fi
 		get_tools
 		echo "Compressing: zImage to kernel.img"
 		cd ${tools}
 		python imagetool-uncompressed.py ${fs}/boot/zImage
+		mv -f kernel.img ${fs}/boot && rm ${fs}/boot/zImage
 		cd ${data}
-		mv kernel.img ${fs}/boot && rm ${fs}/boot/zImage
 		echo "Creating package: receipt"
 		cat > linux-$kvers/receipt << EOT
 # SliTaz package receipt

@@ -158,7 +158,7 @@ main_box() {
 	# Handle options
 	opt=${?}
 	case "$opt" in
-		1|255) rm ${tmpdir} && exit 0 ;;
+		1|255) rm -rf ${tmpdir} && exit 0 ;;
 	esac
 	
 	# Handle actions
