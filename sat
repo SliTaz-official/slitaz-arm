@@ -48,7 +48,7 @@ $(boldify "Options:")
   --spk      Clean or include Spk package manager in the distro
   --noinit   Don't create the compressed initramfs
   --work=    Path to work dir with packages and rootfs
-  --size=    Specify optional vdisk size (default 20Mb)
+  --size=    Specify optional vdisk size (default 50Mb)
   --init=    Specify the initramfs compression: gz bz2 xz
   --flavor=  Generate specific SliTaz ARM flavor
   --append=  SliTaz and Kernel bootime arguments for Qemu
@@ -148,18 +148,6 @@ case "$1" in
 			status
 		fi
 
-		# Move kernel outside the distro
-		if [ -d "$rootfs/boot" ]; then
-			mv -f ${rootfs}/boot/linux-* ${distro}/linux-arm
-			chmod -x ${distro}/linux-arm
-		else
-			# RPi uses a custom Kernel: --rpi
-			if [ ! "$rpi" ]; then
-				echo -n "Missing Kernel directory: rootfs/boot/"; false
-				status
-			fi
-		fi
-
 		# SLITAZ_ARCH
 		if [ -f "${rootfs}/etc/slitaz/slitaz.conf" ]; then
 			echo -n "Setting SliTaz arch to: arm"
@@ -226,6 +214,21 @@ case "$1" in
 			cp -f ${cache}/flavor.conf ${rootfs}/etc/slitaz
 			status
 		fi
+		
+		# Move /boot outside the rootfs
+		if [ "$(ls $rootfs/boot | wc -l)" != 0 ]; then
+			echo -n "Moving /boot outside the rootfs..."
+			mkdir -p ${distro}/boot
+			mv -f ${rootfs}/boot/* ${distro}/boot
+			status
+			
+			# ! wok/linux pkg must be modified to install /boot/kernel.img
+			if ls ${distro}/boot/linux-* >/dev/null 2>/dev/null; then
+				mv ${distro}/boot/linux-* ${distro}/boot/kernel.img
+				chmod -x ${distro}/boot/kernel.img
+			fi
+			
+		fi
 
 		# Rootfs cpio: gzip xz --> /usr/lib/slitaz/liblive.sh ???
 		if [ ! "$noinit" ]; then
@@ -242,14 +245,14 @@ case "$1" in
 		[ "$debug" ] || rm -rf ${cache}
 		
 		# Summary
+		time=$(($(date +%s) - $time))
+		rootfs_size="$(du -sh ${rootfs} | awk '{print $1}')"
+		pkgs_count="$(ls $db/installed | wc -l)"
+		[ "$noinit" ] || \
+			initramfs_size="$(du -sh $distro/$initramfs | awk '{print $1}')"
 		separator && newline
 		boldify "SliTaz ARM distro summary"
 		separator
-		time=$(($(date +%s) - $time))
-		[ "$noinit" ] || \
-			initramfs_size="$(du -sh $distro/$initramfs | awk '{print $1}')"
-		rootfs_size="$(du -sh ${rootfs} | awk '{print $1}')"
-		pkgs_count="$(ls $db/installed | wc -l)"
 		[ "$FLAVOR" ] && echo "Flavor name    : $FLAVOR"
 		echo "Build time     : ${time}s"
 		[ "$noinit" ] || echo "Initramfs      : $initramfs"
@@ -317,14 +320,13 @@ case "$1" in
 	vdisk)
 		# Lets use and HD in Qemu to store files|packages|whatever
 		vdisk="vdisk.img"
-		: ${size=20}
+		: ${size=50}
 		newline
 		echo "Creating virtual disk: $vdisk"
 		cd $work
 		dd if=/dev/zero of=$vdisk bs=1M count=$size
-		#mkfs.ext3 -q -T ext3 -L "SliTaz" -F $vdisk 
 		# Partition
-		echo "Creating partition with: fdisk"
+		echo "Creating a partition with: fdisk"
 		fdisk ${vdisk} >/dev/null << EOT
 o
 n
@@ -340,7 +342,7 @@ EOT
 		[ "$append" ] && append="-append ${append}"
 		qemu-system-arm -m 256 ${opts} \
 			-M versatilepb -cpu arm1176 \
-			-kernel ${distro}/linux-arm \
+			-kernel ${distro}/boot/kernel.img \
 			-initrd ${distro}/${initramfs} ${append} ;;
 	
 	mirror)
@@ -354,7 +356,7 @@ EOT
 		
 		echo -n "URL: " && colorize 34 "$mirror"
 		if ! check_mirror_id; then
-			newline && exit 0
+			exit 0
 		fi
 		for list in packages.list packages.desc packages.md5; do
 			echo -n "Fetching: $list"

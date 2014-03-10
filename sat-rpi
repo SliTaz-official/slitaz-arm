@@ -237,7 +237,7 @@ case "$1" in
 		
 		# We may want to simply regenerate the RPi distro
 		if [ ! "$nosat" ]; then
-			sat gen --work="$work" --flavor="$flavor" --kmap --noinit --rpi
+			sat gen --work="$work" --flavor="$flavor" --kmap --noinit --nolinux
 		fi
 		
 		header "SliTaz Raspberry Pi distro"
@@ -250,21 +250,6 @@ case "$1" in
 			cp ${firmware}/boot/${fw} ${boot}
 		done
 		status
-		
-		# SliTaz Raspberry Pi custom rootfs files. Make sure all files 
-		# belong to root
-		if [ -d "$rpi/rootfs" ]; then
-			size=$(du -sh $rpi/rootfs | awk '{print $1}')
-			echo -n "Copying: SliTaz RPi rootfs ($size)"
-			tmp=${distro}/tmp-$$
-			mkdir -p ${tmp}
-			cp -r ${rpi}/rootfs/* ${tmp}
-			chown -R root.root ${tmp}
-			cp -a ${tmp}/* ${rootfs} && rm -rf ${tmp}
-			# Move files to $boot
-			mv -f ${rootfs}/boot/* ${boot}
-			status
-		fi
 		
 		# TazBerry
 		echo -n "Installing TazBerry..."
@@ -318,7 +303,7 @@ case "$1" in
 			cp -f files.list md5sum receipt ${kpkg}
 			status
 		else
-			echo "RPi Kernel: not used"
+			echo "SliTaz RPi Kernel: not used"
 		fi
 		
 		separator
@@ -353,7 +338,7 @@ case "$1" in
 			make ARCH=arm CROSS_COMPILE=${HOST_SYSTEM}- \
 				INSTALL_MOD_PATH=${install} modules_install || exit 1
 			mkdir -p ${install}/boot
-			cp -a arch/arm/boot/zImage ${install}/boot
+			cp -a arch/arm/boot/zImage ${install}/boot/kernel.img
 		fi
 		
 		# Kernel version
@@ -366,25 +351,29 @@ case "$1" in
 		newline
 		echo "Compressing kernel modules: $mods"
 		find . -name "*.ko$" -exec gzip '{}' \; #2> /dev/null
-		#find . -name "*.ko" -exec rm '{}' \;
+		
 		# Rebuild modules.dep
 		cd ${install}
 		depmod -b . ${kvers%+}-slitaz-rpi+
 		
-		# Pack
+		# Kernel
 		fs="$data/linux-$kvers/fs"
 		echo "Kernel version: $kvers"
 		if [ -d "$install" ]; then
 			rm -rf ${data}/linux-${kvers}
 			mkdir -p ${data}/linux-${kvers}
 			cp -a ${install} ${fs}
-			rm -f ${fs}/lib/modules/*/build ${fs}/lib/modules/*/source
+			rm -f ${fs}/lib/modules/*/build \
+				${fs}/lib/modules/*/source
 		fi
-		get_tools
-		echo "Compressing: zImage to kernel.img"
-		cd ${tools}
-		python imagetool-uncompressed.py ${fs}/boot/zImage
-		mv -f kernel.img ${fs}/boot && rm ${fs}/boot/zImage
+		
+		#get_tools
+		#echo "Compressing: zImage to kernel.img"
+		#cd ${tools}
+		#python imagetool-uncompressed.py ${fs}/boot/zImage
+		#mv -f kernel.img ${fs}/boot && rm ${fs}/boot/zImage
+		
+		# Pack .tazpkg
 		cd ${data}
 		echo "Creating package: receipt"
 		cat > linux-$kvers/receipt << EOT
