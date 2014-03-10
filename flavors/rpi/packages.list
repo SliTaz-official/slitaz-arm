@@ -19,3 +19,7 @@ zlib
 dropbear
 nano
 clex
+wireless_tools
+wpa_supplicant
+libssl
+libcrypto

@@ -5,56 +5,56 @@ SliTaz RPi
 SliTaz Raspberry Pi distro tools and files
 
 
-Spi quickstart
+Sat RPi quickstart
 --------------------------------------------------------------------------------
-The Raspberry Pi has a lot of specifications. SliTaz ARM provides 'spi' to build
+The Raspberry Pi has a lot of specifications. SliTaz ARM provides 'sat-rpi' to build
 custom SliTaz Rpi distro images ready to boot. A SliTaz RPi prebuilt Linux kernel
 package is hosted on the SliTaz mirror. To get the latest version and unpack it:
 
-# spi get-linux
+# sat-rpi get-linux
 
 The 'gen' command will generate a new SliTaz Raspberry Pi distro using 'sat'.
 It will also install needed firmware and boot configuration files from the 
 directory: rpi/rootfs. Don't forget to sync your local packages mirror before
 generating the distro to get the latest versions and fixes:
 
-# spi gen
+# sat-rpi gen
 
 Then you can install the distro on the sdcard. It is recommended to use
 3 partitions: one for /boot formatted in FAT32, second for the swap memory
 and third for the root filesystem. You can you use gparted or 'fdisk' to create
 the needed partitions. Main advantages are: more memory for the RPi and 
 better security with file permissions. When ready and you know your disk
-path (spi ls-dev) you can install SliTaz RPi with:
+path (sat-rpi ls-dev) you can install SliTaz RPi with:
 
-# spi install --dev=/dev/sdX
+# sat-rpi install --dev=/dev/sdX
 
 
-Spi commands and options
+Sat RPi commands and options
 --------------------------------------------------------------------------------
 To get the list of commands and options with a short help simply run:
 
-$ spi
+$ sat-rpi
 
 Overclocking
 ------------
 To enable overclocking select one of the suggested modes from the list. Choosing 
 medium is generally a good starting point without risks:
 
-# spi oclock
-# spi gen --oclock=medium
+# sat-rpi oclock
+# sat-rpi gen --oclock=medium
 
 SliTaz RPi Kernel
 -----------------
-To build the Slitaz RPi Linux Kernel, Spi uses a SliTaz prebuilt ARM cross 
+To build the Slitaz RPi Linux Kernel, Sat RPi uses a SliTaz prebuilt ARM cross 
 toolchain and a small patch to modify the kernel configuration. You can browse
-the RPi SliTaz Mirror for preview versions or get the latest toolchain with spi
+the RPi SliTaz Mirror for preview versions or get the latest toolchain with sat-rpi
 and build the kernel:
 
-# spi get-prebuilt
-# spi cook-linux
+# sat-rpi get-prebuilt
+# sat-rpi cook-linux
 
-Spi Options
+Sat RPi Options
 -----------
 
   --turbo: The forced turbo option turns off the dynamic clocks and runs the 
