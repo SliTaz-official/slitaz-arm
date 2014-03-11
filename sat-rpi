@@ -325,6 +325,7 @@ case "$1" in
 		[ -d "$kernel" ] || git clone --depth 1 ${rpi_git_url}linux.git
 		
 		# Compile
+		[ "$clean" ] && rm -rf ${install}
 		if [ ! -d "$install" ]; then
 			cd ${kernel}
 			export PATH=$PATH:/cross/${arch}/tools/bin
@@ -332,7 +333,7 @@ case "$1" in
 			make mrproper &&
 			make ARCH=arm bcmrpi_defconfig
 			echo "Patching SliTaz RPi Linux .config"
-			patch -p1 -i ${rpi}/linux-rpi.config || exit 1 
+			patch -p0 -i ${rpi}/linux-rpi.patch || exit 1 
 			make ARCH=arm CROSS_COMPILE=${HOST_SYSTEM}- zImage &&
 			make ARCH=arm CROSS_COMPILE=${HOST_SYSTEM}- modules &&
 			make ARCH=arm CROSS_COMPILE=${HOST_SYSTEM}- \
