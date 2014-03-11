@@ -21,7 +21,7 @@ rootfs files can also be directly modified before generating a new distro.
 
 Sat quickstart
 --------------
-Sat is a tool in the sat-rpirit of all SliTaz tools, all commands and options are
+Sat is a tool in the spirit of all SliTaz tools, all commands and options are
 accessible via: sat usage or help. To create a distro you first need to have
 some ARM packages. You can use custom cook or the one from the SliTaz mirror.
 Put all your custom *.tazpkg in the packages/ directory and sat will install
