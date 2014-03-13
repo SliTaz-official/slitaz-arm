@@ -136,7 +136,7 @@ case "$1" in
 			status
 		done
 
-		# Install spk if requested. Spk multiarch support must be tested
+		# Install spk Hg if requested. Spk multiarch support must be tested
 		if [ "$spk" ]; then
 			hg=http://hg.slitaz.org
 			echo -n "Installing: spk ($hg)"
@@ -171,6 +171,13 @@ case "$1" in
 		if [ -f "var/lib/tazpkg/installed/linux/receipt" ]; then
 			. var/lib/tazpkg/installed/linux/receipt
 			depmod -b . ${VERSION}-slitaz
+		fi
+		
+		# CGI Admin
+		if [ -d "$work/cgi-adm" ]; then
+			echo -n "Installing SliTaz ARM CGI Admin interface..."
+			cp -a ${rpi}/cgi-adm/* ${rootfs}/var/www/adm
+			status
 		fi
 
 		# Custom rootfs: make sure all files belong to root
