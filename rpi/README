@@ -5,7 +5,17 @@ SliTaz RPi
 SliTaz Raspberry Pi distro tools and files
 
 
-Sat RPi quickstart
+TazBerry
+-------------------------------------------------------------------------------
+SliTaz Raspberry Pi Config Tool with cmdline suport and user frindly ncurses 
+interface. Symply run the tool to get the menu or give TazBerry a function in
+argument to execute it. Tazberry cmdline output is formated to be used in GUI
+tools such as CGI scripts or GTK boxes:
+
+$ tazberry ls-functions
+
+
+Sat RPi build tool quickstart
 --------------------------------------------------------------------------------
 The Raspberry Pi has a lot of specifications. SliTaz ARM provides 'sat-rpi' to build
 custom SliTaz Rpi distro images ready to boot. A SliTaz RPi prebuilt Linux kernel
@@ -15,8 +25,8 @@ package is hosted on the SliTaz mirror. To get the latest version and unpack it:
 
 The 'gen' command will generate a new SliTaz Raspberry Pi distro using 'sat'.
 It will also install needed firmware and boot configuration files from the 
-directory: rpi/rootfs. Don't forget to sync your local packages mirror before
-generating the distro to get the latest versions and fixes:
+directory: flavors/rpi*/rootfs. Don't forget to sync your local packages 
+mirror before generating the distro to get the latest versions and fixes:
 
 # sat-rpi gen
 
@@ -36,6 +46,10 @@ To get the list of commands and options with a short help simply run:
 
 $ sat-rpi
 
+  --turbo: The forced turbo option turns off the dynamic clocks and runs the 
+           Raspberry Pi constantly at the highest arm_freq.
+
+
 Overclocking
 ------------
 To enable overclocking select one of the suggested modes from the list. Choosing 
@@ -43,6 +57,7 @@ medium is generally a good starting point without risks:
 
 # sat-rpi oclock
 # sat-rpi gen --oclock=medium
+
 
 SliTaz RPi Kernel
 -----------------
@@ -53,12 +68,6 @@ and build the kernel:
 
 # sat-rpi get-prebuilt
 # sat-rpi cook-linux
-
-Sat RPi Options
------------
-
-  --turbo: The forced turbo option turns off the dynamic clocks and runs the 
-           Raspberry Pi constantly at the highest arm_freq.
 
 
 ================================================================================
