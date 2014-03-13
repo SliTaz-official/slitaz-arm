@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Tiny CGI SHell example for SliTaz RPi
+# Tiny CGI SHell example for SliTaz ARM
 #
 # $ startd httpd
 # URL: http://rpi.ip/adm/

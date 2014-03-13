@@ -5,7 +5,7 @@
 #
 # rcS is the main initialization script used to check fs, mount, clean,
 # run scripts and start daemons. This is a custom script for ARM to get
-# a faster boot under Qemu and skip things like handling cdrom.
+# a faster boot and skip things like handling cdrom.
 #
 # Copyright (C) 2012-2014 SliTaz ARM - BSD License
 #
@@ -18,22 +18,31 @@ export PATH=/bin:/sbin:/usr/bin:/usr/sbin
 echo $(colorize 34 "Processing: /etc/init.d/rcS")
 
 # Mount all from: /etc/fstab
+mkdir -p /dev/pts /dev/shm
 echo "Mounting filesystems in fstab..."
 mount -a
-
-# Be quiet
-echo "0 0 0 0" > /proc/sys/kernel/printk
 
 # Mount /run as tmpfs so runtime data are not written to disk
 echo -n "Mounting tmpfs filesystem on: /run"
 mount -t tmpfs tmpfs /run
 status
 
-# Populate /dev
-echo -n "Creating device nodes..."
-mdev -s
-echo "/sbin/mdev" > /proc/sys/kernel/hotplug
-status
+# Be quiet at boot
+echo "0 0 0 0" > /proc/sys/kernel/printk
+
+# Use udev and disable hotplug helper (udevd listen to netlink)
+if [ -x "/sbin/udevd" ]; then
+	echo "" > /proc/sys/kernel/hotplug
+	echo "Starting udevd & udevadm [trigger settle]..."
+	udevd --daemon 2>/dev/null &&
+	udevadm trigger && udevadm settle --timeout=120
+	status
+else
+	# Fallback to Busybox mdev
+	echo -n "Creating device nodes: /sbin/mdev -s"
+	mdev -s && echo "/sbin/mdev" > /proc/sys/kernel/hotplug
+	status
+fi
 
 # Clean up
 echo -n "Cleaning up the system..."
@@ -56,7 +65,7 @@ fi
 
 # Start all init scripts
 for script in $RUN_SCRIPTS; do
-	echo $(colorize 34 "Processing: /etc/init.d/$script")
+	colorize 34 "Processing: /etc/init.d/$script"
 	/etc/init.d/$script
 done
 
@@ -68,7 +77,7 @@ if [ "$RUN_DAEMONS" ]; then
 	done
 fi
 
-# System time
+# System time option
 if fgrep -q 'rdate' /proc/cmdline; then
 	echo -n "Setting system date..."
 	rdate -s 203.129.68.14 2>/dev/null
@@ -78,5 +87,5 @@ fi
 newline
 colorize 32 "$MESSAGE"
 
-# Back to a verbose mode.
-echo "7 4 1 7" > /proc/sys/kernel/printk
+# Back to a verbose mode but wait ti finish with a clean boot
+(sleep 4; echo "7 4 1 7" > /proc/sys/kernel/printk) &
