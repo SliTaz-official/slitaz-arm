@@ -7,9 +7,9 @@ SliTaz Raspberry Pi distro tools and files
 
 TazBerry
 -------------------------------------------------------------------------------
-SliTaz Raspberry Pi Config Tool with cmdline suport and user frindly ncurses 
-interface. Symply run the tool to get the menu or give TazBerry a function in
-argument to execute it. Tazberry cmdline output is formated to be used in GUI
+SliTaz Raspberry Pi Config Tool with cmdline support and user friendly ncurses 
+interface. Simply run the tool to get the menu or give TazBerry a function in 
+argument to execute it. Tazberry cmdline output is formatted to be used in GUI
 tools such as CGI scripts or GTK boxes:
 
 $ tazberry ls-functions

@@ -447,7 +447,7 @@ SliTaz Raspberry Pi - $flavor-$(date +%Y%m%d) - http://arm.slitaz.org/rpi
 boot/   : Must be copied to a FAT32 partition
 rootfs/ : Must be copied to a ext4 or btrfs partition
 
-Manual Installation. Assuming the sdcard is /dev/sdc and have got 3 
+Manual Installation. Assuming the sdcard is /dev/sdc and has got 3 
 partitions (boot,swap,root). Mount the sdcard, copy files, unmount:
 
  # mkdir -p /media/rpi/boot /media/rpi/root

@@ -30,7 +30,7 @@ status
 # Be quiet at boot
 echo "0 0 0 0" > /proc/sys/kernel/printk
 
-# Use udev and disable hotplug helper (udevd listen to netlink)
+# Use udev and disable hotplug helper (udevd listens to netlink)
 if [ -x "/sbin/udevd" ]; then
 	echo "" > /proc/sys/kernel/hotplug
 	echo "Starting udevd & udevadm [trigger settle]..."
@@ -87,5 +87,5 @@ fi
 newline
 colorize 32 "$MESSAGE"
 
-# Back to a verbose mode but wait ti finish with a clean boot
+# Back to a verbose mode but wait to finish with a clean boot
 (sleep 4; echo "7 4 1 7" > /proc/sys/kernel/printk) &
