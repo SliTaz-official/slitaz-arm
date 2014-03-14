@@ -213,7 +213,7 @@ case "$1" in
 		
 		# We may want to simply regenerate the RPi distro
 		if [ ! "$nosat" ]; then
-			sat gen --work="$work" --flavor="$flavor" --kmap --noinit --nolinux
+			sat gen --work="$work" --flavor="$flavor" --noinit --nolinux
 		fi
 		
 		header "SliTaz Raspberry Pi distro"

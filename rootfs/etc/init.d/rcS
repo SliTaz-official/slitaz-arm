@@ -18,19 +18,30 @@ export PATH=/bin:/sbin:/usr/bin:/usr/sbin
 echo $(colorize 34 "Processing: /etc/init.d/rcS")
 
 # Mount all from: /etc/fstab
-mkdir -p /dev/pts /dev/shm
 echo "Mounting filesystems in fstab..."
+mkdir -p /dev/pts /dev/shm
 mount -a
 
 # Mount /run as tmpfs so runtime data are not written to disk
 echo -n "Mounting tmpfs filesystem on: /run"
 mount -t tmpfs tmpfs /run
+mount --bind /run /var/run
 status
+
+# Store boot messages to log files
+log="/var/log/boot.log"
+dmesg > /var/log/dmesg.log &
+echo "$0" > ${log}
 
 # Be quiet at boot
 echo "0 0 0 0" > /proc/sys/kernel/printk
 
-# Use udev and disable hotplug helper (udevd listens to netlink)
+# /dev devtmpfs
+echo -n "Mounting devtmpfs filesystem on: /dev"
+mount -t devtmpfs devtmpfs /dev
+status
+
+# Use udev and disable hotplug helper (udevd listen to netlink)
 if [ -x "/sbin/udevd" ]; then
 	echo "" > /proc/sys/kernel/hotplug
 	echo "Starting udevd & udevadm [trigger settle]..."
@@ -44,27 +55,37 @@ else
 	status
 fi
 
-# Clean up
-echo -n "Cleaning up the system..."
-rm -rf /tmp /var/run && ln -s /run /var/run
-mkdir /tmp && chmod 1777 /tmp
+# Clean up /tmp
+echo -n "Cleaning up temporary files:  /tmp"
+rm -rf /tmp && mkdir /tmp && chmod 1777 /tmp
 status
 
-# Start syslogd and klogd.
+# Start syslogd and klogd
 echo -n "Starting system log daemons: syslogd/klogd..."
-syslogd -s $SYSLOGD_SIZE && klogd
+syslogd -s ${SYSLOGD_SIZE} && klogd
 status
+
+# Run post install configs on first boot --> into a script ?
+if [ ! -f "/var/lib/slitaz/post-install" ]; then
+	colorize 33 "Running post install configs..."
+	mkdir -p /var/lib/slitaz
+	echo "$ARCH" > /var/lib/slitaz/post-install
+	[ -s /etc/keymap.conf ] || tazkeymap
+	#[ -s /etc/locale.conf ] || tazlocale
+	# change root password
+	# add a user
+fi
 
 # Load all modules from config file
 if [ "$LOAD_MODULES" ]; then
 	colorize 33 "Loading Kernel modules..."
-	for mod in $LOAD_MODULES; do
+	for mod in ${LOAD_MODULES}; do
 		modprobe -v $mod
 	done
 fi
 
 # Start all init scripts
-for script in $RUN_SCRIPTS; do
+for script in ${RUN_SCRIPTS}; do
 	colorize 34 "Processing: /etc/init.d/$script"
 	/etc/init.d/$script
 done
@@ -72,7 +93,7 @@ done
 # Start all daemons
 if [ "$RUN_DAEMONS" ]; then
 	colorize 33 "Starting all daemons..."
-	for daemon in $RUN_DAEMONS; do
+	for daemon in ${RUN_DAEMONS}; do
 		/etc/init.d/$daemon start
 	done
 fi
