@@ -1,0 +1,86 @@
+/* SliTaz RPi CSS */
+
+html { height: 102%; }
+body { margin: 0; font-size: 90%; }
+h1 { color: #4d4d4d; }
+h2 { color: #666; font-size: 120%; }
+a:hover { text-decoration: none; }
+li { list-style-type: square; color: #4d4d4d; }
+pre, textarea {
+	font-size: 100%;
+	background: #eee;
+	padding: 10px;
+	overflow: hidden; 
+}
+textarea {
+	width: 100%; height: 320px; 
+	border: 2px solid #ccc; 
+	padding: 5px;
+	overflow: auto;
+}
+
+/* Header and navigation */
+
+header {
+	background: #222; height: 40px; border-bottom: 4px solid #afafaf;
+}
+
+#nav { float: left; margin: 0; padding: 12px 0 0 45px; }
+#nav a { font-size: 90%; color: #fff; text-decoration: none;
+	font-weight: bold; padding: 0 4px; }
+#nav a:hover { color: #afafaf;}
+
+/* Logo */
+
+#logo {
+	background: url(logo.png) no-repeat left;
+	position: absolute; float: left; 
+	left: 5px; top: 0px; width: 40px; height: 40px;
+}
+
+/* Content */
+
+#content { margin: 4%; text-align: justify; }
+
+input[type="submit"], select {
+	color: #444444;
+	border: 1px solid #afafaf;
+	padding: 4px;
+	margin: 4px 0px;
+	font-size: 14px;
+	line-height: 1.2em;
+	background-image: -webkit-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+	background-image: -moz-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+	-webkit-appearance: none;
+	-webkit-padding-end: 12px;
+	-webkit-padding-start: 6px;
+}
+input[type="submit"] {
+	-webkit-box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+	-moz-box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+	box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+}
+input[type="text"] { 
+	border: 1px solid #afafaf;
+	padding: 4px;
+	min-width: 360px;
+}
+
+input[type="submit"]:hover, select:hover {
+	background-color: #ddd;
+	border: 1px solid #999;
+}
+
+pre, input[type="submit"], input[type="text"], textarea {
+	border-radius: 4px;
+}
+
+/* Footer */
+
+#footer {
+	text-align: center;
+	font-size: 84%;
+	border-top: 1px dotted #ddd;
+	padding: 40px;
+}
+#footer, #footer a { color: #888888; }
