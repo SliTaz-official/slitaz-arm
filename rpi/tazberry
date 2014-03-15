@@ -159,6 +159,7 @@ main_box() {
 "oclock"         "$(gettext 'Overclocking information and config')" \
 "packages"       "$(gettext 'Packages info and upgrade (spk)')" \
 "keyboard"       "$(gettext 'System keyboard setting')" \
+"root-passwd"    "$(gettext 'Change root password')" \
 "reboot"         "$(gettext 'Reboot SliTaz')" \
 "halt"           "$(gettext 'Halt the Raspberry Pi')" \
 "quit"           "$(gettext 'Exit from TazBerry tool')" 2>${tmp}
@@ -189,6 +190,8 @@ main_box() {
 			tazkeymap ;;
 		reboot)
 			reboot ;;
+		root-passwd)
+			slitaz-config root_passwd ;;
 		halt)
 			halt ;;
 		quit)

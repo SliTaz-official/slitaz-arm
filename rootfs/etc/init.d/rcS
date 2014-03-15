@@ -68,8 +68,8 @@ if [ ! -f "/var/lib/slitaz/post-install" ]; then
 	echo "$ARCH" > /var/lib/slitaz/post-install
 	[ -s /etc/keymap.conf ] || tazkeymap
 	#[ -s /etc/locale.conf ] || tazlocale
-	# change root password
-	# add a user
+	slitaz-config root_passwd
+	# add a user: slitaz-config add_user
 fi
 
 # Load all modules from config file
