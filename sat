@@ -162,10 +162,10 @@ case "$1" in
 		# Mirror
 		echo "$mirror" > ${rootfs}/var/lib/tazpkg/mirror
 
-		# /init & /run
+		# /init & /var/run
 		cd ${rootfs}
-		rm init && ln -s /bin/busybox init
-		mkdir -p run
+		rm init var/run && ln -s /bin/busybox init
+		mkdir -p run var/run
 
 		# Update modules.dep
 		if [ -f "var/lib/tazpkg/installed/linux/receipt" ]; then

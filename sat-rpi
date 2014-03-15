@@ -222,6 +222,18 @@ case "$1" in
 		boldify "SliTaz Raspberry Pi distro"
 		separator
 		
+		# Custom RPi rootfs: make sure all files belong to root
+		if [ -d "$rpi/rootfs" ]; then
+			size=$(du -sh $rpi/rootfs | awk '{print $1}')
+			echo -n "Copying custom RPi rootfs: $size"
+			tmp=$distro/tmp-$$
+			mkdir -p $tmp
+			cp -r $rpi/rootfs/* $tmp
+			chown -R root.root $tmp
+			cp -a $tmp/* ${rootfs} && rm -rf $tmp
+			status
+		fi
+		
 		# Boot firmware
 		echo -n "Copying: firmware files..."
 		mkdir -p ${boot} && get_fw
@@ -314,7 +326,7 @@ case "$1" in
 			make mrproper &&
 			make ARCH=arm bcmrpi_defconfig
 			echo "Patching SliTaz RPi Linux .config"
-			patch -p0 -i ${rpi}/linux-rpi.patch || exit 1 
+			patch -p0 -i ${rpi}/linux-rpi.patch || exit 1
 			make ARCH=arm CROSS_COMPILE=${HOST_SYSTEM}- zImage &&
 			make ARCH=arm CROSS_COMPILE=${HOST_SYSTEM}- modules &&
 			make ARCH=arm CROSS_COMPILE=${HOST_SYSTEM}- \
