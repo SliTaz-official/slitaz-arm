@@ -221,6 +221,7 @@ case "$1" in
 		
 		boldify "SliTaz Raspberry Pi distro"
 		separator
+		mkdir -p ${boot}
 		
 		# Custom RPi rootfs: make sure all files belong to root
 		if [ -d "$rpi/rootfs" ]; then
@@ -231,12 +232,13 @@ case "$1" in
 			cp -r $rpi/rootfs/* $tmp
 			chown -R root.root $tmp
 			cp -a $tmp/* ${rootfs} && rm -rf $tmp
+			mv -f ${rootfs}/boot/* ${boot}
 			status
 		fi
 		
 		# Boot firmware
 		echo -n "Copying: firmware files..."
-		mkdir -p ${boot} && get_fw
+		get_fw
 		for fw in $fwlist
 		do
 			cp ${firmware}/boot/${fw} ${boot}

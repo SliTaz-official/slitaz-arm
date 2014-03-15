@@ -224,6 +224,7 @@ case "$1" in
 		fi
 		
 		# Move /boot outside the rootfs
+		mkdir -p ${rootfs}/boot
 		if [ "$(ls $rootfs/boot | wc -l)" != 0 ]; then
 			echo -n "Moving /boot outside the rootfs..."
 			mkdir -p ${distro}/boot
@@ -303,7 +304,11 @@ case "$1" in
 			for dep in $DEPENDS
 			do
 				if [ ! -d "${installed}/$dep" ]; then
-					echo -n "$(colorize 34 $PACKAGE)" && indent 24 "$dep"
+					if [ ! "$raw" ]; then
+						echo -n "$(colorize 34 $PACKAGE)" && indent 24 "$dep"
+					else
+						echo "$dep"
+					fi
 					count=$(($count + 1))
 				fi
 			done
