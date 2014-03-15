@@ -1,0 +1,23 @@
+!~/.Xdefault: Control the behavior of x-clients.
+!
+
+! Xcursor theme (~/.icons).
+!
+Xcursor.theme:		slitaz-polar
+
+! XTerm settings.
+!
+xterm*background:	#000000
+xterm*foreground:	#ffffff
+xterm*cursorColor:	#d66018
+xterm*scrollBar:	off
+xterm*faceName:		DejaVu Sans Mono
+xterm*faceNameDoublesize:WenQuanYi WenQuanYi Micro Hei Mono-12
+xterm*faceSize:		12
+xterm*utf8:		2
+xterm*eightBitInput:	true
+
+! Xload settings.
+!
+!xload*background:	black
+!xload*foreground:	lightblue
