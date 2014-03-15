@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# slitaz-arm - The compemented ARM version of /usr/bin/slitaz
+# slitaz-arm - The complemented ARM version of /usr/bin/slitaz
 #
 . /lib/libtaz.sh
 

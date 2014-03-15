@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# SliTaz Config - A tool with all SliTaz Ncurses config in one place for
-# text mode system (server, ARM devices)
+# SliTaz Config - A tool with all SliTaz Ncurses configs in one place for
+# text mode systems (server, ARM devices)
 #
 # Copyright (C) 2014 SliTaz ARM - BSD License
 # Author: Christophe Lincoln <pankso@slitaz.org>

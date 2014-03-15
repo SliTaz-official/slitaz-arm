@@ -35,7 +35,7 @@ EOT
 # RPi functions
 #
 
-# This could move to /usr/bin/slitaz-??? or some thing since it's not
+# This could move to /usr/bin/slitaz-??? or something since it's not
 # ARM specific
 rpi_stats() {
 	ip=$(ifconfig | fgrep -A 1 "encap:Ethernet" | fgrep "inet" | cut -d ":" -f 2)
