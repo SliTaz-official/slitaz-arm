@@ -36,22 +36,18 @@ echo "$0" > ${log}
 # Be quiet at boot
 echo "0 0 0 0" > /proc/sys/kernel/printk
 
-# /dev devtmpfs
-echo -n "Mounting devtmpfs filesystem on: /dev"
-mount -t devtmpfs devtmpfs /dev
-status
-
 # Use udev and disable hotplug helper (udevd listen to netlink)
 if [ -x "/sbin/udevd" ]; then
 	echo "" > /proc/sys/kernel/hotplug
 	echo "Starting udevd & udevadm [trigger settle]..."
-	udevd --daemon 2>/dev/null &&
-	udevadm trigger && udevadm settle --timeout=120
-	status
+	udevd --daemon 2>/dev/null
+	udevadm trigger
+	udevadm settle --timeout=120
 else
 	# Fallback to Busybox mdev
-	echo -n "Creating device nodes: /sbin/mdev -s"
-	mdev -s && echo "/sbin/mdev" > /proc/sys/kernel/hotplug
+	echo "Creating device nodes: /sbin/mdev -s"
+	echo "/sbin/mdev" > /proc/sys/kernel/hotplug
+	mdev -s
 	status
 fi
 

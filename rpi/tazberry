@@ -35,12 +35,20 @@ EOT
 # RPi functions
 #
 
+# This could move to /usr/bin/slitaz-??? or some thing since it's not
+# ARM specific
 rpi_stats() {
+	ip=$(ifconfig | fgrep -A 1 "encap:Ethernet" | fgrep "inet" | cut -d ":" -f 2)
+	mem_total=$(free -m | fgrep "Mem:" | awk '{print $2}')
+	mem_used=$(free -m | fgrep "Mem:" | awk '{print $3}')
+	mem_used_pct=$(( ( ${mem_used} * 100) / ${mem_total} ))
 	cat << EOT
-$(gettext 'Kernel')   : $(uname -snrm)
-$(gettext 'Uptime')   :$(uptime | cut -d "," -f 1,2)
-$(gettext 'CPU heat') : $(awk '{printf "%3.1f C\n", $1/1000}' \
-	/sys/class/thermal/thermal_zone0/temp)
+$(gettext 'Kernel')     : $(uname -snrm)
+$(gettext 'Uptime')     : $(uptime | awk '{print $3}' | sed s"/:/h /" | sed s"/,/min/")
+$(gettext 'Network IP') : $(echo $ip | awk '{print $1}')
+$(gettext 'CPU heat')   : $(awk '{printf "%3.1f C\n", $1/1000}' /sys/class/thermal/thermal_zone0/temp)
+$(gettext 'Processes')  : $(ps | wc -l)
+Memory usage : ${mem_used_pct}%
 EOT
 }
 

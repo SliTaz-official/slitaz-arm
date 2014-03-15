@@ -176,7 +176,8 @@ case "$1" in
 		# CGI Admin
 		if [ -d "$work/cgi-adm" ]; then
 			echo -n "Installing SliTaz ARM CGI Admin interface..."
-			cp -a ${rpi}/cgi-adm/* ${rootfs}/var/www/adm
+			mkdir -p ${rootfs}/var/www/adm
+			cp -a ${work}/cgi-adm/* ${rootfs}/var/www/adm
 			status
 		fi
 

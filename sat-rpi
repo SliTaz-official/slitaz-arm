@@ -173,8 +173,9 @@ case "$1" in
 		fi
 		echo -n "Mounting: /dev/$dev partitions"
 		mkdir -p ${rpiboot} ${rpiroot}
-		mount /dev/${dev}1 ${rpiboot}
-		mount /dev/${dev}3 ${rpiroot}; status
+		mount /dev/${dev}1 ${rpiboot} || exit 1
+		mount /dev/${dev}3 ${rpiroot} || exit 1
+		status
 		echo -n "Cleaning: filesystem directories"
 		for dir in bin dev etc lib media mnt proc sbin sys tmp usr var run
 		do
@@ -187,8 +188,8 @@ case "$1" in
 		
 		# Unmount
 		echo -n "Unmounting: RPi sdcard"
-		umount ${rpiboot} || exit 1
-		umount ${rpiroot} || exit 1
+		umount ${rpiboot}
+		umount ${rpiroot}
 		status
 		
 		rm -f ${data}/sdcard.part
@@ -214,9 +215,12 @@ case "$1" in
 		# We may want to simply regenerate the RPi distro
 		if [ ! "$nosat" ]; then
 			sat gen --work="$work" --flavor="$flavor" --noinit --nolinux
+		else
+			newline
 		fi
 		
-		header "SliTaz Raspberry Pi distro"
+		boldify "SliTaz Raspberry Pi distro"
+		separator
 		
 		# Boot firmware
 		echo -n "Copying: firmware files..."
@@ -227,15 +231,11 @@ case "$1" in
 		done
 		status
 		
-		# TazBerry
-		echo -n "Installing TazBerry..."
+		# TazBerry ncurses and CGI data/plugins
+		echo -n "Copying: TazBerry..."
 		cp -f ${rpi}/tazberry ${rootfs}/usr/bin
+		cp -a ${rpi}/cgi-adm/* ${rootfs}/var/www/adm
 		status
-		
-		# CGI Admin
-		#echo -n "Installing TazBerry CGI..."
-		#cp -a ${rpi}/cgi-adm/* ${rootfs}/var/www/adm
-		#status
 		
 		# Overclocking
 		echo -n "Setting: Overclocking..."

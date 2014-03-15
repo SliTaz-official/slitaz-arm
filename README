@@ -5,18 +5,12 @@ SliTaz ARM
 SliTaz ARM tools and files
 
 
-Installation
+Build tools installation
 --------------------------------------------------------------------------------
-To install 'sat' and 'sat-rpi' you must have make installed:
+To install 'sat' and 'sat-rpi' you need to have make installed or copy the 2
+files to /usr/bin:
 
 # make install
-
-
-rootfs/ directory
---------------------------------------------------------------------------------
-Custom SliTaz ARM scripts and files used to generate a distro. These files
-and any other system files can be erased or added via the flavors support. The
-rootfs files can also be directly modified before generating a new distro. 
 
 
 Sat quickstart
@@ -38,12 +32,42 @@ To boot the distro with Qemu you can run:
 # sat emu
 
 
-Mirror
+ARM packages mirror
 --------------------------------------------------------------------------------
 Sat lets you clone the ARM cooking mirror to let you debug and try official ARM
 packages. Sat will create a mirror directory in the working path and download 
 all lists and packages. After a first clone it will only check the repo ID 
 file and download any modified or new packages.
+
+
+Custom SliTaz system files: rootfs/
+--------------------------------------------------------------------------------
+Custom SliTaz ARM scripts and files used to generate a distro. These files
+and any other system files can be erased or added via the flavors support. The
+rootfs files can also be directly modified before generating a new distro.
+
+
+CGI Admin web interface: cgi-adm/ 
+--------------------------------------------------------------------------------
+Very small and fast CGI SHell admin/info web interface for ARM devices with
+plugins support. The goal is not to rewrite TazPanel but to have a light CGI
+toolkit to code specific ARM devices plugings such as boot configs for the
+Raspberry Pi. In the plugins directory you will find the a skeleton to start
+your custom plugin. You can also create general purpose or hardware specific
+plugins.
+
+The root directory is: /var/www/adm and the default web server is Busyboy HTTPd.
+So just start the web server and connect to the IP address of your machine:
+
+# stard httpd
+
+URL form: http://192.rpi.ip/adm/
+
+On SliTaz i486 you can also use Busybox HTTPd  and install the cgi-adm files
+under /var/www and code directly then copy or upload you plugin to your ARM 
+devices.
+
+# make install-cgi
 
 
 Bugs
