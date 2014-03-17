@@ -37,14 +37,14 @@ the needed partitions. Main advantages are: more memory for the RPi and
 better security with file permissions. When ready and you know your disk
 path (sat-rpi ls-dev) you can install SliTaz RPi with:
 
-# sat-rpi install --dev=/dev/sdX
+# sat-rpi install
 
 
 Sat RPi commands and options
 --------------------------------------------------------------------------------
 To get the list of commands and options with a short help simply run:
 
-$ sat-rpi
+$ sat-rpi help
 
   --turbo: The forced turbo option turns off the dynamic clocks and runs the 
            Raspberry Pi constantly at the highest arm_freq.

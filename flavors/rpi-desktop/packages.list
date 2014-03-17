@@ -6,6 +6,8 @@ kbd-base
 slitaz-base-files
 slitaz-boot-scripts
 slitaz-tools
+slitaz-icon
+slitaz-polar-cursors
 spk
 tazirc
 util-linux-blkid
@@ -44,6 +46,7 @@ expat
 libxml2
 acl
 fontconfig
+jpeg
 pixman
 xorg-libX11
 xorg-libXft
@@ -68,6 +71,9 @@ xorg-libpciaccess
 xorg-libXxf86vm
 xorg-libXfont
 xorg-libXinerama
+xorg-libXcursor
+xorg-libXrandr
+xorg-libXdamage
 xorg-libfontenc
 xorg-xkbcomp
 xorg-server-light
@@ -76,6 +82,7 @@ xorg-xf86-input-evdev
 xorg-xf86-input-fbdev
 xorg-xload
 xorg-xclock
+ttf-dejavu
 giflib
 tiff
 libid3tag
@@ -84,3 +91,9 @@ libpng
 imlib2
 hsetroot
 jwm
+fox
+adie
+pathfinder
+shutterbug
+calculator
+links

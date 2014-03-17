@@ -1,0 +1,18 @@
+SliTaz Raspberry Pi - Cooking/Release - http://arm.slitaz.org/rpi
+================================================================================
+
+
+boot/    : Must be copied to a FAT32 partition
+rootfs/  : Must be copied to an ext4 or btrfs partition
+
+
+Installation script
+-------------------
+Be sure the SD card has got 3 partitions (boot,swap,root). Then you simply have
+to run the install.sh script from this SliTaz Raspberry Pi release directory:
+
+# ./install.sh
+
+
+================================================================================
+

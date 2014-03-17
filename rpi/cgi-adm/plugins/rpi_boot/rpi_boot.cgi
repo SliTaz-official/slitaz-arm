@@ -1,11 +1,11 @@
 #!/bin/sh
 #
-# TazBerry CGI Plugin - Skeleton
+# TazBerry CGI Plugin - Boot configs and options
 #
 
 if [ "$(GET rpi_boot)" ]; then
 	html_header "Boot"
-	echo "<h1>SliTaz RPi Boot</h1>"
+	echo "<h1>SliTaz Raspberry Pi Boot</h1>"
 	
 	cat << EOT
 <p>
@@ -15,12 +15,12 @@ if [ "$(GET rpi_boot)" ]; then
 
 <pre>
 
-Kernel boot parameters
+Kernel boot parameters [ <a href="$script?editor&amp;file=/boot/cmdline.txt">Edit</a> ]
 --------------------------------------------------------------------------------
 $(cat /boot/cmdline.txt 2>/dev/null)
 
 
-RPi configuration file
+RPi configuration file [ <a href="$script?editor&amp;file=/boot/config.txt">Edit</a> ]
 --------------------------------------------------------------------------------
 $(cat /boot/config.txt 2>/dev/null)
 
@@ -29,6 +29,7 @@ Boot files
 --------------------------------------------------------------------------------
 $(ls -1 /boot)
 </pre>
+
 EOT
 	
 	html_footer

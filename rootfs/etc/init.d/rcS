@@ -23,10 +23,9 @@ mkdir -p /dev/pts /dev/shm
 mount -a
 
 # Mount /run as tmpfs so runtime data are not written to disk
-echo -n "Mounting tmpfs filesystem on: /run"
+echo "Mounting tmpfs filesystem on: /run"
 mount -t tmpfs tmpfs /run
 mount --bind /run /var/run
-status
 
 # Store boot messages to log files
 log="/var/log/boot.log"
@@ -39,16 +38,15 @@ echo "0 0 0 0" > /proc/sys/kernel/printk
 # Use udev and disable hotplug helper (udevd listen to netlink)
 if [ -x "/sbin/udevd" ]; then
 	echo "" > /proc/sys/kernel/hotplug
-	echo "Starting udevd & udevadm [trigger settle]..."
+	echo "Starting udev daemon..."
 	udevd --daemon 2>/dev/null
 	udevadm trigger
 	udevadm settle --timeout=120
 else
 	# Fallback to Busybox mdev
-	echo "Creating device nodes: /sbin/mdev -s"
+	echo -n "Creating device nodes: /sbin/mdev -s"
 	echo "/sbin/mdev" > /proc/sys/kernel/hotplug
-	mdev -s
-	status
+	mdev -s; status
 fi
 
 # Clean up /tmp
@@ -76,14 +74,14 @@ fi
 if [ "$LOAD_MODULES" ]; then
 	colorize 33 "Loading Kernel modules..."
 	for mod in ${LOAD_MODULES}; do
-		modprobe -v $mod
+		modprobe -v $mod | tee -a ${log}
 	done
 fi
 
 # Start all init scripts
 for script in ${RUN_SCRIPTS}; do
 	colorize 34 "Processing: /etc/init.d/$script"
-	/etc/init.d/$script
+	/etc/init.d/$script | tee -a ${log}
 done
 
 # Start all daemons
@@ -92,13 +90,6 @@ if [ "$RUN_DAEMONS" ]; then
 	for daemon in ${RUN_DAEMONS}; do
 		/etc/init.d/$daemon start
 	done
-fi
-
-# System time option
-if fgrep -q 'rdate' /proc/cmdline; then
-	echo -n "Setting system date..."
-	rdate -s 203.129.68.14 2>/dev/null
-	status
 fi
 
 newline

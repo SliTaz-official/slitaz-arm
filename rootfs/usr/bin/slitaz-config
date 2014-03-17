@@ -32,18 +32,25 @@ root_passwd() {
     echo "root:$passwd" | chpasswd --md5
 }
 
+set_date() {
+	clear && newline
+	echo -n "Old date:"; date
+	rdate -s 203.129.68.14 2>/dev/null
+	echo -n "New date:"; date
+	sleep 4
+}
+
 # Main Dialog menu
 main_box() {
 	dialog \
-		--clear \
-		--title "$title" \
-		--ok-label "Exec" \
-		--cancel-label "Quit" \
+		--clear --title "$title" \
+		--ok-label "Exec" --cancel-label "Quit" \
 		--menu "" ${height} ${width} 14 \
 "keyboard"       "$(gettext 'System keyboard setting')" \
 "locale"         "$(gettext 'System language setting')" \
 "root-passwd"    "$(gettext 'Change root password')" \
-"quit"           "$(gettext 'Exit from TazBerry tool')" 2>${tmp}
+"set-date"       "$(gettext 'Set system date from the web')" \
+"quit"           "$(gettext 'Exit from SliTaz Config')" 2>${tmp}
 	
 	# Handle options
 	opt=${?}
@@ -54,14 +61,11 @@ main_box() {
 	# Handle actions
 	action=$(cat $tmp)
 	case "$action" in
-		keyboard)
-			tazkeymap ;;
-		locale)
-			tazlocale ;;
-		root-passwd)
-			root_passwd ;;
-		quit)
-			rm -rf ${tmpdir} && exit 0 ;;
+		keyboard) tazkeymap ;;
+		locale) tazlocale ;;
+		root-passwd) root_passwd ;;
+		set-date) set_date ;;
+		quit) rm -rf ${tmpdir} && exit 0 ;;
 	esac
 }
 

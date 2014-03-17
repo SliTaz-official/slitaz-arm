@@ -1,7 +1,8 @@
 # /etc/fstab: Slitaz ARM static filesystems.
 #
-proc              /proc       proc     defaults           0 0
-sysfs             /sys        sysfs    defaults           0 0
-/dev/mmcblk0p1    /boot       auto     noauto,noatime     1 2
-/dev/mmcblk0p2    none        swap     sw                 0 0
-/dev/mmcblk0p3    /           btrfs    noatime            0 1
+proc              /proc       proc     defaults             0    0
+sysfs             /sys        sysfs    defaults             0    0
+tmpfs             /dev/shm    tmpfs    defaults             0    0
+/dev/mmcblk0p1    /boot       vfat     noatime              1    2
+/dev/mmcblk0p2    swap        swap     defaults             0    0
+/dev/mmcblk0p3    /           btrfs    noatime              0    1
