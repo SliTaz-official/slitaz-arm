@@ -56,8 +56,10 @@ Before processing please read the SliTaz ARM/RPi installation howto on:
 EOT
 
 # SD card check
-[ "$dev" ] || echo -n "SD card device name (ex sdc): "; read dev
-[ "$dev" ] || exit 1
+if [ ! "$dev" ]; then
+	echo -n "SD card disk name (ex sdc): "; read dev
+fi
+[ ! "$dev" ] && exit 1
 if ! fdisk -l | grep -q "/dev/${dev}3"; then
 	echo "Unable to find: /dev/${dev}3"; exit 1
 fi

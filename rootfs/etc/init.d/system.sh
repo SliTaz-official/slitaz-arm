@@ -14,8 +14,8 @@ if fgrep -q "swap" /etc/fstab; then
 fi
 
 # Sound configuration: restore or init
-if [ -d /proc/asound ]; then
-	if [ -s /var/lib/alsa/asound.state ]; then
+if [ -d "/proc/asound" ] && [ -x "/usr/sbin/alsactl" ]; then
+	if [ -s "/var/lib/alsa/asound.state" ]; then
 		echo -n "Restoring sound configuration..."
 		alsactl restore; status
 	else
@@ -43,7 +43,7 @@ echo -n "Setting time zone to: $tz"
 export TZ=${tz}; status
 
 # Xorg configuration: $HOME is not yet set
-if [ ! -s /etc/X11/xorg.conf ] && [ -x /usr/bin/Xorg ]; then
+if [ ! -s "/etc/X11/xorg.conf" ] && [ -x "/usr/bin/Xorg" ]; then
 	echo "Configuring Xorg server..." && HOME="/root"
 	tazx config-xorg 2>/var/log/xorg.configure.log
 fi

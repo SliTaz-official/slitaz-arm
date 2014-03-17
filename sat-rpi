@@ -152,8 +152,10 @@ case "$1" in
 		rpiboot="/media/rpi/boot"
 		rpiroot="/media/rpi/rootfs"
 		header "SliTaz Raspberry Pi install"
-		[ "$dev" ] || echo -n "SD card device name (ex sdc): "; read dev
-		[ "$dev" ] || exit 1
+		if [ ! "$dev" ]; then
+			echo -n "SD card disk name (ex sdc): "; read dev
+		fi
+		[ ! "$dev" ] && exit 1
 		
 		# Store sdcard partition(s) list
 		fdisk -l /dev/${dev} | grep "^/dev/$dev" | awk '{print $1}' \

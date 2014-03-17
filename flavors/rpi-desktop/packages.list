@@ -5,6 +5,7 @@ glibc-base
 kbd-base
 slitaz-base-files
 slitaz-boot-scripts
+slitaz-configs-base
 slitaz-tools
 slitaz-icon
 slitaz-polar-cursors
@@ -74,12 +75,13 @@ xorg-libXinerama
 xorg-libXcursor
 xorg-libXrandr
 xorg-libXdamage
+xorg-libXfixes
 xorg-libfontenc
 xorg-xkbcomp
 xorg-server-light
 xorg-base-fonts
 xorg-xf86-input-evdev
-xorg-xf86-input-fbdev
+xorg-xf86-video-fbdev
 xorg-xload
 xorg-xclock
 ttf-dejavu
@@ -91,6 +93,7 @@ libpng
 imlib2
 hsetroot
 jwm
+xterm
 fox
 adie
 pathfinder
