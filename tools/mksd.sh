@@ -2,7 +2,7 @@
 #
 # Sleep to avoid: "kernel still uses old table: Device or resource busy"
 #
-# TODO: handle part number: --part=3 since Raspberry Pi need 3 part with
+# TODO: handle part number: --part=3 since Raspberry Pi needs 3 parts with
 # a first FAT32 and Cubie Board only 2 (with / swap) or 1 single part.
 #
 . /lib/libtaz.sh
