@@ -3,34 +3,28 @@
 <JWM>
 
 	<!-- The root menu, if this is undefined you will not get a menu. -->
-	<!-- Additional RootMenu attributes: onroot, labeled, label -->
 	<RootMenu height="22" onroot="12">
+		<Menu icon="applications-accessories.png" label="Accessories">
+			<Program icon="galculator.png" label="Calculator">calculator</Program>
+			<Program icon="gnome-screenshot.png" label="Screenshot">shutterbug</Program>
+			<Program icon="text-editor.png" label="Joe Editor">terminal -e joe</Program>
+		</Menu>
 		<Menu icon="applications-system.png" label="System Tools">
-			<Program icon="applications-other.png" label="Xload Monitor">
-				xload -nolabel -bg black -fg grey -hl orange
-			</Program>
-			<Program icon="utilities-system-monitor.png" label="Top Monitor">
-				terminal -e top
-			</Program>
-			<Program icon="preferences-desktop-locale.png" label="System Config">
-				terminal -e su -c slitaz-config
-			</Program>
+			<Program icon="utilities-system-monitor.png" label="Top Monitor">terminal -e top</Program>
+			<Program icon="preferences-desktop-locale.png" label="System Config">terminal -e 'su -c slitaz-config'</Program>
 		</Menu>
 		<Menu icon="applications-internet.png" label="Network">
-			<Program icon="internet-web-browser.png" label="Lynx Web browser">
-				terminal -e lynx
-			</Program>
-			<Program icon="xchat.png" label="TazIRC IRC client">
-				terminal -e 'tazirc --ask'
-			</Program>
+			<Program icon="links.png" label="Links Web browser">links -g</Program>
+			<Program icon="internet-web-browser.png" label="Lynx Web browser">terminal -e lynx</Program>
+			<Program icon="xchat.png" label="TazIRC IRC client">terminal -e 'tazirc --ask'</Program>
 		</Menu>
-		<Program icon="tazpkg.png" label="Packages manager">terminal -e tazpkg shell</Program>
-		<Program icon="text-editor.png" label="Joe Text editor">terminal -e joe</Program>
+		<Program icon="file-manager.png" label="File manager">PathFinder</Program>
+		<Program icon="text-editor.png" label="Text editor">adie</Program>
 		<Program icon="xterm.png" label="Terminal">terminal</Program>
 	</RootMenu>
 	
 	<RootMenu height="22" onroot="3">
-		<Program icon="system-shut-down.png" label="Shut down system">reboot</Program>
+		<Program icon="system-shut-down.png" label="Shut down system">halt</Program>
 		<Program icon="system-restart.png" label="Reboot system">reboot</Program>
 		<Exit label="Exit JWM" confirm="true" icon="system-suspend.png"/>
 		<Restart label="Restart JWM" icon="system-restart.png"/>

@@ -2,14 +2,19 @@
 #
 # Sleep to avoid: "kernel still uses old table: Device or resource busy"
 #
+# TODO: handle part number: --part=3 since Raspberry Pi need 3 part with
+# a first FAT32 and Cubie Board only 2 (with / swap) or 1 single part.
+#
 . /lib/libtaz.sh
 check_root
 
-if [ ! "$dev" ]; then
-	echo "Missing: --dev= cmdline option" && exit 1
+dev="$1"
+[ ! "$dev" ] && echo "Missing device name: $0 dev" && exit 1
+if ! fdisk -l | grep -q "/dev/${dev}"; then
+	echo "Unable to find: /dev/${dev}"; exit 1
 fi
 
-# Boot
+# Boot: min 33Mb for FAT32
 echo -n "Creating partition: /dev/${dev}1 /boot"
 fdisk /dev/${dev} >/dev/null << EOF
 o
@@ -17,7 +22,7 @@ n
 p
 1
 1
-+140M
++40M
 w
 EOF
 status
@@ -58,16 +63,25 @@ w
 EOF
 status
 
-# Mkfs 2>&1 >/dev/null
-#if fdisk -l /dev/${dev} | grep "^/dev/${dev}1"; then
-	#debug "Creating: /boot FAT32 filesystem"
-	#mkdosfs -F 32 -v -l -n "RPi-boot" /dev/${dev}1 
-#fi
-#if fdisk -l /dev/${dev} | grep "^/dev/${dev}2"; then
-	#debug "Creating: swap memory filesystem"
-	#mkswap -L "RPi-swap" /dev/${dev}2
-#fi
-#if fdisk -l /dev/${dev} | grep "^/dev/${dev}3"; then
-	#debug "Creating: root ext4 filesystem"
-	#mkfs.ext4 -L "RPi-root" /dev/${dev}3
-#fi
+[ "$nofs" ] && exit 0
+
+# Mkfs: Buggy fat32
+if fdisk -l /dev/${dev} | grep -q "^/dev/${dev}1"; then
+	echo -n "Creating: /boot FAT32 filesystem"
+	mkfs.fat -v -F32 -I -n "           " /dev/${dev}1 \
+		2>>/tmp/mksd.log >/tmp/mksd.log; status
+fi
+if fdisk -l /dev/${dev} | grep -q "^/dev/${dev}2"; then
+	echo -n "Creating: swap memory filesystem"
+	mkswap /dev/${dev}2 >>/tmp/mksd.log; status
+fi
+if fdisk -l /dev/${dev} | grep -q "^/dev/${dev}3"; then
+	fs="ext4"
+	[ "$btrfs" ] && fs="btrfs -f" 
+	echo -n "Creating: root $fs filesystem"
+	mkfs.${fs} -L "SliTazSD" /dev/${dev}3 \
+		2>>/tmp/mksd.log >>/tmp/mksd.log
+	status
+fi
+
+exit 0
