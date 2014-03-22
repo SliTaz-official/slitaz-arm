@@ -7,11 +7,12 @@
 		<Menu icon="applications-accessories.png" label="Accessories">
 			<Program icon="galculator.png" label="Calculator">calculator</Program>
 			<Program icon="gnome-screenshot.png" label="Screenshot">shutterbug</Program>
-			<Program icon="text-editor.png" label="Joe Editor">terminal -e joe</Program>
+			<Program icon="joe.png" label="Joe Editor">terminal -e joe</Program>
 		</Menu>
 		<Menu icon="applications-system.png" label="System Tools">
 			<Program icon="utilities-system-monitor.png" label="Top Monitor">terminal -e top</Program>
-			<Program icon="preferences-desktop-locale.png" label="System Config">terminal -e 'su -c slitaz-config'</Program>
+			<!--<Program icon="raspberrypi.png" label="TazBerry Tool">terminal -e 'su -c tazberry'</Program>-->
+			<Program icon="gnome-settings.png" label="System Config">terminal -e 'su -c slitaz-config'</Program>
 		</Menu>
 		<Menu icon="applications-internet.png" label="Network">
 			<Program icon="links.png" label="Links Web browser">links -g</Program>

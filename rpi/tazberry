@@ -99,7 +99,7 @@ text_box() {
 	fi
 	# Handle options
 	case "$?" in
-		3) nano ${file} ;;
+		3) editor ${file} ;;
 	esac
 }
 
