@@ -92,6 +92,14 @@ if [ "$RUN_DAEMONS" ]; then
 	done
 fi
 
+# Start X session
+if [ "$LOGIN_MANAGER" ] && [ -x "/etc/init.d/$LOGIN_MANAGER" ]; then
+	#mkdir -p  /var/run/dbus
+	#/etc/init.d/dbus start
+	colorize 36 "Starting X environment..."
+	/etc/init.d/$LOGIN_MANAGER start >/dev/null &
+fi
+
 newline
 colorize 32 "$MESSAGE"
 
