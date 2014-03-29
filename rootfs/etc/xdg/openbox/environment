@@ -1,0 +1,22 @@
+#
+# Set system-wide environment variables here for Openbox
+# User-specific variables should be placed in $HOME/.config/openbox/environment
+#
+
+# Export XDG standard directories
+export XDG_CONFIG_HOME="$HOME/.config"
+export XDG_CACHE_HOME="$HOME/.cache"
+export XDG_CURRENT_DESKTOP=openbox
+
+# /etc/xdg/menus/${XDG_MENU_PREFIX}applications.menu
+export XDG_MENU_PREFIX=''
+
+
+# Less Colors for Man Pages in SliTaz
+export LESS_TERMCAP_mb=$(echo -en "\e[01;31m")       # begin blinking
+export LESS_TERMCAP_md=$(echo -en "\e[01;38;5;74m")  # begin bold
+export LESS_TERMCAP_me=$(echo -en "\e[0m")           # end mode
+export LESS_TERMCAP_se=$(echo -en "\e[0m")           # end standout-mode
+export LESS_TERMCAP_so=$(echo -en "\e[38;5;246m")    # begin standout-mode - info box
+export LESS_TERMCAP_ue=$(echo -en "\e[0m")           # end underline
+export LESS_TERMCAP_us=$(echo -en "\e[04;38;5;146m") # begin underline
