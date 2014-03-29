@@ -9,8 +9,7 @@ if [ "$(GET rpi_boot)" ]; then
 	
 	cat << EOT
 <p>
-	The Raspberry Pi uses 2 config files to boot. The default SliTaz RPi 
-	Linux kernel image is: /boot/kernel.img
+	The Raspberry Pi uses 2 config files to boot: cmdline.txt, config.txt
 </p>
 
 <pre>
@@ -23,12 +22,6 @@ $(cat /boot/cmdline.txt 2>/dev/null)
 RPi configuration file [ <a href="$script?editor&amp;file=/boot/config.txt">Edit</a> ]
 --------------------------------------------------------------------------------
 $(cat /boot/config.txt 2>/dev/null)
-
-
-Boot files
---------------------------------------------------------------------------------
-$(ls -1 /boot)
-</pre>
 
 EOT
 	

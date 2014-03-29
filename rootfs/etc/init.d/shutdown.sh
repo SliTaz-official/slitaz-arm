@@ -11,11 +11,12 @@
 newline
 boldify "System is going down for reboot or halt..."
 colorize 32 $(uptime)
+newline
 
 # Store last alsa settings
-#if [ -x /usr/sbin/alsactl ]; then
-	#alsactl store
-#fi
+if [ -x /usr/sbin/alsactl ]; then
+	alsactl store
+fi
 
 # Stop all daemons started at boot time
 if [ "$RUN_DAEMONS" ]; then
