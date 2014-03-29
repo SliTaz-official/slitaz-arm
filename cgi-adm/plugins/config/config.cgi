@@ -21,7 +21,7 @@ case " $(GET) " in
 <h1>System Config</h1>
 
 <p>
-	Remotly configure your SliTaz ARM device.
+	Remotely configure your SliTaz ARM device.
 </p>
 
 <div id="actions">
