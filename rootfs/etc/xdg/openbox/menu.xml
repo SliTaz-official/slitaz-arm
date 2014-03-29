@@ -16,119 +16,25 @@
   <item label="Text Editor">
     <action name="Execute"><command>editor</command></action>
   </item>
-  <separator />
-  <item label="Configure favorites">
-    <action name="Execute"><command>tazbox tazapps</command></action>
-  </item>
-</menu>
-
-<!-- Desktop effects -->
-<menu id="desktop-effects" label="Desktop Effects">
-  <item label="Activate composite">
-    <action name="Execute"><command>xcompmgr</command></action>
-  </item>
-  <item label="Activate shadows">
-    <action name="Execute"><command>xcompmgr -c -r 10 -o 0.5</command></action>
-  </item>
-  <item label="Activate shadows/fade">
-    <action name="Execute"><command>xcompmgr -c -f -r 10 -o 0.5</command></action>
-  </item>
-  <separator />
-  <item label="Set opacity (actual)">
-    <action name="Execute">
-      <command>transset-df --actual --max 60</command>
-    </action>
-  </item>
-  <item label="Set opacity (click)">
-    <action name="Execute">
-      <command>transset-df --click --max 60</command>
-    </action>
-  </item>
-  <separator />
-  <item label="Stop effects">
-    <action name="Execute"><command>killall xcompmgr</command></action>
-  </item>
-</menu>
-
-<!-- SliTaz Live (TazLiTo and TazUSB) -->
-<menu id="slitaz-live-menu" label="SliTaz Live">
-  <item label="TazLiTo LiveCD Tool">
-    <action name="Execute"><command>tazbox su tazlito-wiz</command></action>
-  </item>
-  <item label="TazUSB LiveUSB Tool">
-    <action name="Execute"><command>tazbox su tazusb-box</command></action>
-  </item>
-  <separator />
-  <item label="TazUSB Writefs (gzip)">
-    <action name="Execute">
-      <command>tazbox su "terminal -e tazusb writefs gzip"</command>
-    </action>
-  </item>
-  <item label="TazUSB Writefs (lzma)">
-    <action name="Execute">
-      <command>tazbox su "terminal -e tazusb writefs lzma"</command>
-    </action>
-  </item>
-  <item label="TazUSB Writefs (none)">
-    <action name="Execute">
-      <command>tazbox su "terminal -e tazusb writefs none"</command>
-    </action>
-  </item>
 </menu>
 
 <!-- Openbox configuration -->
 <menu id="openbox-menu" label="Openbox">
-  <item label="ObConf">
-    <action name="Execute"><command>obconf</command></action>
-  </item>
-  <item label="Autostart Script">
-    <action name="Execute">
-      <command>editor ~/.config/openbox/autostart</command>
-    </action>
-  </item>
-  <item label="Openbox Menu">
-    <action name="Execute">
-      <command>editor ~/.config/openbox/menu.xml</command>
-    </action>
-  </item>
-  <separator />
-  <item label="Reconfigure">
-    <action name="Reconfigure" />
-  </item>
-  <item label="Restart">
-    <action name="Restart" />
-  </item>
+  <item label="Reconfigure"><action name="Reconfigure" /></item>
+  <item label="Restart"><action name="Restart" /></item>
+  <item label="Logout"><action name="Exit" /></item>
 </menu>
 
-<menu id="root-menu" label="Openbox 3">
-  <!-- <separator label="SliTaz Openbox" /> -->
-  <item icon="/usr/share/icons/SliTaz/mimetypes/32/empty.png"
-    label="Create a new file or folder">
-    <action name="Execute"><command>tazbox new-file</command></action>
-  </item>
-  <item icon="/usr/share/icons/SliTaz/mimetypes/32/exec.png"
-    label="Run application">
-    <action name="Execute"><command>lxpanelctl run</command></action>
-  </item>
-  <separator />
-  <menu icon="/usr/share/icons/SliTaz/places/32/user-bookmarks.png"
+<menu id="root-menu" label="Openbox">
+  
+  <menu icon="/usr/share/icons/SliTaz/places/32/user-bookmarks.png" 
     id="favorites-menu" />
-  <!-- Pipe menu to open folder using GTK bookmarks -->
-  <menu icon="/usr/share/icons/SliTaz/places/32/folder-open.png"
-    id="open-folder-menu" execute="/usr/lib/openbox/open-folder-menu.sh"
-    label="Open Folder" />
-  <menu icon="/usr/share/icons/SliTaz/apps/22/desktop-effects.png"
-    id="desktop-effects" />
-  <menu icon="/usr/share/pixmaps/slitaz-icon.png"
-    id="slitaz-live-menu" />
-  <menu icon="/usr/share/pixmaps/openbox.png"
-    id="openbox-menu" />
+  
   <menu icon="/usr/share/icons/SliTaz/places/32/desktop.png"
     id="client-list-menu" />
-  <separator />
-  <item icon="/usr/share/pixmaps/slitaz-logout.png" label="Logout">
-    <action name="Execute"><command>tazbox logout</command></action>
-  </item>
+    
+  <menu icon="/usr/share/pixmaps/openbox.png" id="openbox-menu" />
+
 </menu>
 
 </openbox_menu>
