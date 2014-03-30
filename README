@@ -46,6 +46,8 @@ Custom SliTaz ARM scripts and files used to generate a distro. These files
 and any other system files can be erased or added via the flavors support. The
 rootfs files can also be directly modified before generating a new distro.
 
+The rootfs/ files are all packaged into: slitaz-configs-*.tazpkg
+
 
 CGI Admin web interface: cgi-adm/ 
 --------------------------------------------------------------------------------

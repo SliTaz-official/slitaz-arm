@@ -51,6 +51,7 @@ $(boldify "Commands:")
   clone-fw      Clone the RPi firmware repository
   get-prebuilt  Get a prebuilt SliTaz ARM toolchain
   clean         Clean the current work directory
+  release       Realease an installable tarball
 
 $(boldify "Options:")
   --up          Update for commands: firmware and kernel
@@ -452,10 +453,10 @@ EOT
 		cp -a boot rootfs ${dname}
 		echo "Copying: SliTaz release files"
 		cp ${rpi}/release/* ${dname}
-		echo "Creating: ${dname}.tar.xz"
-		tar -cJf ${dname}.tar.xz ${dname}
+		echo "Creating: ${dname}.tar.bz2"
+		tar -cjf ${dname}.tar.bz2 ${dname}
 		echo "Creating: ${dname}.md5"
-		md5sum ${dname}.tar.xz > ${dname}.md5
+		md5sum ${dname}.tar.bz2 > ${dname}.md5
 		rm -rf ${dname} ;;
 	
 	clean)

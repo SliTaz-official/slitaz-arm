@@ -8,7 +8,7 @@
 . /etc/rcS.conf
 
 # Messages
-newline
+clear && newline
 boldify "System is going down for reboot or halt..."
 colorize 32 $(uptime)
 newline
