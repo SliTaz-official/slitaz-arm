@@ -51,7 +51,7 @@ $(boldify "Commands:")
   clone-fw      Clone the RPi firmware repository
   get-prebuilt  Get a prebuilt SliTaz ARM toolchain
   clean         Clean the current work directory
-  release       Realease an installable tarball
+  release       Release an installable tarball
 
 $(boldify "Options:")
   --up          Update for commands: firmware and kernel
