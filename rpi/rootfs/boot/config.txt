@@ -1,1 +1,24 @@
+# /boot/config.txt: SliTaz Raspberry Pi boot configuration
+#
+
+# Linux kernel image
 kernel=kernel.img
+
+# Overclocking Settings
+arm_freq=700
+core_freq=250
+sdram_freq=400
+over_voltage=0
+
+#GPU memory allocation in MB. Default: 64
+#gpu_mem=128
+
+# Framebuffer Video. Depths: 8, 16, 24, 32
+#framebuffer_depth=32
+
+# Overscan Video Settings
+disable_overscan=0
+overscan_left=0
+overscan_right=0
+overscan_top=0
+overscan_bottom=0
