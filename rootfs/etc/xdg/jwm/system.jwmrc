@@ -1,35 +1,9 @@
 <?xml version="1.0"?>
 
 <JWM>
-
-	<!-- The root menu, if this is undefined you will not get a menu. -->
-	<RootMenu height="22" onroot="12">
-		<Menu icon="applications-accessories.png" label="Accessories">
-			<Program icon="galculator.png" label="Calculator">calculator</Program>
-			<Program icon="gnome-screenshot.png" label="Screenshot">shutterbug</Program>
-			<Program icon="joe.png" label="Text Editor">terminal -e joe</Program>
-		</Menu>
-		<Menu icon="applications-system.png" label="System Tools">
-			<Program icon="utilities-system-monitor.png" label="Top Monitor">terminal -e top</Program>
-			<!--<Program icon="raspberrypi.png" label="TazBerry Tool">terminal -e 'su -c tazberry'</Program>-->
-			<Program icon="gnome-settings.png" label="System Config">terminal -e 'su -c slitaz-config'</Program>
-		</Menu>
-		<Menu icon="applications-internet.png" label="Network">
-			<Program icon="links.xpm" label="Links Web browser">links -g</Program>
-			<Program icon="internet-web-browser.png" label="Lynx Web browser">terminal -e lynx</Program>
-			<Program icon="xchat.png" label="TazIRC IRC client">terminal -e 'tazirc --ask'</Program>
-		</Menu>
-		<Program icon="file-manager.png" label="File manager">PathFinder</Program>
-		<Program icon="text-editor.png" label="Text editor">adie</Program>
-		<Program icon="xterm.png" label="Terminal">terminal</Program>
-	</RootMenu>
 	
-	<RootMenu height="22" onroot="3">
-		<Restart label="Restart JWM" icon="system-restart.png" />
-		<Exit label="Exit JWM" confirm="true" icon="system-suspend.png" />
-		<Program icon="system-restart.png" label="Reboot system">reboot</Program>
-		<Program icon="system-shut-down.png" label="Shutdown system">halt</Program>
-	</RootMenu>
+	<!-- SliTaz menus -->
+	<Include>/etc/xdg/jwm/menus.jwmrc</Include> 
 
    <!-- Additional tray attributes: autohide, width, border, layer, layout -->
    <Tray x="0" y="+0" height="24">
