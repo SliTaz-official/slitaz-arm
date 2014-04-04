@@ -42,7 +42,7 @@ list_plugins() {
 	do
 		. ${plugins}/${p}/${p}.conf
 	cat << EOT
-<div><b><a href="$script?$p">$p</a></b></div>
+<div><b><a href="$script?$p">$PLUGIN</a></b></div>
 <pre>
 Description : $SHORT_DESC
 Website     : <a href="$WEB_SITE">${WEB_SITE#http://}</a>
@@ -70,19 +70,12 @@ Memory usage : ${mem_used_pct}%
 CPU usage    : $(top -n 1 | fgrep CPU: | awk '{print $4}')
 </pre>
 
-<pre>
-Filesystem                Size      Used Available Use% Mounted on
---------------------------------------------------------------------------------
-$(df -h | grep ^/dev)
-</pre>
-
 <div id="actions">
 	<form method="get" action="$script">
 		<input type="submit" name="reboot" value="Reboot system" />
 		<input type="submit" name="halt" value="Halt system" />
 	</form>
 </div>
-
 EOT
 }
 

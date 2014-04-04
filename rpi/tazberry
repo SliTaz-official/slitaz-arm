@@ -153,16 +153,15 @@ main_box() {
 		--cancel-label "Quit" \
 		--menu "" ${height} ${width} 14 \
 "rpi-stats"      "$(gettext 'Show some RPi system stats')" \
-"cmdline.txt"    "$(gettext 'View boot args /boot/cmdline.txt')" \
-"config.txt"     "$(gettext 'View config file /boot/config.txt')" \
+"boot-cmdline"   "$(gettext 'View boot args /boot/cmdline.txt')" \
+"boot-config"    "$(gettext 'View config file /boot/config.txt')" \
 "rpi-turbo"      "$(gettext 'Enable or disable RPi turbo on next boot')" \
 "oclock"         "$(gettext 'Overclocking information and config')" \
-"packages"       "$(gettext 'Packages info and upgrade (spk)')" \
-"keyboard"       "$(gettext 'System keyboard setting')" \
-"root-passwd"    "$(gettext 'Change root password')" \
+"packages"       "$(gettext 'Spk packages manager')" \
+"config"         "$(gettext 'System config (lang, keyboard)')" \
 "reboot"         "$(gettext 'Reboot SliTaz')" \
 "halt"           "$(gettext 'Halt the Raspberry Pi')" \
-"quit"           "$(gettext 'Exit from TazBerry tool')" 2>${tmp}
+"quit"           "$(gettext 'Exit TazBerry tool')" 2>${tmp}
 	
 	# Handle options
 	opt=${?}
@@ -175,9 +174,9 @@ main_box() {
 	case "$action" in
 		rpi-stats)
 			msg_box "RPi Stats" "$(rpi_stats)" ;;
-		cmdline.txt)
+		boot-cmdline)
 			text_box /boot/cmdline.txt ;;
-		config.txt)
+		boot-config)
 			text_box ${config} ;;
 		rpi-turbo)
 			rpi_turbo && newline 
@@ -185,13 +184,11 @@ main_box() {
 		oclock)
 			oclock_box ;;
 		packages)
-			pkgs_box ;;
-		keyboard)
-			tazkeymap ;;
+			spk-dialog ;;
+		config)
+			slitaz-config ;;
 		reboot)
 			reboot ;;
-		root-passwd)
-			slitaz-config root_passwd ;;
 		halt)
 			halt ;;
 		quit)

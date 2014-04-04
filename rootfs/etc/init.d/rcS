@@ -68,6 +68,11 @@ if [ ! -f "/var/lib/slitaz/post-install" ]; then
 	#[ -s /etc/locale.conf ] || tazlocale
 	slitaz-config root_passwd
 	# add a user: slitaz-config add_user
+	# Run packages post_install since when we generate a distro from
+	# an i486 machine we can't chroot and run ARM binaries. If we dont
+	# run some post_install we will miss gtk icon, pango modules, etc...
+	# echo "Configuring all SliTaz packages..."
+	# spk reconf --all
 fi
 
 # Load all modules from config file
