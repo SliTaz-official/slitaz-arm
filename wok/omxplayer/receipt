@@ -1,0 +1,28 @@
+# SliTaz package receipt.
+
+PACKAGE="omxplayer"
+VERSION="git-1"
+CATEGORY="multimedia"
+SHORT_DESC="Raspberry Pi cmdline media player."
+MAINTAINER="pankso@slitaz.org"
+LICENSE="GPL2"
+WEB_SITE="https://github.com/popcornmix/omxplayer"
+TARBALL="$PACKAGE-$VERSION.tar.bz2"
+WGET_URL="git|git://github.com/popcornmix/omxplayer.git"
+HOST_ARCH="arm"
+
+DEPENDS="ffmpeg"
+BUILD_DEPENDS="ffmpeg-dev"
+
+# Rules to configure and make the package.
+compile_rules()
+{
+	cp -f ${stuff}/Makefile* .
+	make
+}
+
+# Rules to gen a SliTaz package suitable for Tazpkg.
+genpkg_rules()
+{
+	mkdir ${fs}/usr
+}
