@@ -82,7 +82,7 @@ done; status
 
 # Install
 echo -n "Installing: boot files..."
-cp -a boot/* ${boot}; status
+cp -f boot/* ${boot}; status
 echo -n "Installing: rootfs files..."
 cp -a rootfs/* ${root}; status
 

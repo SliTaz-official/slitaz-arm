@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=TazBerry Config
+Icon=raspberrypi.png
+Exec=terminal -e tazberry
+Categories=System;
