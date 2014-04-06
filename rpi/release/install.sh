@@ -84,7 +84,8 @@ done; status
 echo -n "Installing: boot files..."
 cp -f boot/* ${boot}; status
 echo -n "Installing: rootfs files..."
-cp -a rootfs/* ${root}; status
+cp -a rootfs/* ${root}; 
+chown -R root:root ${root}; status
 
 # Unmount
 echo -n "Unmounting: RPi sdcard..."
