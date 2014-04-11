@@ -1,0 +1,36 @@
+# SliTaz package receipt.
+
+PACKAGE="sonic-pi"
+VERSION="git-1"
+CATEGORY="multimedia"
+SHORT_DESC=""
+MAINTAINER="pankso@slitaz.org"
+LICENSE="GPL3"
+TARBALL="$PACKAGE-VERSION.zip"
+WEB_SITE="http://www.cl.cam.ac.uk/projects/raspberrypi/sonicpi/"
+WGET_URL="https://codeload.github.com/samaaron/sonic-pi/zip/master"
+HOST_ARCH="arm"
+
+DEPENDS=""
+BUILD_DEPENDS=""
+
+# Rules to configure and make the package.
+compile_rules()
+{
+	cd ${src}/app/gui/qt
+	qmake && make &&
+	./rp-app-bin
+}
+
+# SliTaz package testsuite
+testsuite() {
+	echo "Executing cook testsuite..."
+	#readelf -Ah ${src}/8086tiny
+}
+
+# Rules to gen a SliTaz package suitable for Tazpkg.
+genpkg_rules()
+{
+	mkdir -p $fs/usr/bin
+	#cp -a ${src}/etc $fs/etc/sonic-pi
+}

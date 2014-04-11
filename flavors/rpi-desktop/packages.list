@@ -103,3 +103,6 @@ alsa-lib
 libltdl
 alsa-utils
 mpg123
+glib
+pango
+openbox
