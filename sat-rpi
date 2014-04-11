@@ -15,6 +15,7 @@
 distro="$work/distro"
 rpi="$work/rpi"
 data="$rpi/data"
+cache="$rpi/cache"
 boot="$distro/boot"
 rootfs="$distro/rootfs"
 rpi_git="$rpi/git"
@@ -160,8 +161,8 @@ case "$1" in
 		
 		# Store sdcard partition(s) list
 		fdisk -l /dev/${dev} | grep "^/dev/$dev" | awk '{print $1}' \
-			> ${data}/sdcard.part
-		partnb=$(cat ${data}/sdcard.part | wc -l)
+			> ${cache}/sdcard.part
+		partnb=$(cat ${cache}/sdcard.part | wc -l)
 		if [ "$partnb" != 3 ]; then
 			error "SliTaz RPi needs 3 partitions on the sdcard" 
 			newline && exit 1
@@ -191,7 +192,7 @@ case "$1" in
 		echo -n "Unmounting: RPi sdcard"
 		umount_sd; status
 		
-		rm -f ${data}/sdcard.part
+		rm -f ${cache}/sdcard.part
 		separator
 		echo "Insert the SD card into your Raspberry Pi and boot!"
 		newline ;;
@@ -284,10 +285,10 @@ case "$1" in
 		fi
 		
 		# Kernel at last
-		. $data/linux-*/receipt
+		. $cache/linux-*/receipt
 		kvers="$VERSION"
 		kpkg="$rootfs/var/lib/tazpkg/installed/linux"
-		fs="$data/linux-$kvers/fs"
+		fs="$cache/linux-$kvers/fs"
 		ksize=$(du -sh $fs | awk '{print $1}')
 		if [ -d "$fs" ]; then
 			echo -n "Copying: kernel $kvers ($ksize)"
@@ -295,7 +296,7 @@ case "$1" in
 			cp -rf ${fs}/lib/* ${rootfs}/lib
 			cp -f  ${fs}/boot/* ${boot}
 			mkdir -p ${kpkg}
-			cd ${data}/linux-${kvers}
+			cd ${cache}/linux-${kvers}
 			cp -f files.list md5sum receipt ${kpkg}
 			status
 		else
@@ -310,7 +311,7 @@ case "$1" in
 	cook-linux)
 		# Native SliTaz Toolchain and cross toolchain must be installed
 		check_root
-		install="$data/linux-install"
+		install="$cache/linux-install"
 		if [ ! -d "/cross/$arch" ]; then
 			error "Missing cross toolchain in: /cross/$arch" && exit 1
 		fi
@@ -328,7 +329,7 @@ case "$1" in
 			make mrproper &&
 			make ARCH=arm bcmrpi_defconfig
 			echo "Patching SliTaz RPi Linux .config"
-			patch -p0 -i ${rpi}/linux-rpi.patch || exit 1
+			patch -p0 -i ${data}/linux-rpi.patch || exit 1
 			make ARCH=arm CROSS_COMPILE=${HOST_SYSTEM}- zImage &&
 			make ARCH=arm CROSS_COMPILE=${HOST_SYSTEM}- modules &&
 			make ARCH=arm CROSS_COMPILE=${HOST_SYSTEM}- \
@@ -353,18 +354,18 @@ case "$1" in
 		depmod -b . ${kvers%+}-slitaz-rpi+
 		
 		# Kernel
-		fs="$data/linux-$kvers/fs"
+		fs="$cache/linux-$kvers/fs"
 		echo "Kernel version: $kvers"
 		if [ -d "$install" ]; then
-			rm -rf ${data}/linux-${kvers}
-			mkdir -p ${data}/linux-${kvers}
+			rm -rf ${cache}/linux-${kvers}
+			mkdir -p ${cache}/linux-${kvers}
 			cp -a ${install} ${fs}
 			rm -f ${fs}/lib/modules/*/build \
 				${fs}/lib/modules/*/source
 		fi
 		
 		# Pack .tazpkg
-		cd ${data}
+		cd ${cache}
 		echo "Creating package: receipt"
 		cat > linux-$kvers/receipt << EOT
 # SliTaz package receipt
@@ -386,34 +387,34 @@ EOT
 	get-linux)
 		# Precook RPi kernel
 		check_root
-		mkdir -p ${data}
+		mkdir -p ${cache}
 		
 		# Last version
-		rm -f ${data}/linux-version.txt
+		rm -f ${cache}/linux-version.txt
 		if busybox wget -q -s ${rpi_mirror}/last-linux.txt; then
 			echo -n "Fetching latest Kernel string..."
 			wget -q ${rpi_mirror}/last-linux.txt \
-				-O ${data}/linux-version.txt || exit 1
+				-O ${cache}/linux-version.txt || exit 1
 			status
 		else
 			echo "Mirror is unreachable" && exit 1
 		fi
-		kvers=$(cat $data/linux-version.txt)
-		[ "$up" ] && rm -rf ${data}/linux-${kvers}*
+		kvers=$(cat $cache/linux-version.txt)
+		[ "$up" ] && rm -rf ${cache}/linux-${kvers}*
 		echo "Kernel version: $kvers"
 		
 		# Download
-		if [ ! -f "$data/linux-$kvers.tazpkg" ]; then
+		if [ ! -f "$cache/linux-$kvers.tazpkg" ]; then
 			echo -n "Fetching latest Linux package..."
 			wget -q ${rpi_mirror}/linux-${kvers}.tazpkg \
-				-O ${data}/linux-${kvers}.tazpkg; status
+				-O ${cache}/linux-${kvers}.tazpkg; status
 		fi
 		
 		# Extract
-		if [ ! -d "$data/linux-$kvers" ]; then
-			cd ${data} && tazpkg extract linux-${kvers}.tazpkg
+		if [ ! -d "$cache/linux-$kvers" ]; then
+			cd ${cache} && tazpkg extract linux-${kvers}.tazpkg
 		fi 
-		rm -f ${data}/linux-version.txt ;;
+		rm -f ${cache}/linux-version.txt ;;
 		
 	get-prebuilt)
 		# --> in cross ??
@@ -461,7 +462,7 @@ EOT
 	
 	clean)
 		echo "Cleaning: $rpi"
-		rm -rf ${data} ${rpi_git} ;;
+		rm -rf ${cache} ${rpi_git} ;;
 		
 	*|*help) usage ;;
 esac
