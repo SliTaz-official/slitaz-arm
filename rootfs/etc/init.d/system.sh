@@ -15,13 +15,8 @@ fi
 
 # Sound configuration: restore or init
 if [ -d "/proc/asound" ] && [ -x "/usr/sbin/alsactl" ]; then
-	if [ -s "/var/lib/alsa/asound.state" ]; then
-		echo -n "Restoring sound configuration..."
-		alsactl restore; status
-	else
-		echo -n "Initializing sound card..."
-		alsactl init
-	fi
+	echo "Initializing sound card..."
+	alsactl init
 fi
 
 # Locale config
