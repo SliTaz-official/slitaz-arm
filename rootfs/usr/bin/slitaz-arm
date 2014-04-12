@@ -6,6 +6,7 @@
 
 # Handle commands
 case "$1" in
+
 	info)
 		/usr/bin/slitaz
 		# To remove on next slitaz-base-file release
@@ -14,11 +15,11 @@ case "$1" in
 		newline ;;
 	
 	flavor)
+		newline
+		boldify "SliTaz ARM flavor"
+		separator
 		if [ -f "/etc/slitaz/flavor.conf" ]; then
 			. /etc/slitaz/flavor.conf
-			newline
-			boldify "SliTaz ARM flavor"
-			separator
 			echo "Flavor     : $FLAVOR"
 			echo "Build date : $BUILD_DATE"
 			echo "Maintainer : $MAINTAINER"
@@ -30,10 +31,33 @@ case "$1" in
 		separator && newline ;;
 	
 	up-flavor)
-		echo "TODO" ;;
+		hgurl="http://hg.slitaz.org/slitaz-arm"
+		cache="/var/cache/$1"
+		if [ ! -f "/etc/slitaz/flavor.conf" ]; then
+			echo "Missing: /etc/slitaz/flavor.conf" && exit 1
+		fi
+		if ! busybox wget -q -s ${hgurl}; then
+			echo "Hg repos is unreachable..." && exit 1
+		fi
+		. /etc/slitaz/flavor.conf
+		newline
+		colorize 35 "Updating SliTaz ARM"
+		separator
+		echo "Flavor template: $FLAVOR"
+		mkdir -p ${cache} && cd ${cache}
+		wget ${hgurl}/archive/tip.tar.bz2
+		tar xjf tip.tar.bz2
+		cd slitaz-arm-*
+		if [ -d "flavors/$FLAVOR/rootfs" ]; then
+			echo "Installing custom flavor files..."
+			cp -rf flavors/$FLAVOR/rootfs/* /
+		else
+			echo "No custom flavor files to install..."
+		fi
+		rm -rf ${cache}
+		separator
+		newline ;;
 	
-	*)
-		echo "Usage: $(basename $0) [info|flavor|up-flavor]" ;;
-esac
-exit 0
+	*) echo "Usage: $(basename $0) [info|flavor|up-flavor]" ;;
 	
+esac && exit 0
