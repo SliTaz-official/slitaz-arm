@@ -4,8 +4,6 @@
 #
 . /lib/libtaz.sh
 
-[ "$log" ] || log=$(pwd)/slitaz-arm.log
-
 # Handle commands
 case "$1" in
 	info)
@@ -31,26 +29,11 @@ case "$1" in
 		fi 
 		separator && newline ;;
 	
-	report)
-		echo -e "--> uname:" | tee $log
-		uname -a | tee -a $log
-		
-		echo -e "--> ls[pci/usb]:" | tee -a $log
-		lspci | tee -a $log
-		lsusb 2>&1 | tee -a $log
-		
-		echo -e "--> dmesg:" | tee -a $log
-		dmesg | tee -a $log
-		
-		echo -e "--> ifconfig:" | tee -a $log
-		ifconfig -a | tee -a $log 
-		
-		newline
-		echo "Log path: $log" 
-		newline ;;
+	up-flavor)
+		echo "TODO" ;;
 	
 	*)
-		echo "Usage: $(basename $0) [info|flavor|report] [--log=]" ;;
+		echo "Usage: $(basename $0) [info|flavor|up-flavor]" ;;
 esac
 exit 0
 	

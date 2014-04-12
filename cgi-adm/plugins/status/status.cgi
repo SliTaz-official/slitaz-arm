@@ -25,11 +25,25 @@ Type         total         used         free       shared      buffers
 $(free -m | sed "/total/d")
 </pre>
 
+<h2>Last users</h2>
+<pre>
+USER       TTY            HOST               LOGIN  TIME
+--------------------------------------------------------------------------------
+$(last | tail -n 12)
+</pre>
+
 <h2>Routing table</h2>
 <pre>
 Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
 --------------------------------------------------------------------------------
 $(route | grep [0-9])
+</pre>
+
+<h2>ARP hosts</h2>
+<pre>
+Host (IP)
+--------------------------------------------------------------------------------
+$(arp -a)
 </pre>
 
 <h2>Kernel messages</h2>

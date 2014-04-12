@@ -15,12 +15,13 @@ install="$cache/linux-$vers-install"
 
 cd ${cache} || exit 1
 
+# Get source
 echo "Checking for: $tarball"
 [ -f "$tarball" ] || wget ${kurl}
 [ -d "linux-$kvers" ] || tar xJf ${tarball}
 cd linux-$kvers
 
-# fbtft drivers
+# FBtft drivers
 if [ ! -d "drivers/video/fbtft" ]; then
 	cd drivers/video
 	git clone git://github.com/notro/fbtft.git
@@ -29,15 +30,25 @@ if [ ! -d "drivers/video/fbtft" ]; then
 	echo 'obj-y += fbtft/' >> drivers/video/Makefile
 fi
 
-[ "$gconfig" ] && make ARCH=arm gconfig
-
 export PATH=$PATH:/cross/${arch}/tools/bin
 export HOST_SYSTEM=${arch}-slitaz-linux-gnueabi
 
-# Make it!
+# Clean source and get config
+#make mrproper &&
+#cp -f ../../data/linux-pitft.config .config || exit 1
+#yes "" | make ARCH=arm oldconfig
+
+# Handle --gconfig
+[ "$gconfig" ] && make ARCH=arm gconfig
+
+# Cook it!
 make ARCH=arm CROSS_COMPILE=${HOST_SYSTEM}- zImage &&
 make ARCH=arm CROSS_COMPILE=${HOST_SYSTEM}- modules &&
 make ARCH=arm CROSS_COMPILE=${HOST_SYSTEM}- \
 	INSTALL_MOD_PATH=${install} modules_install || exit 1
 mkdir -p ${install}/boot
 cp -a arch/arm/boot/zImage ${install}/boot/kernel.img
+
+# Pack it!
+
+exit 0

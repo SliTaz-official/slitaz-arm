@@ -4,13 +4,13 @@
 #
 
 case " $(GET) " in
-		*\ editor\ *)
-			case " $(GET) " in
-				*\ file\ *)
-					file=$(GET file)
-					html_header "Editor"
-					echo "<h1>Editor: $file</h1>"
-					cat << EOT
+	*\ editor\ *)
+		case " $(GET) " in
+			*\ file\ *)
+				file=$(GET file)
+				html_header "Editor"
+				echo "<h1>Editor: $file</h1>"
+				cat << EOT
 <div id="actions">
 	<form method="get" action="$script">
 		<input type="hidden" name="editor" />
@@ -20,27 +20,27 @@ case " $(GET) " in
 	</form>
 </div>
 EOT
-					;;
+				;;
 				
-				*\ save\ *)
-					html_header "Editor"
-					echo "<h1>Editor</h1>"
-					echo '<pre>'
-					echo "Saving file : $(GET save)"
-					sed "s/$(echo -en '\r') /\n/g" > $(GET save) << EOT
+			*\ save\ *)
+				html_header "Editor"
+				echo "<h1>Editor</h1>"
+				echo '<pre>'
+				echo "Saving file : $(GET save)"
+				sed "s/$(echo -en '\r') /\n/g" > $(GET save) << EOT
 $(GET content)
 EOT
-					echo "File size   : $(du -h $(GET save) | awk '{print $1}')"
-					echo '</pre>'
-					echo "<p><a href='$script?editor'>Editor</a></p>"
-					if [ -d "$cache" ]; then
-						echo "" >> ${cache}/editor.log
-					fi ;;
+				echo "File size   : $(du -h $(GET save) | awk '{print $1}')"
+				echo '</pre>'
+				echo "<p><a href='$script?editor'>Editor</a></p>"
+				if [ -d "$cache" ]; then
+					echo "" >> ${cache}/editor.log
+				fi ;;
 				
-				*)
-					html_header "Editor"
-					echo "<h1>Editor</h1>"
-					cat << EOT
+			*)
+				html_header "Editor"
+				echo "<h1>Editor</h1>"
+				cat << EOT
 <div id="actions">
 	<form method="get" action="$script">
 		<input type="hidden" name="editor" />
@@ -49,9 +49,8 @@ EOT
 	</form>
 </div>
 EOT
-					;;
-			esac
-			
+				;;
+		esac	
 		html_footer
 		exit 0 ;;
 esac
