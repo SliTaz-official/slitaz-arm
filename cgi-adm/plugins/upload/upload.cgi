@@ -31,9 +31,9 @@ if [ "$(GET upload)" ] || [ "$upload" ]; then
 	</form>
 </div>
 
-<h2>Default upload directory: $updir</h2>
+<h2>Upload directory: $updir</h2>
 <pre>
-$(ls -l ${updir})
+$(ls -l ${updir} | fgrep : | awk '{print $6 " " $7 " " $8 " " $9}')
 </pre>
 EOT
 	html_footer && exit 0
