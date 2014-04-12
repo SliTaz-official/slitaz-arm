@@ -67,7 +67,7 @@ Network IP   : $(echo $ip | awk '{print $1}')
 CPU heat     : $(awk '{printf "%3.1f C\n", $1/1000}' /sys/class/thermal/thermal_zone0/temp)
 Processes    : $(ps | wc -l)
 Memory usage : ${mem_used_pct}%
-CPU usage    : $(top -n 1 | fgrep CPU: | awk '{print $4}')
+CPU usage    : $(top -n 1 | grep ^CPU: | awk '{print $4}')
 </pre>
 
 <div id="actions">
