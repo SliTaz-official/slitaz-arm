@@ -135,7 +135,8 @@ $(rpi_oclock)
 
 Current /boot/config.txt
 ------------------------
-$(cat $config)
+$(fgrep _freq /boot/config.txt)
+$(fgrep over_voltage /boot/config.txt)
 
 EOT
 	dialog --cr-wrap \
@@ -155,8 +156,9 @@ main_box() {
 "rpi-stats"      "$(gettext 'Show some RPi system stats')" \
 "boot-cmdline"   "$(gettext 'View boot args /boot/cmdline.txt')" \
 "boot-config"    "$(gettext 'View config file /boot/config.txt')" \
-"rpi-turbo"      "$(gettext 'Enable or disable RPi turbo on next boot')" \
 "oclock"         "$(gettext 'Overclocking information and config')" \
+"rpi-turbo"      "$(gettext 'Enable or disable RPi turbo on next boot')" \
+"act-led"        "$(gettext 'Test RPi onboard ACT green led')" \
 "packages"       "$(gettext 'Spk packages manager')" \
 "config"         "$(gettext 'System config (lang, keyboard)')" \
 "reboot"         "$(gettext 'Reboot SliTaz')" \
@@ -178,11 +180,15 @@ main_box() {
 			text_box /boot/cmdline.txt ;;
 		boot-config)
 			text_box ${config} ;;
+		oclock)
+			oclock_box ;;
 		rpi-turbo)
 			rpi_turbo && newline 
 			gettext "Press ENTER to go back to TazBerry"; read ;;
-		oclock)
-			oclock_box ;;
+		act-led)
+			brightness="/sys/class/leds/led0/brightness"
+			(echo "1" > ${brightness}
+			sleep 2; echo "0" > ${brightness}) & ;;
 		packages)
 			spk-dialog ;;
 		config)
