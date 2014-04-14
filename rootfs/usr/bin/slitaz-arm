@@ -37,7 +37,7 @@ case "$1" in
 			echo "Missing: /etc/slitaz/flavor.conf" && exit 1
 		fi
 		if ! busybox wget -q -s ${hgurl}; then
-			echo "Hg repos is unreachable..." && exit 1
+			echo "Hg repo is unreachable..." && exit 1
 		fi
 		. /etc/slitaz/flavor.conf
 		newline

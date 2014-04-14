@@ -81,7 +81,7 @@ EOT
 
 <h2>Kernel boot parameters</h2>
 <p>
-	This file provide the Linux Kernel boot time parameter and SliTaz
+	This file provides the Linux Kernel boot time parameters and SliTaz
 	boot time options.
 </p>
 <pre>
