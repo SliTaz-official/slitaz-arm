@@ -4,29 +4,38 @@
 	
 	<!-- Applications menu -->
 	<RootMenu height="22" onroot="12">
+		
 		<Menu icon="applications-accessories.png" label="Accessories">
 			<Program icon="galculator.png" label="Calculator">calculator</Program>
 			<Program icon="gnome-screenshot.png" label="Screenshot">shutterbug</Program>
+			<Program icon="text-editor.png" label="Text editor">fltk-editor</Program>
 			<Program icon="joe.png" label="Text Editor">terminal -e joe</Program>
 		</Menu>
+		
+		<Menu icon="applications-development.png" label="Development">
+			<Program icon="fluid.png" label="Fluid designer">fluid</Program>
+			<Program icon="lua.png" label="Screenshot">terminal -e lua</Program>
+		</Menu>
+		
 		<Menu icon="applications-system.png" label="System Tools">
+			<Program icon="file-manager.png" label="File manager">PathFinder</Program>
 			<Program icon="utilities-system-monitor.png" label="Top Monitor">terminal -e top</Program>
 			<!--<Program icon="raspberrypi.png" label="TazBerry Tool">terminal -e 'su -c tazberry'</Program>-->
 			<Program icon="gnome-settings.png" label="System Config">terminal -e 'su -c slitaz-config'</Program>
 			<Program icon="slitaz-icon.png" label="Web Admin">links -g http://localhost/adm</Program>
 		</Menu>
+		
 		<Menu icon="applications-internet.png" label="Network">
-			<Program icon="links.xpm" label="Links Web browser">links -g /usr/share/webhome/links.html</Program>
+			<Program icon="dillo.png" label="Dillo Web browser">dillo</Program>
 			<Program icon="internet-web-browser.png" label="Lynx Web browser">terminal -e lynx</Program>
 			<Program icon="xchat.png" label="TazIRC IRC client">terminal -e 'tazirc --ask'</Program>
 		</Menu>
-		<Program icon="file-manager.png" label="File manager">PathFinder</Program>
-		<Program icon="text-editor.png" label="Text editor">adie</Program>
-		<Program icon="xterm.png" label="Terminal">terminal</Program>
+		
 	</RootMenu>
 	
 	<!-- System menus -->
 	<RootMenu height="22" onroot="3">
+		<Program icon="xterm.png" label="Terminal Emulator">terminal</Program>
 		<Restart label="Restart JWM" icon="system-restart.png" />
 		<Exit label="Exit JWM" confirm="true" icon="system-suspend.png" />
 		<Program icon="system-restart.png" label="Reboot system">reboot</Program>

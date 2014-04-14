@@ -34,6 +34,14 @@
     id="client-list-menu" />
     
   <menu icon="/usr/share/pixmaps/openbox.png" id="openbox-menu" />
+  
+  <item label="Reboot system">
+    <action name="Execute"><command>reboot</command></action>
+  </item>
+  
+  <item label="Shutdown system">
+    <action name="Execute"><command>poweroff</command></action>
+  </item>
 
 </menu>
 
