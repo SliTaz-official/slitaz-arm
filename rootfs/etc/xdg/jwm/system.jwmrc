@@ -2,8 +2,8 @@
 
 <JWM>
 	
-	<!-- SliTaz menus -->
-	<Include>/etc/xdg/jwm/menus.jwmrc</Include> 
+   <!-- SliTaz menus -->
+   <Include>/etc/xdg/jwm/menus.jwmrc</Include> 
 
    <!-- Additional tray attributes: autohide, width, border, layer, layout -->
    <Tray x="0" y="+0" height="24">
@@ -27,7 +27,7 @@
 		  xload -nolabel -bg black -fg grey -hl orange
       </Swallow>
 
-      <Clock format="%I:%M">xclock</Clock>
+      <Clock format="%I:%M">xcal</Clock>
 
    </Tray>
 
@@ -99,6 +99,8 @@
    <IconPath>$HOME/.icons</IconPath>
    <IconPath>/usr/share/icons/SliTaz/apps/22</IconPath>
    <IconPath>/usr/share/icons/SliTaz/categories/22</IconPath>
+   <IconPath>/usr/share/icons/SliTaz/mimetypes/32</IconPath>
+   <IconPath>/usr/share/icons/SliTaz/devices/22</IconPath>
    <IconPath>/usr/share/pixmaps</IconPath>
 
    <!-- Virtual Desktops -->
@@ -128,7 +130,7 @@
    <FocusModel>click</FocusModel>
 
    <!-- The snap mode (none, screen, or border) -->
-   <SnapMode distance="10">border</SnapMode>
+   <SnapMode distance="20">border</SnapMode>
 
    <!-- The move mode (outline or opaque) -->
    <MoveMode>opaque</MoveMode>
@@ -153,5 +155,9 @@
    <Key mask="A" key="#">desktop#</Key>
    <Key mask="A" key="F1">root:1</Key>
    <Key mask="A" key="F2">window</Key>
+   
+   <Key mask="" key="Print">exec:shutterbug</Key>
+   <Key mask="" key="F11">exec:amixer set PCM 5%- unmute</Key>
+   <Key mask="" key="F12">exec:amixer set PCM 5%+ unmute</Key>
 
 </JWM>

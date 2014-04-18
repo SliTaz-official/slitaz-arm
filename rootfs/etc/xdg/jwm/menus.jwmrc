@@ -24,7 +24,7 @@
 		</Menu>
 		
 		<Menu icon="applications-multimedia.png" label="Multimedia">
-			<Program icon="audio-mixer.png" label="Alsaplayer Mixer">terminal -e alsamixer</Program>
+			<Program icon="audio-x-generic.png" label="Alsaplayer Mixer">terminal -e alsamixer</Program>
 		</Menu>
 		
 		<Menu icon="applications-games.png" label="Games">
