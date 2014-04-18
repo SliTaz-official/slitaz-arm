@@ -11,6 +11,13 @@ case " $(GET) " in
 		cat << EOT
 <h1>Raspberry Pi GPIO pins</h1>
 
+<p>
+	The R-Pi offers GPIO lower-level interfaces intended to connect 
+	more directly with chips and subsystem modules. Documentation on the:
+	<a href="http://elinux.org/RPi_Low-level_peripherals">Official Wiki</a>
+</p>
+
+<h2>$sysfs</h2>
 <pre>
 $(ls $sysfs)
 </pre>

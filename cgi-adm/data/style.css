@@ -3,7 +3,7 @@
 html { height: 102%; }
 body { margin: 0; font-size: 90%; }
 h1 { color: #4d4d4d; }
-h2 { color: #666; font-size: 120%; }
+h2 { color: #666; font-size: 140%; }
 h1, h2 { border-bottom: 1px dashed #afafaf; padding: 0 0 5px 0; }
 a:hover { text-decoration: none; }
 li { list-style-type: square; color: #4d4d4d; }

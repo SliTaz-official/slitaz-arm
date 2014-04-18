@@ -63,6 +63,7 @@ EOT
 		html_footer && exit 0 ;;
 	
 	*\ rpi_config\ *)
+		blacklist="/etc/modprebe.d/rpi-blacklist.conf"
 		html_header "Raspberry Pi"
 		cat << EOT
 <h1>SliTaz Raspberry Pi</h1>
@@ -100,6 +101,18 @@ $(cat /boot/config.txt 2>/dev/null)
 </pre>
 <div class="button">
 	<a href="$script?editor&amp;file=/boot/config.txt">Edit config.txt</a>
+</div>
+
+<h2>Blacklisted Kernel modules</h2>
+<p>
+	List of the Linux Kernel modules that should not be loaded on boot
+	time to save resource and speed up you Raspberry Pi.
+</p>
+<pre>
+$(cat $blacklist 2>/dev/null)
+</pre>
+<div class="button">
+	<a href="$script?editor&amp;file=$blacklist">Edit $(basename $blacklist)</a>
 </div>
 EOT
 	
