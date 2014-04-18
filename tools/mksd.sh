@@ -63,25 +63,24 @@ w
 EOF
 status
 
-[ "$nofs" ] && exit 0
-
 # Mkfs: Buggy fat32
-if fdisk -l /dev/${dev} | grep -q "^/dev/${dev}1"; then
-	echo -n "Creating: /boot FAT32 filesystem"
-	mkfs.fat -v -F32 -I -n "           " /dev/${dev}1 \
-		2>>/tmp/mksd.log >/tmp/mksd.log; status
-fi
-if fdisk -l /dev/${dev} | grep -q "^/dev/${dev}2"; then
-	echo -n "Creating: swap memory filesystem"
-	mkswap /dev/${dev}2 >>/tmp/mksd.log; status
-fi
-if fdisk -l /dev/${dev} | grep -q "^/dev/${dev}3"; then
-	fs="ext4"
-	[ "$btrfs" ] && fs="btrfs -f" 
-	echo -n "Creating: root $fs filesystem"
-	mkfs.${fs} -L "SliTazSD" /dev/${dev}3 \
-		2>>/tmp/mksd.log >>/tmp/mksd.log
-	status
+if [ "$mkfs" ]; then
+	if fdisk -l /dev/${dev} | grep -q "^/dev/${dev}1"; then
+		echo -n "Creating: /boot FAT32 filesystem"
+		mkfs.fat -v -F32 -I -n "           " /dev/${dev}1 \
+			>>/tmp/mksd.log 2>&1; status
+	fi
+	if fdisk -l /dev/${dev} | grep -q "^/dev/${dev}2"; then
+		echo -n "Creating: swap memory filesystem"
+		mkswap /dev/${dev}2 >>/tmp/mksd.log; status
+	fi
+	if fdisk -l /dev/${dev} | grep -q "^/dev/${dev}3"; then
+		fs="ext4"
+		[ "$btrfs" ] && fs="btrfs -f" 
+		echo -n "Creating: root $fs filesystem"
+		mkfs.${fs} -L "SliTazSD" /dev/${dev}3 >>/tmp/mksd.log 2>&1
+		status
+	fi
 fi
 
 exit 0

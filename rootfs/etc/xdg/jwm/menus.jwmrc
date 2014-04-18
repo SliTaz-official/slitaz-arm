@@ -6,23 +6,10 @@
 	<RootMenu height="22" onroot="12">
 		
 		<Menu icon="applications-accessories.png" label="Accessories">
-			<Program icon="galculator.png" label="Calculator">calculator</Program>
-			<Program icon="gnome-screenshot.png" label="Screenshot">shutterbug</Program>
-			<Program icon="text-editor.png" label="Text editor">fltk-editor</Program>
-			<Program icon="joe.png" label="Text Editor">terminal -e joe</Program>
-		</Menu>
-		
-		<Menu icon="applications-development.png" label="Development">
-			<Program icon="fluid.png" label="Fluid designer">fluid</Program>
-			<Program icon="lua.png" label="Screenshot">terminal -e lua</Program>
-		</Menu>
-		
-		<Menu icon="applications-system.png" label="System Tools">
-			<Program icon="file-manager.png" label="File manager">PathFinder</Program>
-			<Program icon="utilities-system-monitor.png" label="Top Monitor">terminal -e top</Program>
-			<!--<Program icon="raspberrypi.png" label="TazBerry Tool">terminal -e 'su -c tazberry'</Program>-->
-			<Program icon="gnome-settings.png" label="System Config">terminal -e 'su -c slitaz-config'</Program>
-			<Program icon="slitaz-icon.png" label="Web Admin">links -g http://localhost/adm</Program>
+			<Program icon="galculator.png" label="FOX Calculator">calculator</Program>
+			<Program icon="text-editor.png" label="Fast Text editor">fltk-editor</Program>
+			<Program icon="text-editor.png" label="Joe Text Editor">terminal -e joe</Program>
+			<Program icon="clock.png" label="Desktop Clock">xclock -bg grey92</Program>
 		</Menu>
 		
 		<Menu icon="applications-internet.png" label="Network">
@@ -31,11 +18,43 @@
 			<Program icon="xchat.png" label="TazIRC IRC client">terminal -e 'tazirc --ask'</Program>
 		</Menu>
 		
+		<Menu icon="applications-graphics.png" label="Graphics">
+			<Program icon="gnome-screenshot.png" label="Screen Shot">shutterbug</Program>
+			<Program icon="gcolor2.png" label="Color Browser">fltk-colbrowser</Program>
+		</Menu>
+		
+		<Menu icon="applications-multimedia.png" label="Multimedia">
+			<Program icon="audio-mixer.png" label="Alsaplayer Mixer">terminal -e alsamixer</Program>
+		</Menu>
+		
+		<Menu icon="applications-games.png" label="Games">
+			<Program icon="fltk-blocks.png" label="Blocks Attack">fltk-blocks</Program>
+			<Program icon="fltk-sudoku.png" label="FLTK Sudoku">fltk-sudoku</Program>
+		</Menu>
+		
+		<Menu icon="applications-development.png" label="Development">
+			<!--<Program icon="scratch.png" label="Scratch">scratch</Program>-->
+			<!--<Program icon="python.png" label="Python interpreter">scratch</Program>-->
+			<Program icon="fluid.png" label="Fluid Designer">fluid</Program>
+			<Program icon="lua.png" label="Lua Interpreter">terminal -e lua</Program>
+		</Menu>
+		
+		<Menu icon="applications-system.png" label="System Tools">
+			<Program icon="file-manager.png" label="File Manager">PathFinder</Program>
+			<Program icon="spk.png" label="Packages Manager">terminal -e 'su -c spk-dialog'</Program>
+			<Program icon="htop.png" label="HTop Monitor">terminal -e htop</Program>
+			<!--<Program icon="raspberrypi.png" label="TazBerry Tool">terminal -e 'su -c tazberry'</Program>-->
+			<Program icon="gnome-settings.png" label="System Config">terminal -e 'su -c slitaz-config'</Program>
+			<Program icon="slitaz-icon.png" label="Web Admin">browser http://localhost/adm</Program>
+		</Menu>
+		
 	</RootMenu>
 	
 	<!-- System menus -->
 	<RootMenu height="22" onroot="3">
 		<Program icon="xterm.png" label="Terminal Emulator">terminal</Program>
+		<Program icon="file-manager.png" label="File Manager">file-manager</Program>
+		<Separator/>
 		<Restart label="Restart JWM" icon="system-restart.png" />
 		<Exit label="Exit JWM" confirm="true" icon="system-suspend.png" />
 		<Program icon="system-restart.png" label="Reboot system">reboot</Program>

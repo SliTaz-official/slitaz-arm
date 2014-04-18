@@ -39,7 +39,6 @@ $(boldify "Commands:")
   flavors    List and give info about flavors
   ckpkgs     Distro packages dependencies check
   clean      Clean up the work directory
-  vdisk      Create a virtual disk to be used by Qemu
   emu        Emulate the distro with qemu-system-arm
   mirror     Download or sync the SliTaz ARM mirror
 
@@ -329,25 +328,6 @@ case "$1" in
 			echo -n "Cleaning: spk"
 			rm -rf $work/spk && status
 		fi ;;
-	
-	vdisk)
-		# Lets use and HD in Qemu to store files|packages|whatever
-		vdisk="vdisk.img"
-		: ${size=50}
-		newline
-		echo "Creating virtual disk: $vdisk"
-		cd $work
-		dd if=/dev/zero of=$vdisk bs=1M count=$size
-		# Partition
-		echo "Creating a partition with: fdisk"
-		fdisk ${vdisk} >/dev/null << EOT
-o
-n
-p
-1
-w
-EOT
-		newline ;;
 	
 	emu)
 		cd $work

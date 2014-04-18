@@ -1,0 +1,19 @@
+SliTaz PiTFT Touchscreen
+------------------------
+
+SliTaz run nicely on PiTFT! Here are some notes about cross compiling the
+fbtft kernel driver and about customization. The default X session is
+powered by sts.
+
+Custom configs are in slitaz-arm/flavors/pitft
+
+
+Adafruit Fork of FBTFT for use with Adafruit TS shield
+------------------------------------------------------
+https://github.com/adafruit/adafruit-rpi-fbtft/
+
+
+Adafruit guides
+---------------
+https://learn.adafruit.com/adafruit-pitft-28-inch-resistive-touchscreen-display-raspberry-pi
+
