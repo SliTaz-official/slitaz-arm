@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Create SliTat PiTFT Linux Kernel package
+# Create SliTaz PiTFT Linux Kernel package
 #
 # See: https://github.com/adafruit/adafruit-rpi-fbtft/
 #

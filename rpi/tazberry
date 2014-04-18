@@ -152,7 +152,7 @@ gpu_mem_box() {
 		--title "$title" \
 		--ok-label "Set mem" \
 		--cancel-label "TazBerry" \
-		--menu "\nSet the memory alocated to the GPU (in MB)" \
+		--menu "\nSet the memory allocated to the GPU (in MB)" \
 		${height} ${width} 14 \
 "16"   "For server, NAS, base system without X" \
 "32"   "For very small TFT and TV display" \

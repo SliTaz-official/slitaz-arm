@@ -1,7 +1,7 @@
 SliTaz PiTFT Touchscreen
 ------------------------
 
-SliTaz run nicely on PiTFT! Here are some notes about cross compiling the
+SliTaz runs nicely on PiTFT! Here are some notes about cross compiling the
 fbtft kernel driver and about customization. The default X session is
 powered by sts.
 

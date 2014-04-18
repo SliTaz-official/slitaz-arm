@@ -106,7 +106,7 @@ $(cat /boot/config.txt 2>/dev/null)
 <h2>Blacklisted Kernel modules</h2>
 <p>
 	List of the Linux Kernel modules that should not be loaded on boot
-	time to save resource and speed up you Raspberry Pi.
+	time to save resources and speed up your Raspberry Pi.
 </p>
 <pre>
 $(cat $blacklist 2>/dev/null)
