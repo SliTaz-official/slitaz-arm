@@ -26,6 +26,7 @@ $(boldify "$(gettext 'Usage:')") $(basename $0) [command|rpi_function]
 $(boldify "$(gettext 'Commands:')")
   oclock            $(gettext 'Display overclocking information')
   ls-functions      $(gettext 'List TazBerry functions')
+  rpi_              $(gettext 'Execute any tazberry_function')
   testsuite         $(gettext 'Run TazBerry testsuite')
 
 EOT
@@ -145,6 +146,25 @@ EOT
 		--textbox "$out" ${height} ${width}
 }
 
+gpu_mem_box() {
+	dialog \
+		--clear \
+		--title "$title" \
+		--ok-label "Set mem" \
+		--cancel-label "TazBerry" \
+		--menu "\nSet the memory alocated to the GPU (in MB)" \
+		${height} ${width} 14 \
+"16"   "For server, NAS, base system without X" \
+"32"   "For very small TFT and TV display" \
+"64"   "Default value, fine for low latency desktop" \
+"128"  "For a faster desktop, using a video player" \
+"256"  "For media center, GL/3D applications" 2>${tmp}
+	mem=$(cat $tmp)
+	sed -i \
+		-e s"/#gpu_mem=.*/gpu_mem=$mem/" \
+		-e s"/gpu_mem=.*/gpu_mem=$mem/" /boot/config.txt
+}
+
 # Main Dialog menu
 main_box() {
 	dialog \
@@ -154,11 +174,12 @@ main_box() {
 		--cancel-label "Quit" \
 		--menu "" ${height} ${width} 14 \
 "rpi-stats"      "$(gettext 'Show some RPi system stats')" \
-"boot-cmdline"   "$(gettext 'View boot args /boot/cmdline.txt')" \
-"boot-config"    "$(gettext 'View config file /boot/config.txt')" \
+"gpu-mem"        "$(gettext 'Set memory split between ARM and GPU')" \
+"act-led"        "$(gettext 'Test the RPi onboard ACT green led')" \
 "oclock"         "$(gettext 'Overclocking information and config')" \
 "rpi-turbo"      "$(gettext 'Enable or disable RPi turbo on next boot')" \
-"act-led"        "$(gettext 'Test RPi onboard ACT green led')" \
+"boot-cmdline"   "$(gettext 'View boot args /boot/cmdline.txt')" \
+"boot-config"    "$(gettext 'View config file /boot/config.txt')" \
 "packages"       "$(gettext 'Spk packages manager')" \
 "config"         "$(gettext 'System config (lang, keyboard)')" \
 "reboot"         "$(gettext 'Reboot SliTaz')" \
@@ -166,8 +187,7 @@ main_box() {
 "quit"           "$(gettext 'Exit TazBerry tool')" 2>${tmp}
 	
 	# Handle options
-	opt=${?}
-	case "$opt" in
+	case "$?" in
 		1|255) rm -rf ${tmpdir} && exit 0 ;;
 	esac
 	
@@ -176,19 +196,21 @@ main_box() {
 	case "$action" in
 		rpi-stats)
 			msg_box "RPi Stats" "$(rpi_stats)" ;;
-		boot-cmdline)
-			text_box /boot/cmdline.txt ;;
-		boot-config)
-			text_box ${config} ;;
+		gpu-mem)
+			 gpu_mem_box ;;
+		act-led)
+			brightness="/sys/class/leds/led0/brightness"
+			(echo "1" > ${brightness}
+			sleep 3; echo "0" > ${brightness}) & ;;
 		oclock)
 			oclock_box ;;
 		rpi-turbo)
 			rpi_turbo && newline 
 			gettext "Press ENTER to go back to TazBerry"; read ;;
-		act-led)
-			brightness="/sys/class/leds/led0/brightness"
-			(echo "1" > ${brightness}
-			sleep 2; echo "0" > ${brightness}) & ;;
+		boot-cmdline)
+			text_box /boot/cmdline.txt ;;
+		boot-config)
+			text_box ${config} ;;
 		packages)
 			spk-dialog ;;
 		config)
