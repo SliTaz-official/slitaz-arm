@@ -59,22 +59,9 @@ echo -n "Starting system log daemons: syslogd/klogd..."
 syslogd -s ${SYSLOGD_SIZE} && klogd
 status
 
-# Run post install configs on first boot 
-# /etc/init.d/post-install.sh --> into a script ?
+# Run post install configs on first boot
 if [ ! -f "/var/lib/slitaz/post-install" ]; then
-	colorize 33 "Running post install configs..."
-	mkdir -p /var/lib/slitaz
-	echo "$ARCH" > /var/lib/slitaz/post-install
-	[ -s /etc/keymap.conf ] || tazkeymap
-	#[ -s /etc/locale.conf ] || tazlocale
-	slitaz-config root_passwd
-	slitaz-config add_user
-	[ -x "/var/lib/post-install.sh" ] && /var/lib/post-install.sh
-	# Run packages post_install since when we generate a distro from
-	# an i486 machine we can't chroot and run ARM binaries. If we don't
-	# run some post_install we will miss gtk icon, pango modules, etc...
-	colorize 33 "Configuring all SliTaz packages..."
-	spk reconf --all
+	/etc/init.d/post-install.sh
 fi
 
 # Load all modules from config file

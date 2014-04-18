@@ -2,7 +2,7 @@
 #
 # /etc/init.d/shutdown.sh: System shutdown or reboot script
 #
-# Copyright (C) 2012 SliTaz ARM - BSD License
+# Copyright (C) 2012-2014 SliTaz ARM - BSD License
 #
 . /lib/libtaz.sh
 . /etc/rcS.conf
