@@ -6,6 +6,7 @@ kbd-base
 slitaz-base-files
 slitaz-boot-scripts
 slitaz-configs-base
+slitaz-arm-configs
 slitaz-tools
 slitaz-icon
 slitaz-polar-cursors

@@ -37,6 +37,12 @@ tz=$(cat /etc/TZ)
 echo -n "Setting time zone to: $tz"
 export TZ=${tz}; status
 
+# Rdate for device without HW clock
+if fgrep -q ' rdate ' /proc/cmdline; then
+	echo "Syncing system time..."
+	rdate -s tick.greyware.com 2>/dev/null; status
+fi
+
 # Xorg configuration: $HOME is not yet set
 if [ ! -s "/etc/X11/xorg.conf" ] && [ -x "/usr/bin/Xorg" ]; then
 	echo "Configuring Xorg server..." && HOME="/root"

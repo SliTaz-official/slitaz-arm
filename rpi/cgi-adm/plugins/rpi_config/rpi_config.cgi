@@ -11,8 +11,8 @@ case " $(GET) " in
 		html_header "Leds"
 		case " $(GET leds) " in
 			*\ act_test\ *) 
-				echo "1" > ${brightness} 
-				sleep 2; echo "0" > ${brightness} ;;
+				(echo "1" > ${brightness}
+				sleep 3; echo "0" > ${brightness}) & ;;
 			*\ act_on\ *) 
 				echo "1" > ${brightness} ;;
 			*\ act_off\ *) 
