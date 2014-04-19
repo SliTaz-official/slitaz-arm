@@ -6,7 +6,7 @@
 if [ "$(GET status)" ]; then
 	html_header "Status"
 	cat << EOT
-<h1>System Status</h1>
+<h1>System status</h1>
 <p>
 	Uptime: $(uptime)
 </p>

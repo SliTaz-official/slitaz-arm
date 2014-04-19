@@ -19,7 +19,7 @@ case " $(GET) " in
 
 <h2>$sysfs</h2>
 <pre>
-$(ls $sysfs)
+$(ls -1p $sysfs)
 </pre>
 
 <h2>Export example</h2>

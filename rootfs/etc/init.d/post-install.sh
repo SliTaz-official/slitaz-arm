@@ -20,10 +20,12 @@ slitaz-config about_post_install
 
 slitaz-config root_passwd
 slitaz-config add_user
+#dialog --yesno "$user account was created. Do you want X autologin ?"
 #dialog --yesno "Do you wish to setup a network connection ?"
 #slitaz-config network_connection
 
 # No post install on next boot.
+mkdir -p /var/lib/slitaz
 echo "$ARCH" > /var/lib/slitaz/post-install
 
 # Run packages post_install since when we generate a distro from

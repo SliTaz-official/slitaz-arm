@@ -49,6 +49,11 @@ else
 	mdev -s; status
 fi
 
+# Run post install configs on first boot
+if [ ! -f "/var/lib/slitaz/post-install" ]; then
+	/etc/init.d/post-install.sh
+fi
+
 # Clean up /tmp
 echo -n "Cleaning up temporary files:  /tmp"
 rm -rf /tmp && mkdir /tmp && chmod 1777 /tmp
@@ -58,11 +63,6 @@ status
 echo -n "Starting system log daemons: syslogd/klogd..."
 syslogd -s ${SYSLOGD_SIZE} && klogd
 status
-
-# Run post install configs on first boot
-if [ ! -f "/var/lib/slitaz/post-install" ]; then
-	/etc/init.d/post-install.sh
-fi
 
 # Load all modules from config file
 if [ "$LOAD_MODULES" ]; then
