@@ -1,0 +1,238 @@
+#!/bin/sh
+
+# Check for depends ...
+
+mv -f /var/log/$0.log /var/log/$0.log.0 /dev/null
+while read file pkg ; do
+	[ "$(which $file)" ] && continue
+	echo "Can't find $file. Please install $pkg." >> /var/log/$0.log
+done <<EOT
+kexec	kexec-tools
+dialog	dialog
+EOT
+[ -s /var/log/$0.log ] && exec /init
+
+
+cmdlinearg()
+{
+	grep -q $1= /proc/cmdline && sed "s/.*$1=\([^ ]*\).*/\1/" </proc/cmdline
+}
+
+get()
+{
+	grep -sq ^$1 $2 && sed "/^$1/!d;s/$1[ :=]*//" $2
+}
+
+list_entry()
+{
+	n=0
+	while true ; do	
+		n=$(($n+1))
+		eval KEYWORD="\$KEYWORD_$n"
+		eval ENTRY="\$ENTRY_$n"
+		[ "$KEYWORD" ] || break
+		[ "$KEYWORD" == "$default" ] && ENTRY="$ENTRY (default)"
+		echo -n "$KEYWORD \"$ENTRY\" "
+	done
+}
+
+edit_menu()
+{
+while true; do
+
+	eval KERNEL="\$KERNEL_$1"
+	eval INITRD="\$INITRD_$1"
+	eval CMDLINE="\$CMDLINE_$1"
+
+	exec 3>&1
+	value=$($DIALOG  --clear \
+		--title "${edittitle:-Edit menu}" \
+		--ok-label "Edit" \
+		--cancel-label "Done" \
+		--menu "" 20 72 14 \
+		Kernel "$KERNEL" \
+		Initramfs "$INITRD" \
+		Cmdline "$CMDLINE" 2>&1 1>&3 )
+	retval=$?
+	exec 3>&-
+	
+	case $retval in
+	1|255) return ;;
+	esac
+
+	exec 3>&1
+	case $value in
+	Kernel)
+		data=$($DIALOG  --clear --title "Select the kernel" \
+			 --fselect "$mnt/$KEYWORD/$KERNEL" 10 72 2>&1 1>&3) ;;
+	Initramfs)
+		data=$($DIALOG  --clear --title "Select the initramfs" \
+			 --fselect "$mnt/$KEYWORD/$INITRD" 10 72 2>&1 1>&3) ;;
+	Cmdline)
+		data=$($DIALOG  --clear --title "Edit $value" \
+			 --inputbox "Cmdline" 20 72 2>&1 "$CMDLINE" 1>&3) ;;
+	esac
+	retval=$?
+	exec 3>&-
+	
+	case $retval in
+	1|255) continue ;;
+	esac
+	
+	case $value in
+	Kernel)		[ -f $data ] && eval KERNEL_$1=\$data ;;
+	Initramfs)	[ -f $data ] && eval INITRD_$1=\$data ;;
+	Cmdline)	eval CMDLINE_$1=\$data ;;
+	esac
+done
+}
+
+web_boot_entry()
+{
+	[ "$USING_WEBBOOT" == "1" ] ||
+	echo -n 'WebBoot "boot from Internet"'
+}
+
+web_boot()
+{
+	USING_WEBBOOT=1
+	[ -s $mnt/network.conf ] && cp $mnt/network.conf /etc
+	/etc/init.d/network.sh start
+	webpath=$(get webpath $mnt/menu.txt)
+	[ "$webpath" ] || webpath=http://mirror.slitaz.org/pxe/arm/boot.php
+	wget -O /root/webboot.sh $webpath 2>&1 > /dev/null
+	[ -s /root/webboot.sh ] || return
+	. /root/webboot.sh
+	webprefix=$(dirname $webpath)
+	editbutton=""
+}
+
+: ${DIALOG=dialog}
+
+mount -t proc proc /proc
+BOOTDEV=$(cmdlinearg bootdev)
+mnt=/mnt
+mount -t devtmpfs /dev /dev
+
+# A dirty hack: why devtmpfs does not mount ?
+[ -b /dev/mmcblk0p1 ] || mknod -m 660 /dev/mmcblk0p1 b 179 1
+
+mount -r /dev/${BOOTDEV:-mmcblk0p1} $mnt
+umount /dev
+
+
+# Get global variables
+
+title=$(get title $mnt/menu.txt)
+subtitle=$(get subtitle $mnt/menu.txt)
+
+timeout=$(get timeout $mnt/menu.txt)
+timeout=${timeout:-30}
+
+default=$(get default $mnt/menu.txt)
+
+editbutton='--extra-button --extra-label "Edit"'
+grep -qs ^noedit i$mnt/menu.txt && editbutton=
+
+kmap=$(get kmap $mnt/menu.txt)
+[ "$kmap" ] && ! loadkeys $kmap && loadkmap < /usr/share/kmap/$kmap.kmap
+
+edittitle=$(get edittitle $mnt/menu.txt)
+
+
+# Get OS variables
+
+n=0
+for i in $mnt/*/ ; do
+	grep -qs ^kernel $i/config.txt || continue
+	n=$(($n+1))
+	eval KERNEL_$n="\$(get kernel \$i/config.txt)"
+	eval INITRD_$n="\$(get initramfs \$i/config.txt)"
+	eval CMDLINE_$n="\$(cat \$i/cmdline.txt)"
+	eval KEYWORD_$n="\$(basename \$i)"
+	eval ENTRY_$n="\$(get entry \$i/menu.txt)"
+done
+
+
+# Main loop
+
+while true; do
+
+	exec 3>&1
+	value=$(sh 2>&1 1>&3 <<EOT
+	$DIALOG  --clear \
+		--title "${title:-Boot menu}" \
+		$editbutton \
+		--ok-label "Boot" \
+		--cancel-label "Halt" \
+		--timeout $timeout \
+		--menu "${subtitle:-Default boot in $timeout seconds}" 20 72 14 \
+		$(list_entry) $(web_boot_entry) \
+		Continue "Execute SliTaz boot sequence"
+EOT
+)
+	retval=$?
+	exec 3>&-
+	
+	n=0
+	while true; do
+		n=$(($n+1))
+		eval KEYWORD="\$KEYWORD_$n"
+		[ "$KEYWORD" ] || break
+		[ "$KEYWORD" == "$value" ] && break
+		case $value in
+		*timeout)	[ "$KEYWORD" == "$default" ] && break ;;
+		esac
+	done
+	
+	case $retval in
+		0)
+			case "$value" in
+			*WebBoot) web_boot ;;
+			*)	break ;;
+			esac ;;
+		1|255)
+			case "$value" in
+			*timeout) break ;;
+			esac
+			umount $mnt
+			umount /proc
+			poweroff -f ;;
+		3)
+			[ "$KEYWORD" ] && edit_menu $n ;;
+	esac
+done
+
+
+# Start OS
+
+case "$KEYWORD" in
+
+''|Continue)
+	umount $mnt
+	umount /proc
+	exec /init ;;
+
+*)
+	eval KERNEL="\$KERNEL_$n"
+	eval INITRD="\$INITRD_$n"
+	eval CMDLINE="\$CMDLINE_$n"
+
+	if [ "$webprefix" ]; then
+		cd /root
+		wget $webprefix/$KEYWORD/$KERNEL
+		wget $webprefix/$KEYWORD/$INITRD
+	else
+		cd $mnt/$KEYWORD
+		cp $KERNEL $INITRD /root
+		cd /root
+	fi
+	[ "$INITRD" ] && INITRD="--initrd $(basename $INITRD)"
+	[ "$CMDLINE" ] && CMDLINE="--command-line \"$CMDLINE\""
+
+	kexec -l $(basename $KERNEL) $INITRD $CMDLINE --atags
+	umount $mnt
+	umount /proc
+	kexec -e ;;
+
+esac
