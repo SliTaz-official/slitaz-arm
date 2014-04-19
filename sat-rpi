@@ -56,8 +56,6 @@ $(boldify "Commands:")
 
 $(boldify "Options:")
   --up          Update for commands: firmware and kernel
-  --turbo       Force the RPi to run at the highest arm_freq
-  --oclock=     Set the RPi overclocking mode in config.txt
   --vc          Install the RPi VC libraries in /opt/vc
   --nosat       Don't regenerate the distro with sat
 
@@ -123,10 +121,12 @@ set_oclock() {
 			over_voltage=6 ;;
 	esac
 	cat >> ${boot}/config.txt << EOT
+# Overclocking Settings
 arm_freq=$arm_freq
 core_freq=$core_freq
 sdram_freq=$sdram_freq
 over_voltage=$over_voltage
+
 EOT
 }
 
@@ -252,18 +252,6 @@ case "$1" in
 		cp -f ${rpi}/tazberry ${rootfs}/usr/bin
 		cp -a ${rpi}/cgi-adm/* ${rootfs}/var/www/adm
 		status
-		
-		# Overclocking
-		echo -n "Setting: Overclocking..."
-		set_oclock; status
-		
-		# Force turbo
-		if [ "$turbo" ]; then
-			if ! fgrep 'force_turbo=1' ${boot}/config.txt; then
-				echo -n "Config: force_turbo=1"
-				echo "force_turbo=1" >> ${boot}/config.txt; status
-			fi
-		fi
 		
 		# RPi VC libraries
 		if [ "$vc" ]; then

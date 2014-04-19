@@ -4,12 +4,6 @@
 # Linux kernel image
 kernel=kernel.img
 
-# Overclocking Settings
-arm_freq=700
-core_freq=250
-sdram_freq=400
-over_voltage=0
-
 #GPU memory allocation in MB. Default: 64
 #gpu_mem=128
 
