@@ -63,7 +63,7 @@ EOT
 		html_footer && exit 0 ;;
 	
 	*\ rpi_config\ *)
-		blacklist="/etc/modprebe.d/rpi-blacklist.conf"
+		blacklist="/etc/modprobe.d/rpi-blacklist.conf"
 		html_header "Raspberry Pi"
 		cat << EOT
 <h1>SliTaz Raspberry Pi</h1>
