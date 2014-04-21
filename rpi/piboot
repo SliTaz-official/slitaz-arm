@@ -1,7 +1,13 @@
 #!/bin/sh
+#
+# /sbin/piboot: SliTaz Raspberry Pi bootloader and web boot!
+#
+# (C) 2014 SliTaz GNU/Linux - ...
+#
+# AUTHORS: Pascal Bellard <pascal.bellard@slitaz.org>
+#
 
 # Check for depends ...
-
 mv -f /var/log/$0.log /var/log/$0.log.0 /dev/null
 while read file pkg ; do
 	[ "$(which $file)" ] && continue
@@ -114,7 +120,8 @@ BOOTDEV=$(cmdlinearg bootdev)
 mnt=/mnt
 mount -t devtmpfs /dev /dev
 
-# A dirty hack: why devtmpfs does not mount ?
+# A dirty hack: why devtmpfs does not mount ? 
+# pankso@20140421: It mount fine on my side
 [ -b /dev/mmcblk0p1 ] || mknod -m 660 /dev/mmcblk0p1 b 179 1
 
 mount -r /dev/${BOOTDEV:-mmcblk0p1} $mnt
