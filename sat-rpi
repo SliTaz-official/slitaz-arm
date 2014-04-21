@@ -275,6 +275,10 @@ case "$1" in
 			rm -rf ${vc}/include ${vc}/src ${vc}/lib/*.a
 			${cross_tools}/${arch}-slitaz-linux-gnueabi-strip -s ${vc}/lib/*.so
 			status
+			echo -n "Adding: VC binarie to PATH"
+			echo -e '\n# Raspberry Pi VC tools' >> ${rootfs}/etc/profile
+			echo 'export PATH=$PATH:/opt/vc/bin' >> ${rootfs}/etc/profile
+			status
 		fi
 		
 		# Kernel at last
