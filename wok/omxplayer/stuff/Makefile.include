@@ -1,24 +1,28 @@
+
+HOST_SYSTEM	= arm-slitaz-linux-gnueabi
+SYSROOT		= /cross/arm/sysroot
+
 USE_BUILDROOT=0
-
 JOBS=1
-
 CFLAGS		:= 
 CXXFLAGS	:= $(CFLAGS)
 CPPFLAGS	:= $(CFLAGS)
 LDFLAGS		:= 
-LD		:= ld
-CC		:= gcc
-CXX         	:= g++
-OBJDUMP		:= objdump
-RANLIB		:= ranlib
-STRIP		:= strip
-AR 		:= ar
+LD			:= $(HOST_SYSTEM)-ld
+CC			:= $(HOST_SYSTEM)-gcc
+CXX         := $(HOST_SYSTEM)-g++
+OBJDUMP		:= $(HOST_SYSTEM)-objdump
+RANLIB		:= $(HOST_SYSTEM)-ranlib
+STRIP		:= $(HOST_SYSTEM)-strip
+AR			:= $(HOST_SYSTEM)-ar
 CXXCP 		:= $(CXX) -E
 
 LDFLAGS		+= -L/opt/vc/lib/ -Wl,-rpath /opt/vc/lib/
 
 INCLUDES	+= -I/opt/vc/include -I/opt/vc/include/interface/vcos/ \
-		   -I/opt/vc/include/interface/vcos/pthreads -I/usr/include/freetype2 \
-		   -I/opt/vc/include/interface/vmcs_host/linux -I/usr/include/dbus-1.0 \
-		   -I/usr/lib/dbus-1.0/include/
+		   -I/opt/vc/include/interface/vcos/pthreads \
+		   -I$(SYSROOT)/usr/include/freetype2 \
+		   -I/opt/vc/include/interface/vmcs_host/linux \
+		   -I$(SYSROOT)/usr/include/dbus-1.0 \
+		   -I$(SYSROOT)/usr/lib/dbus-1.0/include/
 

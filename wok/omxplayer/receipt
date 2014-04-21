@@ -14,10 +14,16 @@ HOST_ARCH="arm"
 DEPENDS="ffmpeg"
 BUILD_DEPENDS="ffmpeg-dev"
 
+# BUG: it needs libboost wich will be hard to cross compile!
+
+# WARNING: Omxplayer need the official R-Pi libs in /opt/vc. They are
+# not packaged in i486 so install all firmware by hand.
+# DL: https://github.com/raspberrypi/firmware
+
 # Rules to configure and make the package.
 compile_rules()
 {
-	cp -f ${stuff}/Makefile* .
+	cp -f ${stuff}/Makefile* . &&
 	make
 }
 

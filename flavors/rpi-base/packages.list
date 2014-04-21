@@ -30,3 +30,6 @@ udev
 acl
 attr
 liblzma
+libnl
+wireless_tools
+wpa_supplicant
