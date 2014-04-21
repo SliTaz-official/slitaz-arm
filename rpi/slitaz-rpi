@@ -1,0 +1,73 @@
+#!/bin/sh
+#
+# A tiny utility to help manage SliTaz R-Pi's from an i486 machine. Make
+# it clean and fast for users :-). i you looking for the SliTaz R-Pi distro
+# builder, have a look at sat-rpi.
+#
+# (C) 2014 SliTaz ARM - BSD License
+# AUTHOR: Christophe Lincoln <pankso@slitaz.org> 
+#
+# TODO:
+#
+#   GUI box to dl/install SliTaz R-Pi on sdcard (à la tazusb-box)
+#   SD card DD backup and restore
+#   Setup a R-Pi webboot on any i?86/X64 server/machine
+#
+#
+. /lib/libtaz.sh
+
+usage() {
+	cat << EOT
+
+$(boldify "Usage:") $(basename $0) [command] [host]
+
+$(boldify "Commands:")
+  netmap    Search and map R-Pi's on the wired local network
+  pscan     Scan a or all Raspberry Pi hosts open ports
+
+EOT
+}
+
+case "$1" in
+	netmap)
+		# MAC address works for wired raspberry R-Pi's
+		# http://hwaddress.com/?q=raspberry
+		newline && colorize 35 "Raspberry Pi wired LAN map"
+		separator
+		arp -a | grep -i "b8:27:eb" | awk '{print $2}' | while read line
+		do
+			ip=$(echo "$line" | tr -d '()')
+			ssh="$(colorize 31 OFF)"
+			http="$ssh"
+			if pscan ${ip} -p 22 -P 22 | fgrep 'ssh' | fgrep -q 'open'; then
+				ssh="$(colorize 32 ON)"
+			fi
+			if pscan ${ip} -p 81 -P 81 | fgrep 'http' | fgrep -q 'open'; then
+				http="$(colorize 32 ON)"
+			fi
+			echo -n "IP: $ip $(indent 30 "SSH: $ssh")"
+			indent 46 "HTTP: $http"
+		done
+		separator
+		count=$(arp -a | grep -i "b8:27:eb" | wc -l)
+		echo -n "Raspberry Pi found: "; boldify "$count"
+		newline ;;
+	
+	pscan)
+		[ "$2" ] && pscan ${2} && exit 0
+		arp -a | grep -i "b8:27:eb" | awk '{print $2}' | while read line
+		do
+			ip=$(echo "$line" | tr -d '()')
+			newline
+			echo "$(colorize 35 'Raspberry Pi Open ports')"
+			separator
+			pscan ${ip}
+			separator; newline
+		done ;;
+	
+	backup) ;;
+	
+	restore) ;;
+	
+	*) usage ;;
+esac && exit 0
