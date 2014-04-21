@@ -91,45 +91,6 @@ clone_fw() {
 	git clone --depth 1 ${rpi_git_url}firmware.git
 }
 
-# --> will move to tazberry
-set_oclock() {
-	case "$oclock" in
-		none)
-			arm_freq=700
-			core_freq=250
-			sdram_freq=400
-			over_voltage=0 ;;
-		modest)
-			arm_freq=800
-			core_freq=300
-			sdram_freq=400
-			over_voltage=0 ;;
-		medium)
-			arm_freq=900
-			core_freq=333
-			sdram_freq=450
-			over_voltage=2 ;;
-		hight)
-			arm_freq=950
-			core_freq=450
-			sdram_freq=450
-			over_voltage=6 ;;
-		turbo)
-			arm_freq=1000
-			core_freq=500
-			sdram_freq=500
-			over_voltage=6 ;;
-	esac
-	cat >> ${boot}/config.txt << EOT
-# Overclocking Settings
-arm_freq=$arm_freq
-core_freq=$core_freq
-sdram_freq=$sdram_freq
-over_voltage=$over_voltage
-
-EOT
-}
-
 umount_sd() {
 	umount /dev/${dev}1 2>/dev/null || exit 1
 	umount /dev/${dev}3 2>/dev/null || exit 1
@@ -196,12 +157,7 @@ case "$1" in
 		separator
 		echo "Insert the SD card into your Raspberry Pi and boot!"
 		newline ;;
-		
-	ls-dev)
-		newline
-		fdisk -l | grep "^Disk /dev/sd*" 
-		newline ;;
-	
+
 	gen)
 		# Separate boot files since the Raspberry Pi boots off a FAT32 /boot 
 		# partition on the sdcard.

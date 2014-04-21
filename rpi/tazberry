@@ -24,7 +24,7 @@ help() {
 $(boldify "$(gettext 'Usage:')") $(basename $0) [command|rpi_function]
 
 $(boldify "$(gettext 'Commands:')")
-  oclock            $(gettext 'Display overclocking information')
+  oclock            $(gettext 'Configure overclocking')
   ls-functions      $(gettext 'List TazBerry functions')
   rpi_              $(gettext 'Execute any tazberry_function')
   testsuite         $(gettext 'Run TazBerry testsuite')
@@ -71,6 +71,60 @@ modest  800MHz  ARM 300MHz core 400MHz SDRAM 0 overvolt
 medium  900MHz  ARM 333MHz core 450MHz SDRAM 2 overvolt
 high    950MHz  ARM 450MHz core 450MHz SDRAM 6 overvolt
 turbo   1000MHz ARM 500MHz core 500MHz SDRAM 6 overvolt
+EOT
+}
+
+# Unset overclocking
+unset_oclock() {
+	debug "unset_oclock"
+	sed -i \
+		-e '/# Overclocking.*/'d \
+		-e '/arm_freq=/'d \
+		-e '/core_freq=/'d \
+		-e '/sdram_freq=/'d \
+		-e '/over_voltage=/'d ${config}
+	# Remove if 3 empty lines follows
+	sed -i '1N;N;/^\n\n$/d;P;D' ${config}
+}
+
+# Set overclocking: set_oclock [mode]
+set_oclock() {
+	debug "set_oclock $1"
+	case "$1" in
+		none)
+			arm_freq=700
+			core_freq=250
+			sdram_freq=400
+			over_voltage=0 ;;
+		modest)
+			arm_freq=800
+			core_freq=300
+			sdram_freq=400
+			over_voltage=0 ;;
+		medium)
+			arm_freq=900
+			core_freq=333
+			sdram_freq=450
+			over_voltage=2 ;;
+		hight)
+			arm_freq=950
+			core_freq=450
+			sdram_freq=450
+			over_voltage=6 ;;
+		turbo)
+			arm_freq=1000
+			core_freq=500
+			sdram_freq=500
+			over_voltage=6 ;;
+	esac
+	unset_oclock
+	cat >> ${config} << EOT
+# Overclocking Settings
+arm_freq=$arm_freq
+core_freq=$core_freq
+sdram_freq=$sdram_freq
+over_voltage=$over_voltage
+
 EOT
 }
 
@@ -126,24 +180,38 @@ pkgs_box() {
 	esac
 }
 
+# Overclocking info TODO: button to setup
 oclock_box() {
-	out="$tmpdir/overclocking.txt"
-	cat > ${out} << EOT
-
-Overclocking modes:
--------------------
-$(rpi_oclock)
-
-Current /boot/config.txt
-------------------------
-$(fgrep _freq /boot/config.txt)
-$(fgrep over_voltage /boot/config.txt)
-
-EOT
-	dialog --cr-wrap \
-		--title "$title" \
+	mode=$(fgrep arm_freq ${config} | cut -d '=' -f 2)
+	case "$mode" in
+		700) mode="none" ;;
+		800) mode="modest" ;;
+		900) mode="medium" ;;
+		950) mode="high" ;;
+		1000) mode="turbo" ;;
+	esac
+	dialog \
+		--clear --colors \
+		--extra-button \
+		--title "{ Overclocking }" \
 		--ok-label "TazBerry" \
-		--textbox "$out" ${height} ${width}
+		--extra-label "Set Overclock" \
+		--cancel-label "Unset Oclock" \
+		--menu "\nSet Raspberry Pi overcloking, current setting: \Zb\Z2$mode" \
+		${height} ${width} 14 \
+"none"    "700MHz  ARM 250MHz core 400MHz SDRAM 0 overvolt" \
+"modest"  "800MHz  ARM 300MHz core 400MHz SDRAM 0 overvolt" \
+"medium"  "900MHz  ARM 333MHz core 450MHz SDRAM 2 overvolt" \
+"high"    "950MHz  ARM 450MHz core 450MHz SDRAM 6 overvolt" \
+"turbo"   "1000MHz ARM 500MHz core 500MHz SDRAM 6 overvolt"  2>${tmp}
+	retval="$?"
+	mode=$(cat $tmp)
+	case "$retval" in
+		0) continue ;;
+		1) unset_oclock ;;
+		3) set_oclock "$mode" ;;
+		255) rm -rf ${tmpdir} && exit 0 ;;
+	esac
 }
 
 gpu_mem_box() {
@@ -176,13 +244,13 @@ main_box() {
 "rpi-stats"      "$(gettext 'Show some RPi system stats')" \
 "gpu-mem"        "$(gettext 'Set memory split between ARM and GPU')" \
 "act-led"        "$(gettext 'Test the RPi onboard ACT green led')" \
-"oclock"         "$(gettext 'Overclocking information and config')" \
+"oclock"         "$(gettext 'Overclocking configuration')" \
 "rpi-turbo"      "$(gettext 'Enable or disable RPi turbo on next boot')" \
 "boot-cmdline"   "$(gettext 'View boot args /boot/cmdline.txt')" \
 "boot-config"    "$(gettext 'View config file /boot/config.txt')" \
 "packages"       "$(gettext 'SliTaz packages manager') (spk)" \
 "config"         "$(gettext 'System config (lang, keyboard, wifi)')" \
-"reboot"         "$(gettext 'Reboot SliTaz')" \
+"reboot"         "$(gettext 'Reboot SliTaz system')" \
 "halt"           "$(gettext 'Halt the Raspberry Pi')" \
 "quit"           "$(gettext 'Exit TazBerry tool')" 2>${tmp}
 	
@@ -240,12 +308,7 @@ gauge_box() {
 
 case "$1" in
 	oclock)
-		newline
-		boldify "Overclocking modes:"
-		rpi_oclock
-		boldify "Current config.txt:"
-		cat ${config}
-		newline ;;
+		oclock_box ;;
 	
 	ls-functions)
 		newline
