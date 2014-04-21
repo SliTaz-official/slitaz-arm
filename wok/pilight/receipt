@@ -1,0 +1,26 @@
+# SliTaz package receipt.
+
+PACKAGE="pilight"
+VERSION="3.0"
+CATEGORY="system-tools"
+SHORT_DESC="Free open source full fledge domotica solution for the R-Pi"
+MAINTAINER="pankso@slitaz.org"
+LICENSE="GPL"
+TARBALL="$PACKAGE-$VERSION.tar.gz"
+WEB_SITE="http://www.pilight.org/"
+WGET_URL="https://github.com/pilight/pilight/archive/v${VERSION}.tar.gz"
+HOST_ARCH="arm"
+
+# Rules to configure and make the package.
+compile_rules()
+{
+	#sed -i 's|\(/usr/lib/\).*/\(libz.so\)|\1\2|g' CMakeLists.txt
+	cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr . &&
+    make
+}
+
+# Rules to gen a SliTaz package suitable for Tazpkg.
+genpkg_rules()
+{
+	mkdir -p $fs/usr/share/${PACKAGE}
+}
