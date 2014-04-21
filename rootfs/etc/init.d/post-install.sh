@@ -6,33 +6,34 @@
 #
 . /lib/libtaz.sh
 
-# Exit fbs
+# Be sure fbs is not running
 if [ -f "/fbs.fifo" ]; then
 	echo "exit" > /fbs.fifo && rm -f /fbs.fifo
 	usleep 500000
 fi
 
 # Welcome/About
-#slitaz-config about_post_install
+slitaz-config about_post_install
 
-#[ -s /etc/keymap.conf ] || tazkeymap
+[ -s /etc/keymap.conf ] || tazkeymap
 #[ -s /etc/locale.conf ] || tazlocale
 
-#slitaz-config root_passwd
-#slitaz-config add_user
+slitaz-config root_passwd
+slitaz-config add_user
 #dialog --yesno "$user account was created. Do you want X autologin ?"
 
 # Wireless ?
-#if ifconfig -a | grep "wlan[0-9]"; then
-	#dialog --yesno "\nDo you wish to setup a Wi-Fi network connection ?" 10 72
-	#opt=$?
-	#echo $opt
-	#[ "$?" == "0" ] && slitaz-config wifi_setup
-#fi
+if ifconfig -a | grep "wlan[0-9]"; then
+	dialog --title "{ Network config }" \
+		--yesno "\nDo you wish to setup a Wi-Fi network connection ?" 10 72
+	opt=$?
+	echo $opt
+	[ "$?" == "0" ] && slitaz-config wifi_setup
+fi
 
 # No post install on next boot.
-#mkdir -p /var/lib/slitaz
-#echo "$ARCH" > /var/lib/slitaz/post-install
+mkdir -p /var/lib/slitaz
+echo "$ARCH" > /var/lib/slitaz/post-install
 
 # Run packages post_install since when we generate a distro from
 # an i486 machine we can't chroot and run ARM binaries. If we don't
@@ -48,14 +49,16 @@ fi
 	db=/var/lib/tazpkg/installed
 	installed=$(ls $db | wc -l)
 	
-	# Get the % alocated for 1 pkg and split % left
-	echo "XXX" && echo 4
+	# Get the % alocated for each pkgs and split % left. We use 4% to 
+	# start so 96% is for packages.
+	echo "XXX" && echo 5
 	echo -e "\nInstalled packages to check: \Zb\Z2$installed"
 	echo "XXX"
 	total=$(grep "^post_install" ${db}/*/receipt | wc -l)
-	pkgpct=$((100 / ${total})) 
+	pkgpct=$((100 / ${total}))
 	left=$((100 - (${pkgpct} * ${total})))
 	split=$((${left} / 2))
+	[ "$pkgpct" == 0 ] && pkgpct=1 # If too much installed pkgs
 	sleep 2
 	
 	# Show pkgs to configure a few sec
@@ -63,21 +66,27 @@ fi
 	echo -e "\nPackages to configure: \Zb\Z2$total"
 	echo "XXX" && sleep 3
 	
-	# Lets run all thes post_install
+	# Run all these post_install
 	pct="$split"
 	for pkg in ${db}/*
 	do
-		receipt="$installed/$pkg/receipt"
+		receipt="$pkg/receipt"
 		[ ! -f "$receipt" ] && continue
 		if grep -q ^post_install ${receipt}; then
-			echo -e "\nConfiguring: $pkg"
+			# If we run on a system with <1000 packages...
+			[ "$pct" == 100 ] && pct=0
+			pct=$(($pct + $pkgpct))
+			echo "XXX" && echo ${pct}
+			echo -e "\nConfiguring: $(basename $pkg)"
+			echo "XXX"
 			. ${receipt}
-			#post_install
-		#fi
+			post_install >/dev/null 2>&1
+			#usleep 250000
+		fi
 	done
 	
 	echo "XXX" && echo 100
-	echo -e "\nAll packages are configured... exiting"
+	echo -e "\nAll packages are configured..."
 	echo "XXX" && sleep 2
 } | dialog --title "{ Packages Post Install }" --colors --gauge "" 8 72 0
 
