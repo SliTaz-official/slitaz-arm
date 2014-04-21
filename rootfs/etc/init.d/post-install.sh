@@ -26,8 +26,6 @@ slitaz-config add_user
 if ifconfig -a | grep "wlan[0-9]"; then
 	dialog --title "{ Network config }" \
 		--yesno "\nDo you wish to setup a Wi-Fi network connection ?" 10 72
-	opt=$?
-	echo $opt
 	[ "$?" == "0" ] && slitaz-config wifi_setup
 fi
 

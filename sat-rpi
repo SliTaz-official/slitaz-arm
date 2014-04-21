@@ -231,10 +231,12 @@ case "$1" in
 			rm -rf ${vc}/include ${vc}/src ${vc}/lib/*.a
 			${cross_tools}/${arch}-slitaz-linux-gnueabi-strip -s ${vc}/lib/*.so
 			status
-			echo -n "Adding: VC binaries to PATH"
-			echo -e '\n# Raspberry Pi VC tools' >> ${rootfs}/etc/profile
+			# PATH + LD_LIBRARY_PATH
+			echo -n "Enabling: /opt/vc/bin /opt/vc/lib"
+			echo -e '\n# Raspberry Pi VC tools and libs' >> ${rootfs}/etc/profile
 			echo 'export PATH=$PATH:/opt/vc/bin' >> ${rootfs}/etc/profile
-			status
+			echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/vc/lib' \
+				>> ${rootfs}/etc/profile; status
 		fi
 		
 		# Kernel at last
