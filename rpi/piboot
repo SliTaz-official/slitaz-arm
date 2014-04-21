@@ -4,19 +4,23 @@
 #
 # (C) 2014 SliTaz GNU/Linux - ...
 #
+# usage: insert 'rdinit=/sbin/piboot' (if you load an initramfs)
+# or 'init=/sbin/piboot' in the kernel command line /boot/cmdline.txt
+#
 # AUTHORS: Pascal Bellard <pascal.bellard@slitaz.org>
 #
 
 # Check for depends ...
-mv -f /var/log/$0.log /var/log/$0.log.0 /dev/null
+LOG=/var/log/$(basename $0).log
+mv -f $LOG $LOG.0 /dev/null
 while read file pkg ; do
 	[ "$(which $file)" ] && continue
-	echo "Can't find $file. Please install $pkg." >> /var/log/$0.log
+	echo "Can't find $file. Please install $pkg." >> $LOG
 done <<EOT
 kexec	kexec-tools
 dialog	dialog
 EOT
-[ -s /var/log/$0.log ] && exec /init
+[ -s $LOG ] && exec /init
 
 
 cmdlinearg()
