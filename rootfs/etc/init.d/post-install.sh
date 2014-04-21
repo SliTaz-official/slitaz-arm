@@ -39,7 +39,7 @@ echo "$ARCH" > /var/lib/slitaz/post-install
 # an i486 machine we can't chroot and run ARM binaries. If we don't
 # run some post_install we will miss gtk icon, pango modules, etc...
 # Keep it here since reconf can be run from cmdline and advanced users.
-# Anyway, after a this post install is finish everthing will be handle
+# Anyway, after this post install is finished everything will be handled
 # by spk or tazpkg.
 #
 {
@@ -49,7 +49,7 @@ echo "$ARCH" > /var/lib/slitaz/post-install
 	db=/var/lib/tazpkg/installed
 	installed=$(ls $db | wc -l)
 	
-	# Get the % alocated for each pkgs and split % left. We use 4% to 
+	# Get the % allocated for each pkgs and split % left. We use 4% to 
 	# start so 96% is for packages.
 	echo "XXX" && echo 5
 	echo -e "\nInstalled packages to check: \Zb\Z2$installed"
@@ -61,7 +61,7 @@ echo "$ARCH" > /var/lib/slitaz/post-install
 	[ "$pkgpct" == 0 ] && pkgpct=1 # If too much installed pkgs
 	sleep 2
 	
-	# Show pkgs to configure a few sec
+	# Show pkgs to configure a few secs
 	echo "XXX" && echo ${split}
 	echo -e "\nPackages to configure: \Zb\Z2$total"
 	echo "XXX" && sleep 3
