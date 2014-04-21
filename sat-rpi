@@ -248,9 +248,14 @@ case "$1" in
 		status
 		
 		# TazBerry
-		echo -n "Copying: TazBerry..."
+		echo -n "Copying utility: TazBerry..."
 		cp -f ${rpi}/tazberry ${rootfs}/usr/bin
 		cp -a ${rpi}/cgi-adm/* ${rootfs}/var/www/adm
+		status
+		
+		# PiBoot
+		echo -n "Copying bootloader: PiBoot..."
+		cp -f ${rpi}/piboot ${rootfs}/sbin
 		status
 		
 		# RPi VC libraries
