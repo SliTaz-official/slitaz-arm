@@ -58,7 +58,7 @@
 		<Restart label="Restart JWM" icon="system-restart.png" />
 		<Exit label="Exit JWM" confirm="true" icon="system-suspend.png" />
 		<Program icon="system-restart.png" label="Reboot system">reboot</Program>
-		<Program icon="system-shut-down.png" label="Shutdown system">halt</Program>
+		<Program icon="system-shut-down.png" label="Shutdown system">poweroff</Program>
 	</RootMenu>
 
 </JWM>

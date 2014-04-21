@@ -89,7 +89,7 @@ text_box() {
 	local file="$1"
 	if [ -f "$file" ]; then
 		dialog --cr-wrap \
-			--title " $(gettext 'Viewing file:') $file " \
+			--title "{ $(gettext 'Viewing file:') $file }" \
 			--extra-button \
 			--extra-label "Edit file" \
 			--ok-label "TazBerry" \
@@ -106,7 +106,7 @@ text_box() {
 
 # Usage: tail_box "file"
 tail_box() {
-	dialog --title " $(gettext 'Watching file:') $2 " \
+	dialog --title "{ $(gettext 'Watching file:') $2 }" \
 		--tailbox "$1" ${height} ${width}
 }
 
@@ -180,8 +180,8 @@ main_box() {
 "rpi-turbo"      "$(gettext 'Enable or disable RPi turbo on next boot')" \
 "boot-cmdline"   "$(gettext 'View boot args /boot/cmdline.txt')" \
 "boot-config"    "$(gettext 'View config file /boot/config.txt')" \
-"packages"       "$(gettext 'Spk packages manager')" \
-"config"         "$(gettext 'System config (lang, keyboard)')" \
+"packages"       "$(gettext 'SliTaz packages manager') (spk)" \
+"config"         "$(gettext 'System config (lang, keyboard, wifi)')" \
 "reboot"         "$(gettext 'Reboot SliTaz')" \
 "halt"           "$(gettext 'Halt the Raspberry Pi')" \
 "quit"           "$(gettext 'Exit TazBerry tool')" 2>${tmp}
@@ -218,7 +218,7 @@ main_box() {
 		reboot)
 			reboot ;;
 		halt)
-			halt ;;
+			poweroff ;;
 		quit)
 			rm -rf ${tmpdir} && exit 0 ;;
 	esac

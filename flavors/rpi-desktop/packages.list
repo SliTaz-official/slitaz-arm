@@ -38,7 +38,6 @@ udev
 kmod
 liblzma
 bzip2
-pciids
 usbids
 bzlib
 freetype
