@@ -232,13 +232,26 @@ case "$KEYWORD" in
 	if [ "$webprefix" ]; then
 		cd /root
 		wget $webprefix/$KEYWORD/$KERNEL
-		wget $webprefix/$KEYWORD/$INITRD
+		for i in ${INITRD//,/ }; do
+			wget -O - $webprefix/$KEYWORD/$i >> /root/rootfs.gz
+			n=$(stat -c %s /root/rootfs.gz)
+			n=$(($n % 4))
+			[ $n -eq 0 ] && continue
+			dd if=/dev/zero bs=1 count=$((4 - $n)) >> /root/rootfs.gz
+		done
 	else
 		cd $mnt/$KEYWORD
-		cp $KERNEL $INITRD /root
+		cp $KERNEL /root
+		for i in ${INITRD//,/ }; do
+			cat $i >> /root/rootfs.gz
+			n=$(stat -c %s /root/rootfs.gz)
+			n=$(($n % 4))
+			[ $n -eq 0 ] && continue
+			dd if=/dev/zero bs=1 count=$((4 - $n)) >> /root/rootfs.gz
+		done
 		cd /root
 	fi
-	[ "$INITRD" ] && INITRD="--initrd $(basename $INITRD)"
+	[ "$INITRD" ] && INITRD="--initrd rootfs.gz"
 	[ "$CMDLINE" ] && CMDLINE="--command-line \"$CMDLINE\""
 
 	kexec -l $(basename $KERNEL) $INITRD $CMDLINE --atags
