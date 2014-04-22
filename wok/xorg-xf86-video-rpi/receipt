@@ -1,0 +1,37 @@
+# SliTaz package receipt.
+
+PACKAGE="xorg-xf86-video-rpi"
+VERSION="0.2.0"
+CATEGORY="x-window"
+SHORT_DESC="Raspberry Pi DDX driver for XFree86 server."
+MAINTAINER="pankso@slitaz.org"
+LICENSE="GPL"
+SOURCE="xf86-video-rpi"
+TARBALL="$SOURCE-$VERSION.tar.gz"
+WEB_SITE="https://github.com/Factoid/xf86-video-rpi"
+WGET_URL="${WEB_SITE}/archive/${VERSION}.tar.gz"
+HOST_ARCH="arm"
+
+BUILD_DEPENDS="xorg-server-dev"
+
+# Rules to configure and make the package.
+compile_rules()
+{
+	if [ ! -d "/opt/vc/include" ]; then
+		echo "Missing Raspberry PI VideoCore files..."
+		return 1
+	fi
+	autoconf && automake
+	./configure \
+		--sysconfdir=/etc \
+		$CONFIGURE_ARGS &&
+	make && make install
+}
+
+# Rules to gen a SliTaz package suitable for Tazpkg.
+genpkg_rules()
+{
+	mkdir -p $fs/usr/lib/X11/modules/drivers/
+    cp -a $install/usr/lib/X11/modules/drivers/*.so \
+    	$fs/usr/lib/X11/modules/drivers/
+}
