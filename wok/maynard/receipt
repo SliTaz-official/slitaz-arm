@@ -1,0 +1,31 @@
+# SliTaz package receipt.
+
+PACKAGE="maynard"
+VERSION="git-1"
+CATEGORY="x-window"
+SHORT_DESC="Desktop env for the R-Pi (not limited to it) running on Wayland."
+MAINTAINER="pankso@slitaz.org"
+LICENSE="GPL"
+TARBALL="$PACKAGE-$VERSION.tar.bz2"
+WEB_SITE="http://www.slitaz.org/"
+WGET_URL="git|git://github.com/raspberrypi/maynard.git"
+HOST_ARCH="i486 arm"
+
+# Arf... want gtk3 and some gnome pkgs... not so light I guess
+DEPENDS="wayland"
+BUILD_DEPENDS="wayland-dev"
+
+# Rules to configure and make the package.
+compile_rules()
+{
+	./autogen.sh \
+		--prefix=/usr \
+		${CONFIGURE_ARGS} &&
+	make && make install
+}
+
+# Rules to gen a SliTaz package suitable for Tazpkg.
+genpkg_rules()
+{
+	mkdir -p $fs/usr
+}

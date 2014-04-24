@@ -43,6 +43,7 @@ if fgrep -q ' rdate ' /proc/cmdline; then
 	rdate -s tick.greyware.com 2>/dev/null; status
 fi
 
+# DEPRECATED: Xorg dont need any config file anymore but the 60-Keyboard.conf
 # Xorg configuration: $HOME is not yet set
 if [ ! -s "/etc/X11/xorg.conf" ] && [ -x "/usr/bin/Xorg" ]; then
 	echo "Configuring Xorg server..." && HOME="/root"
