@@ -1,0 +1,32 @@
+# SliTaz package receipt.
+
+PACKAGE="raspyplayer"
+VERSION="v2.7"
+CATEGORY="multimedia"
+SHORT_DESC="A simple media player originally designed for the Raspberry Pi."
+MAINTAINER="pankso@slitaz.org"
+LICENSE="GPL"
+TARBALL="${PACKAGE}-${VERSION}.tar.gz"
+WEB_SITE="http://raspyplayer.org/"
+WGET_URL="https://github.com/jpec/raspyplayer/archive/$VERSION.tar.gz"
+TAGS="raspberrypi rpi"
+HOST_ARCH="i486 arm"
+
+DEPENDS="tk"
+
+# Rules to configure and make the package.
+compile_rules()
+{
+	install -D -m 0755 RasPyPlayer.py ${DESTDIR}/usr/bin/raspyplayer
+	install -D -m 0644 raspyplayer.desktop \
+		${DESTDIR}/usr/share/applications/raspyplayer.desktop
+	install -D -m 0644 raspyplayer.png \
+		${DESTDIR}/usr/share/pixmaps/raspyplayer.png
+}
+
+# Rules to gen a SliTaz package suitable for Tazpkg.
+genpkg_rules()
+{
+	mkdir -p $fs/usr
+	cp -a $install/usr/* $fs/usr
+}
