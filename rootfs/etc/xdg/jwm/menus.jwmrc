@@ -34,9 +34,15 @@
 		
 		<Menu icon="applications-development.png" label="Development">
 			<!--<Program icon="scratch.png" label="Scratch">scratch</Program>-->
-			<!--<Program icon="python.png" label="Python interpreter">scratch</Program>-->
+			<!--<Program icon="python.png" label="Python interpreter">terminal -e python</Program>-->
 			<Program icon="fluid.png" label="Fluid Designer">fluid</Program>
 			<Program icon="lua.png" label="Lua Interpreter">terminal -e lua</Program>
+			<Program icon="sqlite.png" label="SQLite Interpreter">terminal -e sqlite3</Program>
+		</Menu>
+		
+		<Menu icon="text-x-generic.png" label="Documentation">
+			<Program icon="slitaz-icon.png" label="SliTaz ARM Codex">browser /usr/share/doc/slitaz-arm/codex/index.html</Program>
+			<Program icon="spk.png" label="Packages Toolkit">browser /usr/share/doc/spk/spk.html</Program>
 		</Menu>
 		
 		<Menu icon="applications-system.png" label="System Tools">
