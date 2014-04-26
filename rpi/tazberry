@@ -288,7 +288,7 @@ SliTaz is configured for the PiCam but you need a reboot to use it.\
 \n\n
 Do You wish to reboot now ?" \
 	${height} ${width}
-	[ "$?" == 0 ] && echo reboot #####
+	[ "$?" == 0 ] && reboot
 }
 
 # Breakout bords!

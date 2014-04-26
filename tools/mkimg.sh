@@ -16,7 +16,7 @@ cd ${distro}
 echo "Creating disk image..."
 dd if=/dev/zero of=${img} bs=1M count=${size}
 
-device=`kpartx -va $img | sed -E 's/.*(loop[0-9])p.*/\1/g' | head -1`
+device=$(kpartx -va $img | sed -E 's/.*(loop[0-9])p.*/\1/g' | head -1)
 device="/dev/mapper/${device}"
 bootp=${device}p1
 rootp=${device}p2

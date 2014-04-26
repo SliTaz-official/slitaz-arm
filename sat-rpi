@@ -20,7 +20,6 @@ boot="$distro/boot"
 rootfs="$distro/rootfs"
 rpi_git="$rpi/git"
 kernel="$rpi_git/linux"
-firmware="$rpi_git/firmware"
 dev="$2"
 
 # URLs
@@ -51,6 +50,8 @@ $(boldify "Commands:")
 
 $(boldify "Options:")
   --nosat       Don't regenerate the distro with sat
+  --nopatch     Don't patch the kernel before cooking
+  --gconfig     Configure the kernel before cooking
 
 EOT
 }
@@ -226,8 +227,11 @@ case "$1" in
 			export HOST_SYSTEM=${arch}-slitaz-linux-gnueabi
 			make mrproper &&
 			make ARCH=arm bcmrpi_defconfig
-			echo "Patching SliTaz RPi Linux .config"
-			patch -p0 -i ${data}/linux-rpi.patch || exit 1
+			if [ ! "$nopatch" ]; then
+				echo "Patching SliTaz RPi Linux .config"
+				patch -p0 -i ${data}/linux-rpi.patch || exit 1
+			fi
+			[ "$gconfig" ] && make ARCH=arm gconfig
 			make ARCH=arm CROSS_COMPILE=${HOST_SYSTEM}- zImage &&
 			make ARCH=arm CROSS_COMPILE=${HOST_SYSTEM}- modules &&
 			make ARCH=arm CROSS_COMPILE=${HOST_SYSTEM}- \
@@ -238,18 +242,18 @@ case "$1" in
 		
 		# Kernel version
 		kvers=$(ls ${install}/lib/modules)
-		kvers=${kvers%-slitaz-rpi+}+
+		kvers=${kvers%-tazberry+}+
 		
 		# Compress modules
-		cd ${install}/lib/modules/${kvers%+}-slitaz-rpi+/ || exit 1
-		mods=$(find . -name "*.ko$" | wc -l)
-		newline
-		echo "Compressing kernel modules: $mods"
-		find . -name "*.ko$" -exec gzip '{}' \; #2> /dev/null
+		#cd ${install}/lib/modules/*/kernel || exit 1
+		#mods=$(find . -name "*.ko$" | wc -l)
+		#newline
+		#echo "Compressing kernel modules: $mods"
+		#find . -name "*.ko$" -exec xz '{}' \; 2> /dev/null
 		
 		# Rebuild modules.dep
 		cd ${install}
-		depmod -b . ${kvers%+}-slitaz-rpi+
+		depmod -b . ${kvers%+}-tazberry+
 		
 		# Kernel
 		fs="$cache/linux-$kvers/fs"
@@ -270,7 +274,7 @@ case "$1" in
 
 PACKAGE="linux"
 VERSION="$kvers"
-SHORT_DESC="SliTaz Linux Kernel for the Raspberry Pi."
+SHORT_DESC="SliTaz GNU/Linux Kernel for the Raspberry Pi."
 WEB_SITE="http://www.kernel.org"
 
 EOT
