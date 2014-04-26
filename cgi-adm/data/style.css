@@ -50,14 +50,15 @@ header {
 input[type="submit"], select, .button a {
 	color: #444444;
 	border: 1px solid #afafaf;
-	padding: 4px;
+	padding: 6px;
 	margin: 4px 0px;
 	font-size: 14px;
 	line-height: 1.2em;
+	cursor: pointer;
 	background-image: -webkit-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
 	background-image: -moz-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
 	-webkit-appearance: none;
-	-webkit-padding-end: 12px;
+	-webkit-padding-end: 6px;
 	-webkit-padding-start: 6px;
 }
 input[type="submit"],  {
@@ -70,7 +71,6 @@ input[type="text"] {
 	padding: 4px;
 	min-width: 360px;
 }
-
 input[type="submit"]:hover, select:hover, .button a:hover {
 	background-color: #ddd;
 	border: 1px solid #999;

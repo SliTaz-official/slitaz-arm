@@ -24,7 +24,7 @@ case " $(GET) " in
 	<a href="$script?audio=play">Play sound</a>
 	<a href="$script?audio=mute">Mute</a>
 	<a href="$script?audio=vol&amp;cset=100">Vol 100%</a>
-	<a href="$script?audio=vol&amp;cset=50">Vol 50%</a>
+	<a href="$script?audio=vol&amp;cset=75">Vol 75%</a>
 </div>
 <pre>
 $(amixer)
