@@ -8,8 +8,8 @@ h1, h2 { border-bottom: 1px dashed #afafaf; padding: 0 0 5px 0; }
 a:hover { text-decoration: none; }
 li { list-style-type: square; color: #4d4d4d; }
 pre, textarea {
-	font-size: 100%;
-	background: #eee;
+	font-size: 110%;
+	background: #ddd;
 	padding: 10px;
 	overflow: hidden; 
 }
@@ -42,7 +42,10 @@ header {
 /* Content */
 
 #content { margin: 4%; text-align: justify; }
-.button a { text-decoration: none; }
+#notify { padding: 10px; background-color: #ddd; border: 1px solid #00A500; }
+.button { margin: 25px 0; } .button a { text-decoration: none; }
+.center { text-align: center; }
+
 input[type="submit"], select, .button a {
 	color: #444444;
 	border: 1px solid #afafaf;
@@ -72,7 +75,8 @@ input[type="submit"]:hover, select:hover, .button a:hover {
 	border: 1px solid #999;
 }
 
-pre, input[type="submit"], input[type="text"], textarea, .button a {
+pre, input[type="submit"], input[type="text"], textarea, .button a,
+#notify, img {
 	border-radius: 4px;
 }
 

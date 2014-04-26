@@ -4,16 +4,69 @@
 #
 
 case " $(GET) " in
+	*\ audio\ *)
+		html_header "Audio Mixer"
+		case " $(GET audio) " in
+			*\ auto\ *|*\ analog\ *|*\ hdmi\ *) 
+				amixer -q cset numid=3  $(GET cset) ;;
+			*\ vol\ *)
+				amixer -q cset numid=1 "$(GET cset)%" ;;
+			*\ mute\ *)
+				amixer -q cset numid=1 mute ;;
+			*\ play\ *)
+				notify "Playing MP3 system sound..."
+				mpg123 /usr/share/sounds/ready.mp3 2>/dev/null 
+				notify hide ;;
+		esac
+		cat << EOT
+<h1>Audio Mixer</h1>
+<div class="button">
+	<a href="$script?audio=play">Play sound</a>
+	<a href="$script?audio=mute">Mute</a>
+	<a href="$script?audio=vol&amp;cset=100">Vol 100%</a>
+	<a href="$script?audio=vol&amp;cset=50">Vol 50%</a>
+</div>
+<pre>
+$(amixer)
+</pre>
+
+<h2>Audio Output</h2>
+<p>
+	The Raspberry Pi has two audio output modes: HDMI and headphone jack.
+	You can switch between these modes at any time.
+</p>
+<div class="button">
+	<a href="$script?audio=auto&amp;cset=0">Auto</a>
+	<a href="$script?audio=analog&amp;cset=1">Headphone</a>
+	<a href="$script?audio=hdmi&amp;cset=2">HDMI</a>
+</div>
+
+<h2>Controls</h2>
+<pre>
+$(amixer controls)
+</pre>
+
+<h2>Contents</h2>
+<pre>
+$(amixer contents)
+</pre>
+
+EOT
+		html_footer && exit 0 ;;
 
 	*\ leds\ *)
 		trigger="/sys/class/leds/led0/trigger"
 		brightness="/sys/class/leds/led0/brightness"
 		html_header "Leds"
 		case " $(GET leds) " in
-			*\ act_test\ *) 
-				(echo "1" > ${brightness}
-				sleep 3; echo "0" > ${brightness}) & ;;
-			*\ act_on\ *) 
+			*\ act_test\ *)
+				notify "ACT Led should be on..."
+				echo "1" > ${brightness}
+				sleep 4
+				echo "0" > ${brightness} 
+				notify hide ;;
+			*\ act_on\ *)
+				echo "0" > ${brightness}; usleep 50000
 				echo "1" > ${brightness} ;;
 			*\ act_off\ *) 
 				echo "0" > ${brightness} ;;
@@ -25,7 +78,7 @@ Trigger    : $(cat $trigger)
 Brightness : $(cat $brightness)
 </pre>
 <div class="button">
-	<a href="$script?leds=act_on">ACT Test</a>
+	<a href="$script?leds=act_test">ACT Test</a>
 	<a href="$script?leds=act_on">ACT On</a>
 	<a href="$script?leds=act_off">ACT Off</a>
 </div>
@@ -48,7 +101,7 @@ EOT
 <h1>RPi Overclocking</h1>
 
 <pre>
-$(/home/pankso/Projects/slitaz-arm/rpi/tazberry rpi_oclock)
+$(tazberry rpi_oclock)
 </pre>
 
 <h2>Current settings:</h2>
@@ -57,7 +110,7 @@ $(fgrep _freq /boot/config.txt)
 $(fgrep over_voltage /boot/config.txt)
 </pre>
 <div class="button">
-	<a href='$script?editor&amp;file=/boot/config.txt'>Edit boot configuration</a>
+	<a href='$script?editor&amp;file=/boot/config.txt&amp;from=?rpi_config'>Edit boot configuration</a>
 <div>
 EOT
 		html_footer && exit 0 ;;
@@ -75,6 +128,7 @@ EOT
 <div id="actions">
 	<form method="get" action="$script">
 		<input type="submit" name="rdate" value="Set system time" />
+		<input type="submit" name="audio" value="Audio mixer" />
 		<input type="submit" name="oclock" value="Overclocking" />
 		<input type="submit" name="leds" value="Leds" />
 	</form>
@@ -89,7 +143,7 @@ EOT
 $(cat /boot/cmdline.txt 2>/dev/null)
 </pre>
 <div class="button">
-	<a href="$script?editor&amp;file=/boot/cmdline.txt">Edit cmdline.txt</a>
+	<a href="$script?editor&amp;file=/boot/cmdline.txt&amp;from=?rpi_config">Edit cmdline.txt</a>
 </div>
 
 <h2>Boot configuration file</h2>
@@ -100,7 +154,7 @@ $(cat /boot/cmdline.txt 2>/dev/null)
 $(cat /boot/config.txt 2>/dev/null)
 </pre>
 <div class="button">
-	<a href="$script?editor&amp;file=/boot/config.txt">Edit config.txt</a>
+	<a href="$script?editor&amp;file=/boot/config.txt&amp;from=?rpi_config">Edit config.txt</a>
 </div>
 
 <h2>Blacklisted Kernel modules</h2>
@@ -112,7 +166,7 @@ $(cat /boot/config.txt 2>/dev/null)
 $(cat $blacklist 2>/dev/null)
 </pre>
 <div class="button">
-	<a href="$script?editor&amp;file=$blacklist">Edit $(basename $blacklist)</a>
+	<a href="$script?editor&amp;file=$blacklist&amp;from=?rpi_config">Edit $(basename $blacklist)</a>
 </div>
 EOT
 	

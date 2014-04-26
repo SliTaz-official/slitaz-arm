@@ -37,6 +37,15 @@ html_footer() {
 EOT
 }
 
+# Usage: notify [hide|"Message..."]
+notify() {
+	if [ "$1" == "hide" ]; then
+		echo "<style type='text/css'>#notify { display: none !important; }</style>"
+	else
+		echo "<div id='notify'>$@</div>"
+	fi
+}
+
 list_plugins() {
 	for p in $(ls -1 $plugins)
 	do
