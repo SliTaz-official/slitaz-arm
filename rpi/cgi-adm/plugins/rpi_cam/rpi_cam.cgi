@@ -18,18 +18,20 @@ case " $(GET) " in
 	img { margin: 10px 0; }
 </style>
 EOT
-		# Wen need VC Tools
-		if [ ! -x "/opt/vc/bin/raspivid" ]; then
-			echo "<p>VideoCore tools are missing. Please use tazberry \
-				to setup the PiCam/NoIR</p>" && exit 0
+		# We need VC Tools
+		if [ ! -x "/opt/vc/bin/raspistill" ]; then
+			echo "<div id='error'>VideoCore tools are missing. \
+				Please use tazberry to setup your PiCam/NoIR</div>" 
+				html_footer && exit 0
 		fi
 		
 		# raspivid + raspistill
 		case " $(GET rpi_cam) " in
 			*\ shot\ *)
-				notify "Executing raspistill..."
-				echo "$(GET options)" > ${camdir}/shot.opts
-				raspistill $(GET options) -o ${camdir}/shot.jpg 
+				opts="$(GET options)"
+				notify "Executing: raspistill $opts"
+				echo "$opts" > ${camdir}/shot.opts
+				raspistill ${opts} -o ${camdir}/shot.jpg 
 				notify hide ;;
 			*\ rm_shot\ *)
 				rm -f ${camdir}/shot.jpg ;;

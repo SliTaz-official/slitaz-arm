@@ -6,7 +6,6 @@
 case " $(POST) " in
 	*\ upload\ *)
 		[ "$updir" ] || updir="/var/cache/uploads"
-		[ -d "$updir" ] || mkdir -p ${updir}
 		upload="true"
 		name=$(FILE file name)
 		tmpname=$(FILE file tmpname)
@@ -20,6 +19,7 @@ esac
 
 if [ "$(GET upload)" ] || [ "$upload" ]; then
 	[ "$updir" ] || updir="/var/cache/uploads"
+	[ -d "$updir" ] || mkdir -p ${updir}
 	html_header "File Upload"
 	echo "<h1>File Upload</h1>"
 	cat << EOT

@@ -43,6 +43,7 @@ header {
 
 #content { margin: 4%; text-align: justify; }
 #notify { padding: 10px; background-color: #ddd; border: 1px solid #00A500; }
+#error { padding: 10px; background-color: #ddd; border: 1px solid red; }
 .button { margin: 25px 0; } .button a { text-decoration: none; }
 .center { text-align: center; }
 
@@ -76,7 +77,7 @@ input[type="submit"]:hover, select:hover, .button a:hover {
 }
 
 pre, input[type="submit"], input[type="text"], textarea, .button a,
-#notify, img {
+#notify, #error, img {
 	border-radius: 4px;
 }
 

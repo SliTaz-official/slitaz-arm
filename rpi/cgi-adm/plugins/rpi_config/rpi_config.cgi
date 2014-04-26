@@ -5,7 +5,7 @@
 
 case " $(GET) " in
 	*\ audio\ *)
-		html_header "Audio Mixer"
+		html_header "Audio Control"
 		case " $(GET audio) " in
 			*\ auto\ *|*\ analog\ *|*\ hdmi\ *) 
 				amixer -q cset numid=3  $(GET cset) ;;
@@ -60,9 +60,9 @@ EOT
 		html_header "Leds"
 		case " $(GET leds) " in
 			*\ act_test\ *)
-				notify "ACT Led should be on..."
+				notify "ACT Led turned on for 5 sec..."
 				echo "1" > ${brightness}
-				sleep 4
+				sleep 5
 				echo "0" > ${brightness} 
 				notify hide ;;
 			*\ act_on\ *)
@@ -78,21 +78,11 @@ Trigger    : $(cat $trigger)
 Brightness : $(cat $brightness)
 </pre>
 <div class="button">
-	<a href="$script?leds=act_test">ACT Test</a>
-	<a href="$script?leds=act_on">ACT On</a>
-	<a href="$script?leds=act_off">ACT Off</a>
+	<a href="$script?leds=act_test">ACT Led test</a>
+	<a href="$script?leds=act_on">ACT Led on</a>
+	<a href="$script?leds=act_off">ACT Led off</a>
 </div>
 EOT
-		html_footer && exit 0 ;;
-	
-	*\ rdate\ *)
-		html_header "System time"
-		echo "<h1>System time</h1>"
-		echo "<pre>"
-		echo -n "Old date: "; date
-		rdate -s tick.greyware.com
-		echo -n "New date: "; date 
-		echo "</pre>" 
 		html_footer && exit 0 ;;
 	
 	*\ oclock\ *)
@@ -127,8 +117,7 @@ EOT
 
 <div id="actions">
 	<form method="get" action="$script">
-		<input type="submit" name="rdate" value="Set system time" />
-		<input type="submit" name="audio" value="Audio mixer" />
+		<input type="submit" name="audio" value="Audio control" />
 		<input type="submit" name="oclock" value="Overclocking" />
 		<input type="submit" name="leds" value="Leds" />
 	</form>

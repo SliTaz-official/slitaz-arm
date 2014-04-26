@@ -70,6 +70,8 @@ sys_tools() {
 	mem_used_pct=$(( ( ${mem_used} * 100) / ${mem_total} ))
 	cat << EOT
 <pre>
+System time  : $(date)
+Time zone    : $(cat /etc/TZ)
 Kernel       : $(uname -snrm)
 Uptime       : $(uptime | awk '{print $3}' | sed s"/:/h /" | sed s"/,/min/")
 Network IP   : $(echo $ip | awk '{print $1}')
@@ -83,6 +85,7 @@ CPU usage    : $(top -n 1 | grep ^CPU: | awk '{print $4}')
 	<form method="get" action="$script">
 		<input type="submit" name="reboot" value="Reboot system" />
 		<input type="submit" name="halt" value="Halt system" />
+		<input type="submit" name="rdate" value="Set system time" />
 	</form>
 </div>
 EOT
@@ -104,11 +107,23 @@ done
 case " $(GET) " in
 	*\ reboot\ *) reboot ;;
 	*\ halt\ *) halt ;;
+	
 	*\ plugins\ *)
 		html_header "Plugins"
 		echo "<h1>Plugins list</h1>"
 		list_plugins
 		html_footer ;;
+	
+	*\ rdate\ *)
+		html_header "System time"
+		echo "<h1>System time</h1>"
+		echo "<pre>"
+		echo -n "Old date: "; date
+		rdate -s tick.greyware.com
+		echo -n "New date: "; date 
+		echo "</pre>" 
+		html_footer && exit 0 ;;
+	
 	*)
 		html_header "Admin"
 		echo "<h1>System admin</h1>"
