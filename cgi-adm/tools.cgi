@@ -15,6 +15,7 @@ check_root
 plugins="$(pwd)/plugins"
 script="$SCRIPT_NAME"
 data="$(pwd)/data"
+cache="$(pwd)/cache"
 
 #
 # Functions

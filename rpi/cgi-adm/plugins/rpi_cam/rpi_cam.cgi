@@ -30,7 +30,7 @@ EOT
 			*\ shot\ *)
 				opts="$(GET options)"
 				notify "Executing: raspistill $opts"
-				echo "$opts" > ${camdir}/shot.opts
+				echo "$opts" > ${cache}/shot.opts
 				raspistill ${opts} -o ${camdir}/shot.jpg 
 				notify hide ;;
 			*\ rm_shot\ *)
@@ -38,8 +38,8 @@ EOT
 		esac
 		
 		# Get last used options
-		if [ -f "${camdir}/shot.opts" ]; then
-			shot_opts="$(cat ${camdir}/shot.opts)"
+		if [ -f "$cache/shot.opts" ]; then
+			shot_opts="$(cat $cache/shot.opts)"
 		else
 			shot_opts="--width 480 --height 320"
 		fi
