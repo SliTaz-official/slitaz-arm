@@ -246,7 +246,7 @@ picam_setup() {
 			echo "XXX" && echo $((${pct} + 20))
 			echo -e "\nInstalling: $pkg"
 			echo "XXX"
-			#[ -d "$db/$pkg" ] || spk-add ${pkg} >/dev/null
+			[ -d "$db/$pkg" ] || spk-add ${pkg} >/dev/null 2>/dev/null
 			sleep 1
 		done
 		
