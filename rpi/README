@@ -46,17 +46,10 @@ To get the list of commands and options with a short help simply run:
 
 $ sat-rpi help
 
-  --turbo: The forced turbo option turns off the dynamic clocks and runs the 
-           Raspberry Pi constantly at the highest arm_freq.
-
 
 Overclocking
 ------------
-To enable overclocking select one of the suggested modes from the list. Choosing 
-medium is generally a good starting point without risks:
-
-# sat-rpi oclock
-# sat-rpi gen --oclock=medium
+To enable overclocking you must use tazberry directly on your Raspberry Pi.
 
 
 SliTaz RPi Kernel

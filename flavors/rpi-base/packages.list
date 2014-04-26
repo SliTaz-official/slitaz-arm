@@ -6,6 +6,7 @@ kbd-base
 slitaz-base-files
 slitaz-boot-scripts
 slitaz-configs-base
+slitaz-arm-rpi
 slitaz-tools
 spk
 tazirc

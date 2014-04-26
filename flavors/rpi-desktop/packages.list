@@ -6,6 +6,7 @@ kbd-base
 slitaz-base-files
 slitaz-boot-scripts
 slitaz-configs-base
+slitaz-arm-rpi
 slitaz-arm-configs
 slitaz-tools
 slitaz-icon
@@ -111,4 +112,4 @@ libltdl
 alsa-utils
 mpg123
 lua
-svkbd
+raspberrypi-boot
