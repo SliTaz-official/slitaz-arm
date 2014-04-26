@@ -6,6 +6,7 @@
 # Author: Christophe Lincoln <pankso@slitaz.org>
 #
 . /lib/libtaz.sh
+check_root
 
 title="{ TazBerry }"
 config="/boot/config.txt"
@@ -290,6 +291,38 @@ Do You wish to reboot now ?" \
 	[ "$?" == 0 ] && echo reboot #####
 }
 
+# Breakout bords!
+boards_box() {
+	dialog \
+		--clear \
+		--title "$title" \
+		--ok-label "Exec" \
+		--cancel-label "Quit" \
+		--menu "\nSetup or use a breakout board" ${height} ${width} 14 \
+"cam-setup"      "$(gettext 'Configure your Pi to use a Camera')" \
+"piglow"          "$(gettext 'Setup your Pi to use PiGlow')" 2>${tmp}
+	
+	# Handle options
+	case "$?" in
+		1|255) rm -rf ${tmpdir} && exit 0 ;;
+	esac
+	
+	# Handle actions
+	action=$(cat $tmp)
+	case "$action" in
+		cam-setup)
+			 picam_setup ;;
+		piglow)
+			for pkg in python-rpi-pyglow wiringpi-piglow; do
+				spk-add ${pkg}
+			done
+			newline
+			echo -n "Do you wish to try the leds [y/N] ? " ; read anser
+			[ "$anser" == "y" ] && echo "Enter a value between: 5-255" \
+				&& pyglow test
+	esac
+}
+
 # Main Dialog menu
 main_box() {
 	dialog \
@@ -300,7 +333,7 @@ main_box() {
 		--menu "" ${height} ${width} 14 \
 "rpi-stats"      "$(gettext 'Show some RPi system stats')" \
 "gpu-mem"        "$(gettext 'Set memory split between ARM and GPU')" \
-"cam-setup"      "$(gettext 'Configure your Pi to use the Camera')" \
+"boards"         "$(gettext 'Boards settings and tools (Camera, PyGlow)')" \
 "act-led"        "$(gettext 'Test the RPi onboard ACT green led')" \
 "oclock"         "$(gettext 'Overclocking configuration')" \
 "rpi-turbo"      "$(gettext 'Enable or disable RPi turbo on next boot')" \
@@ -324,8 +357,8 @@ main_box() {
 			msg_box "RPi Stats" "$(rpi_stats)" ;;
 		gpu-mem)
 			 gpu_mem_box ;;
-		cam-setup)
-			 picam_setup ;;
+		boards)
+			 boards_box ;;
 		act-led)
 			brightness="/sys/class/leds/led0/brightness"
 			(echo "1" > ${brightness}
