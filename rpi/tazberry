@@ -25,6 +25,7 @@ $(boldify "$(gettext 'Usage:')") $(basename $0) [command|rpi_function]
 
 $(boldify "$(gettext 'Commands:')")
   oclock            $(gettext 'Configure overclocking')
+  cam-setup         $(gettext 'Configure your Pi to use the Camera')
   ls-functions      $(gettext 'List TazBerry functions')
   rpi_              $(gettext 'Execute any tazberry_function')
   testsuite         $(gettext 'Run TazBerry testsuite')
@@ -233,6 +234,62 @@ gpu_mem_box() {
 		-e s"/gpu_mem=.*/gpu_mem=$mem/" /boot/config.txt
 }
 
+picam_setup() {
+	db="/var/lib/tazpkg/installed"
+	gpu_mem=128
+	pct="0"
+	{
+		# Needed packages
+		for pkg in raspberrypi-vc raspberrypi-boot-x
+		do
+			echo "XXX" && echo $((${pct} + 20))
+			echo -e "\nInstalling: $pkg"
+			echo "XXX"
+			#[ -d "$db/$pkg" ] || spk-add ${pkg} >/dev/null
+			sleep 1
+		done
+		
+		echo "XXX" && echo 60
+		echo -e "\nSetting up: ${config}"
+		echo "XXX" && sleep 1
+		# 0 to disable camera, 1 to enable it
+		if ! grep -q "start_x=1" ${config}; then
+			cat >> ${config} << EOT
+		
+# Camera settings
+start_x=1
+
+EOT
+		fi
+		# In case it was commented ot disabled
+		sed -i s'/#start_x=.*/start_x=1/' ${config}
+		sed -i s'/start_x=.*/start_x=1/' ${config}
+		
+		# PiCam need 128 MB of GPU memory
+		echo "XXX" && echo 80
+		echo -e "\nSetting GPU memory to: ${gpu_mem}"
+		echo "XXX" && sleep 1
+		
+		sed  -i "s/#gpu_mem=.*/gpu_mem=${gpu_mem}/" ${config}
+		sed  -i "s/gpu_mem=.*/gpu_mem=${gpu_mem}/" ${config}
+		
+		echo "XXX" && echo 100
+		echo -e "\nPiCam config done..."
+		echo "XXX" && sleep 1
+
+	} | dialog --title "{ PiCam Setup }" \
+		--gauge "" 8 ${width} 0
+	
+	# Reboot ?
+	dialog --title "$title" \
+	--yesno "\n\
+SliTaz is configured for the PiCam but you need a reboot to use it.\
+\n\n
+Do You wish to reboot now ?" \
+	${height} ${width}
+	[ "$?" == 0 ] && echo reboot #####
+}
+
 # Main Dialog menu
 main_box() {
 	dialog \
@@ -243,6 +300,7 @@ main_box() {
 		--menu "" ${height} ${width} 14 \
 "rpi-stats"      "$(gettext 'Show some RPi system stats')" \
 "gpu-mem"        "$(gettext 'Set memory split between ARM and GPU')" \
+"cam-setup"      "$(gettext 'Configure your Pi to use the Camera')" \
 "act-led"        "$(gettext 'Test the RPi onboard ACT green led')" \
 "oclock"         "$(gettext 'Overclocking configuration')" \
 "rpi-turbo"      "$(gettext 'Enable or disable RPi turbo on next boot')" \
@@ -266,6 +324,8 @@ main_box() {
 			msg_box "RPi Stats" "$(rpi_stats)" ;;
 		gpu-mem)
 			 gpu_mem_box ;;
+		cam-setup)
+			 picam_setup ;;
 		act-led)
 			brightness="/sys/class/leds/led0/brightness"
 			(echo "1" > ${brightness}
@@ -309,6 +369,9 @@ gauge_box() {
 case "$1" in
 	oclock)
 		oclock_box ;;
+	
+	cam-setup)
+		picam_setup ;;
 	
 	ls-functions)
 		newline
