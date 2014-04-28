@@ -216,7 +216,7 @@ case "$1" in
 		fi
 		
 		# Kernel source
-		cd ${rpi_git}
+		mkdir -p ${rpi_git} && cd ${rpi_git}
 		[ -d "$kernel" ] || git clone --depth 1 ${rpi_git_url}linux.git
 		
 		# Compile

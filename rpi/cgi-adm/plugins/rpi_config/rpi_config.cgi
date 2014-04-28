@@ -85,6 +85,27 @@ Brightness : $(cat $brightness)
 EOT
 		html_footer && exit 0 ;;
 	
+	*\ i2c\ *)
+		html_header "I2C Bus"
+		modprobe -q i2c-bcm2708
+		modprobe -q i2c-dev
+		echo '<h1>Raspberry Pi I2C Bus</h1>'
+		if [ ! -x "/usr/sbin/i2cdetect" ]; then
+			echo "<div id='error'>Missing package: i2c-tools</div>"
+			html_footer && exit 0
+		fi
+		cat << EOT
+<p>
+	I2C kernel modules: i2c-bcm2708 + i2c-dev
+</p>
+
+<h2>I2C Detect</h2>
+<pre>
+$(i2cdetect -y 1)
+</pre>
+EOT
+		html_footer && exit 0 ;;
+	
 	*\ oclock\ *)
 		html_header "Overclocking"
 		cat << EOT
@@ -120,6 +141,7 @@ EOT
 		<input type="submit" name="audio" value="Audio control" />
 		<input type="submit" name="oclock" value="Overclocking" />
 		<input type="submit" name="leds" value="Leds" />
+		<input type="submit" name="i2c" value="I2C Bus" />
 	</form>
 </div>
 

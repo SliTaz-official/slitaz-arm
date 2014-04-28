@@ -13,4 +13,4 @@ hsetroot -fill /usr/share/images/slitaz-arm-background.png &
 #xsetroot -solid "#222222" &
 
 # Wbar2 icon bar.
-#$(sleep 3 && wbar) &
+#$(sleep 2; wbar &) &
