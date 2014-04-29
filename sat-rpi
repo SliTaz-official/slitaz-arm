@@ -52,6 +52,7 @@ $(boldify "Options:")
   --nosat       Don't regenerate the distro with sat
   --nopatch     Don't patch the kernel before cooking
   --gconfig     Configure the kernel before cooking
+  --fbtft       Try to compile the Framebuffer touch screen driver
 
 EOT
 }
@@ -216,12 +217,22 @@ case "$1" in
 			error "Missing cross toolchain in: /cross/$arch" && exit 1
 		fi
 		
-		# Kernel source
+		# Kernel source and --clean
 		mkdir -p ${rpi_git} && cd ${rpi_git}
 		[ -d "$kernel" ] || git clone --depth 1 ${rpi_git_url}linux.git
+		[ "$clean" ] && rm -rf ${install}
+		
+		# FBtft drivers for small touchscreen such PiTFT, PiScreen
+		if [ "$fbtft" ] && [ ! -d "${kernel}/drivers/video/fbtft" ]; then
+			cd ${kernel}/drivers/video
+			git clone git://github.com/notro/fbtft.git
+			cd ${kernel}
+			echo 'source "drivers/video/fbtft/Kconfig"' >> drivers/video/Kconfig
+			echo 'obj-y += fbtft/' >> drivers/video/Makefile
+			cd ${rpi_git}
+		fi
 		
 		# Compile
-		[ "$clean" ] && rm -rf ${install}
 		if [ ! -d "$install" ]; then
 			cd ${kernel}
 			export PATH=$PATH:/cross/${arch}/tools/bin
@@ -257,11 +268,13 @@ case "$1" in
 		depmod -b . ${kvers%+}-tazberry+
 		
 		# Kernel
-		fs="$cache/linux-$kvers/fs"
+		pkg="linux"
+		[ "$fbtft" ] && pkg="linux-fbtft"
+		fs="$cache/$pkg-$kvers/fs"
 		echo "Kernel version: $kvers"
 		if [ -d "$install" ]; then
-			rm -rf ${cache}/linux-${kvers}
-			mkdir -p ${cache}/linux-${kvers}
+			rm -rf ${cache}/${pkg}-${kvers}
+			mkdir -p ${cache}/${pkg}-${kvers}
 			cp -a ${install} ${fs}
 			rm -f ${fs}/lib/modules/*/build \
 				${fs}/lib/modules/*/source
@@ -270,16 +283,16 @@ case "$1" in
 		# Pack .tazpkg
 		cd ${cache}
 		echo "Creating package: receipt"
-		cat > linux-$kvers/receipt << EOT
+		cat > ${pkg}-$kvers/receipt << EOT
 # SliTaz package receipt
 
-PACKAGE="linux"
+PACKAGE="${pkg}"
 VERSION="$kvers"
 SHORT_DESC="SliTaz GNU/Linux Kernel for the Raspberry Pi."
 WEB_SITE="http://www.kernel.org"
 
 EOT
-		tazpkg pack linux-$kvers ;;
+		tazpkg pack ${pkg}-$kvers ;;
 	
 	clone-fw)
 		clone_fw ;;

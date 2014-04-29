@@ -1,11 +1,13 @@
 SliTaz PiTFT Touchscreen
 ------------------------
 
-SliTaz runs nicely on PiTFT! Here are some notes about cross compiling the
-fbtft kernel driver and about customization. The default X session is
-powered by sts.
+SliTaz runs nicely on PiTFT! Here is a custom flavor to get started.
+Cross compiling the fbtft kernel driver is done with:
 
-Custom configs are in slitaz-arm/flavors/pitft
+# sat-rpi cook-linux --clean --gconfig --fbtft 
+
+Then enable video drivers you want, close te config and it will buid.
+The default X session is powered by sts.
 
 
 Adafruit Fork of FBTFT for use with Adafruit TS shield
