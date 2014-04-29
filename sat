@@ -56,6 +56,10 @@ $(boldify "Options:")
 EOT
 }
 
+error() {
+	echo "[ $(colorize 31 'ERROR') ] $@"
+}
+
 # --> use libpkg.sh when released (function is shared with spk)
 # Check mirror ID: return 1 if no changes or mirror unreachable
 check_mirror_id() {
@@ -85,6 +89,12 @@ case "$1" in
 		newline && boldify "Generating SliTaz ARM distro"
 		separator
 		rm -rf ${distro} && mkdir -p ${rootfs} ${cache}
+		
+		# We need a valid flavor
+		if [ "$flavor" ] && [ ! -f "$flavors/$flavor/packages.list" ]; then
+			error "Missing '$flavor' flavor packages.list" 
+			newline && exit 1
+		fi
 		
 		# Get --flavor= packages lists
 		if [ "$flavor" ]; then

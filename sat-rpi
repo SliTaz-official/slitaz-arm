@@ -150,7 +150,8 @@ case "$1" in
 		
 		# We may want to simply regenerate the RPi distro
 		if [ ! "$nosat" ]; then
-			sat gen --work="$work" --flavor="$flavor" --noinit --nolinux
+			sat gen --work="$work" --flavor="$flavor" \
+				--noinit --nolinux || exit 1
 		else
 			newline
 		fi
