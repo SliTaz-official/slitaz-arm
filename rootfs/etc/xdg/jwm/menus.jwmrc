@@ -1,5 +1,4 @@
 <?xml version="1.0"?>
-
 <JWM>
 	
 	<!-- Applications menu -->
@@ -12,7 +11,7 @@
 			<Program icon="clock.png" label="Desktop Clock">xclock -bg grey92</Program>
 		</Menu>
 		
-		<Menu icon="applications-internet.png" label="Network">
+		<Menu icon="applications-internet.png" label="Internet">
 			<Program icon="dillo.png" label="Dillo Web browser">dillo</Program>
 			<Program icon="internet-web-browser.png" label="Lynx Web browser">terminal -e lynx</Program>
 			<Program icon="xchat.png" label="TazIRC IRC client">terminal -e 'tazirc --ask'</Program>
@@ -58,7 +57,7 @@
 	
 	<!-- System menus -->
 	<RootMenu height="22" onroot="3">
-		<Program icon="xterm.png" label="Terminal Emulator">terminal</Program>
+		<Program icon="terminal.png" label="Terminal Emulator">terminal</Program>
 		<Program icon="file-manager.png" label="File Manager">file-manager</Program>
 		<Separator/>
 		<Restart label="Restart JWM" icon="system-restart.png" />
@@ -66,5 +65,4 @@
 		<Program icon="system-restart.png" label="Reboot system">reboot</Program>
 		<Program icon="system-shut-down.png" label="Shutdown system">poweroff</Program>
 	</RootMenu>
-
 </JWM>
