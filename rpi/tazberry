@@ -168,7 +168,7 @@ EOT
 }
 
 tazberry_back() {
-	gettext "Press ENTER to go back to TazBerry"; read ;;
+	gettext "Press ENTER to go back to TazBerry"; read
 }
 
 #
