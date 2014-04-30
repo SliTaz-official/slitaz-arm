@@ -345,7 +345,7 @@ boards_box() {
 	
 	# Handle options
 	case "$?" in
-		1|255) rm -rf ${tmpdir} && continue ;;
+		1|255) continue ;;
 	esac
 	
 	# Handle actions
