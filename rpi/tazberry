@@ -15,6 +15,9 @@ tmp="$tmpdir/$$"
 height="20"
 width="72"
 
+# Mirror URL
+rpi_mirror="http://mirror.slitaz.org/arm/rpi/"
+
 # Use a tmp directory
 mkdir -p ${tmpdir}
 
@@ -76,6 +79,40 @@ turbo   1000MHz ARM 500MHz core 500MHz SDRAM 6 overvolt
 EOT
 }
 
+# Update custom Raspberry Pi Kernel
+rpi_linux_up() {
+	cache="/var/cache/tazpkg"
+	gettext "Updating Raspberry Pi Linux kernel..."; echo
+	mkdir -p ${cache}
+		
+	# Last version
+	rm -f ${cache}/linux-version.txt
+	if busybox wget -q -s ${rpi_mirror}/packages/last-linux.txt; then
+		echo -n "Fetching latest Kernel string..."
+		wget -q ${rpi_mirror}/packages/last-linux.txt \
+			-O ${cache}/linux-version.txt || exit 1
+		status
+	else
+		gettext "Mirror is unreachable"; echo && exit 1
+	fi
+	kvers=$(cat $cache/linux-version.txt)
+	rm -rf ${cache}/linux-${kvers}*
+	gettext "Kernel version: $kvers"; echo
+	
+	# Download
+	gettext "Fetching latest Linux package..."
+	wget -q ${rpi_mirror}/packages/linux-${kvers}.tazpkg \
+		-O ${cache}/linux-${kvers}.tazpkg; status
+	
+	# Install
+	if [ -f "$cache/linux-$kvers.tazpkg" ]; then
+		cd ${cache} && spk-add linux-${kvers}.tazpkg
+	else
+		gettext "Kernel update failed..."; echo
+	fi 
+	rm -f ${cache}/linux-version.txt
+}
+
 # Unset overclocking
 unset_oclock() {
 	debug "unset_oclock"
@@ -130,6 +167,10 @@ over_voltage=$over_voltage
 EOT
 }
 
+tazberry_back() {
+	gettext "Press ENTER to go back to TazBerry"; read ;;
+}
+
 #
 # GUI Functions
 #
@@ -178,7 +219,7 @@ pkgs_box() {
 		--textbox "$out" ${height} ${width}
 	# Handle options
 	case "$?" in
-		3) spk-up && gettext "Press ENTER to go back to TazBerry"; read ;;
+		3) spk-up && tazberry_back ;;
 	esac
 }
 
@@ -339,6 +380,7 @@ main_box() {
 "rpi-turbo"      "$(gettext 'Enable or disable RPi turbo on next boot')" \
 "boot-cmdline"   "$(gettext 'View boot args /boot/cmdline.txt')" \
 "boot-config"    "$(gettext 'View config file /boot/config.txt')" \
+"linux-up"       "$(gettext 'Update SliTaz Raspberry Pi Linux Kernel')" \
 "packages"       "$(gettext 'SliTaz packages manager') (spk)" \
 "config"         "$(gettext 'System config (lang, keyboard, wifi)')" \
 "reboot"         "$(gettext 'Reboot SliTaz system')" \
@@ -367,11 +409,14 @@ main_box() {
 			oclock_box ;;
 		rpi-turbo)
 			rpi_turbo && newline 
-			gettext "Press ENTER to go back to TazBerry"; read ;;
+			tazberry_back ;;
 		boot-cmdline)
 			text_box /boot/cmdline.txt ;;
 		boot-config)
 			text_box ${config} ;;
+		linux-up)
+			rpi_linux_up
+			tazberry_back ;;
 		packages)
 			spk-dialog ;;
 		config)
