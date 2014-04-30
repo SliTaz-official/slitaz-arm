@@ -345,7 +345,7 @@ boards_box() {
 	
 	# Handle options
 	case "$?" in
-		1|255) rm -rf ${tmpdir} && exit 0 ;;
+		1|255) rm -rf ${tmpdir} && continue ;;
 	esac
 	
 	# Handle actions
@@ -359,8 +359,9 @@ boards_box() {
 			done
 			newline
 			echo -n "Do you wish to try the leds [y/N] ? " ; read anser
-			[ "$anser" == "y" ] && echo "Enter a value between: 5-255" \
-				&& pyglow test
+			if [ "$anser" == "y" ]; then 
+				echo "Enter a value between: 5-255" && pyglow test
+			fi ;;
 	esac
 }
 
