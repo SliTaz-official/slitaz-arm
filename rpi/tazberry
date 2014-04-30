@@ -80,49 +80,60 @@ EOT
 }
 
 # Update custom Raspberry Pi Kernel
-rpi_linux_up() {
+linux_update() {
 	cache="/var/cache/tazpkg"
 	current="/var/lib/tazpkg/installed/linux"
-	newline
-	colorize 35 "$(gettext 'Raspberry Pi kernel update')"
-	separator
-	mkdir -p ${cache}
+	{
+		echo "XXX" && echo 20
+		echo -e "\n$(gettext 'Raspberry Pi kernel update')"
+		echo "XXX" && sleep 1
+		mkdir -p ${cache}
+		rm -f ${cache}/linux-version.txt
 		
-	# Last version
-	rm -f ${cache}/linux-version.txt
-	if busybox wget -q -s ${rpi_mirror}/packages/last-linux.txt; then
-		echo -n "Fetching latest Kernel string..."
-		wget -q ${rpi_mirror}/packages/last-linux.txt \
-			-O ${cache}/linux-version.txt || exit 1
-		status
-	else
-		gettext "Mirror is unreachable"; echo && exit 1
-	fi
-	kvers=$(cat $cache/linux-version.txt)
-	rm -rf ${cache}/linux-${kvers}*
-	gettext "Last Kernel version: $kvers"; echo
-	
-	# Current version
-	if [ -f "$current/receipt" ]; then
-		. ${current}/receipt
-		[ "$VERSION" != "$kvers" ] && echo "Current version: $VERSION"
-	fi
-	
-	# Download
-	gettext "Fetching latest Linux package..."
-	wget -q ${rpi_mirror}/packages/linux-${kvers}.tazpkg \
-		-O ${cache}/linux-${kvers}.tazpkg; status
-	
-	# Install
-	if [ -f "$cache/linux-$kvers.tazpkg" ]; then
-		cd ${cache} && spk-add linux-${kvers}.tazpkg --forced
-	else
-		gettext "Kernel update failed..."; false
-		status
-	fi
-	
-	rm -f ${cache}/linux-version.txt
-	separator && newline
+		# Last version
+		echo "XXX" && echo 40
+		echo -e "\n$(gettext 'Fetching latest Kernel version string...')"
+		echo "XXX" && sleep 1
+		if busybox wget -q -s ${rpi_mirror}/packages/last-linux.txt; then
+			wget -q ${rpi_mirror}/packages/last-linux.txt \
+				-O ${cache}/linux-version.txt || exit 1
+		else
+			echo "XXX" && echo 100
+			echo -e "\n$(gettext 'Mirror is unreachable')"
+			echo "XXX" && sleep 1
+			exit 1
+		fi
+		kvers=$(cat $cache/linux-version.txt)
+		
+		echo "XXX" && echo 50
+		echo -e "\n$(gettext 'Last Kernel version:') $kvers"
+		echo "XXX" && sleep 2
+		rm -rf ${cache}/linux-${kvers}*
+		
+		# Download
+		echo "XXX" && echo 60
+		echo -e "\n$(gettext 'Fetching latest Linux package...')"
+		echo "XXX"
+		wget -q ${rpi_mirror}/packages/linux-${kvers}.tazpkg \
+			-O ${cache}/linux-${kvers}.tazpkg || exit 1
+		
+		# Install
+		echo "XXX" && echo 80
+		echo -e "\n$(gettext 'Installing:') linux-${kvers}.tazpkg"
+		echo "XXX"
+		cd ${cache}
+		spk-add linux-${kvers}.tazpkg --forced >/dev/null 2>&1 || exit 1
+		
+		echo "XXX" && echo 100
+		echo -e "\n$(gettext 'cleaning installing files...')"
+		echo "XXX" && sleep 2
+		rm -f ${cache}/linux-version.txt
+		
+	} | dialog --title "{ Kernel Update }" \
+		--gauge "" 8 ${width} 0
+	# Reboot ?
+	reboot_ox \
+		"$(gettext 'You must reboot to use your new Linux Kernel.')"
 }
 
 # Unset overclocking
@@ -217,6 +228,14 @@ text_box() {
 tail_box() {
 	dialog --title "{ $(gettext 'Watching file:') $2 }" \
 		--tailbox "$1" ${height} ${width}
+}
+
+# Usage: reboot_box "Message..."
+reboot_box() {
+	dialog --title "$title" --yesno "\n${2}\n\n
+Do You wish to reboot now ?" \
+	${height} ${width}
+	[ "$?" == 0 ] && reboot
 }
 
 # Packages info and spk-up button
@@ -335,13 +354,8 @@ EOT
 		--gauge "" 8 ${width} 0
 	
 	# Reboot ?
-	dialog --title "$title" \
-	--yesno "\n\
-SliTaz is configured for the PiCam but you need a reboot to use it.\
-\n\n
-Do You wish to reboot now ?" \
-	${height} ${width}
-	[ "$?" == 0 ] && reboot
+	reboot_ox \
+		"$(gettext 'SliTaz is configured for the PiCam but you need a reboot to use it.')"
 }
 
 # Breakout bords!

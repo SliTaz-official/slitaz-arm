@@ -43,9 +43,8 @@ if [ "$NTPD_HOST" ]; then
 	ntpd -q -p ${$NTPD_HOST}; status
 fi
 
-# DEPRECATED: Xorg dont need any config file anymore but the 60-Keyboard.conf
-# Xorg configuration: $HOME is not yet set
+# We need Xorg 40-Keyboard.conf and SliTaz applications.conf
 if [ ! -s "/etc/X11/xorg.conf" ] && [ -x "/usr/bin/Xorg" ]; then
-	echo "Configuring Xorg server..." && HOME="/root"
-	tazx config-xorg 2>/var/log/xorg.configure.log
+	echo "Configuring Xorg server..." && 
+	HOME="/root" tazx init
 fi
