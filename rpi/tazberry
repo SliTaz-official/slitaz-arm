@@ -442,7 +442,7 @@ main_box() {
 		boot-config)
 			text_box ${config} ;;
 		linux-up)
-			rpi_linux_up
+			linux_update
 			tazberry_back ;;
 		packages)
 			spk-dialog ;;
