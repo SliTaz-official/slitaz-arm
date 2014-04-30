@@ -82,7 +82,10 @@ EOT
 # Update custom Raspberry Pi Kernel
 rpi_linux_up() {
 	cache="/var/cache/tazpkg"
-	gettext "Updating Raspberry Pi Linux kernel..."; echo
+	current="/var/lib/tazpkg/installed/linux"
+	newline
+	colorize 35 "$(gettext 'Raspberry Pi kernel update')"
+	separator
 	mkdir -p ${cache}
 		
 	# Last version
@@ -97,7 +100,13 @@ rpi_linux_up() {
 	fi
 	kvers=$(cat $cache/linux-version.txt)
 	rm -rf ${cache}/linux-${kvers}*
-	gettext "Kernel version: $kvers"; echo
+	gettext "Last Kernel version: $kvers"; echo
+	
+	# Current version
+	if [ -f "$current/receipt" ]; then
+		. ${current}/receipt
+		[ "$VERSION" != "$kvers" ] && echo "Current version: $VERSION"
+	fi
 	
 	# Download
 	gettext "Fetching latest Linux package..."
@@ -106,11 +115,14 @@ rpi_linux_up() {
 	
 	# Install
 	if [ -f "$cache/linux-$kvers.tazpkg" ]; then
-		cd ${cache} && spk-add linux-${kvers}.tazpkg
+		cd ${cache} && spk-add linux-${kvers}.tazpkg --forced
 	else
-		gettext "Kernel update failed..."; echo
-	fi 
+		gettext "Kernel update failed..."; false
+		status
+	fi
+	
 	rm -f ${cache}/linux-version.txt
+	separator && newline
 }
 
 # Unset overclocking
@@ -338,7 +350,7 @@ boards_box() {
 		--clear \
 		--title "$title" \
 		--ok-label "Exec" \
-		--cancel-label "Quit" \
+		--cancel-label "TazBerry" \
 		--menu "\nSetup or use a breakout board" ${height} ${width} 14 \
 "cam-setup"      "$(gettext 'Configure your Pi to use a Camera')" \
 "piglow"          "$(gettext 'Setup your Pi to use PiGlow')" 2>${tmp}
