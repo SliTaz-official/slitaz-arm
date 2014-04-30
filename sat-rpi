@@ -222,7 +222,7 @@ case "$1" in
 		[ -d "$kernel" ] || git clone --depth 1 ${rpi_git_url}linux.git
 		[ "$clean" ] && rm -rf ${install}
 		
-		# FBtft drivers for small touchscreen such PiTFT, PiScreen
+		# FBtft drivers for small touchscreens such PiTFT, PiScreen
 		if [ "$fbtft" ] && [ ! -d "${kernel}/drivers/video/fbtft" ]; then
 			cd ${kernel}/drivers/video
 			git clone git://github.com/notro/fbtft.git

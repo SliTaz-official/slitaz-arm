@@ -6,7 +6,7 @@ Cross compiling the fbtft kernel driver is done with:
 
 # sat-rpi cook-linux --clean --gconfig --fbtft 
 
-Then enable video drivers you want, close te config and it will buid.
+Then enable video drivers you want, close the config and it will build.
 The default X session is powered by sts.
 
 

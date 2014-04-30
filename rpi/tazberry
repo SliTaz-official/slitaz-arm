@@ -319,7 +319,7 @@ EOT
 		sed -i s'/#start_x=.*/start_x=1/' ${config}
 		sed -i s'/start_x=.*/start_x=1/' ${config}
 		
-		# PiCam need 128 MB of GPU memory
+		# PiCam needs 128 MB of GPU memory
 		echo "XXX" && echo 80
 		echo -e "\nSetting GPU memory to: ${gpu_mem}"
 		echo "XXX" && sleep 1
