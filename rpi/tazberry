@@ -29,6 +29,7 @@ $(boldify "$(gettext 'Usage:')") $(basename $0) [command|rpi_function]
 
 $(boldify "$(gettext 'Commands:')")
   oclock            $(gettext 'Configure overclocking')
+  linux-up          $(gettext 'Update SliTaz R-Pi Linux kernel')
   cam-setup         $(gettext 'Configure your Pi to use the Camera')
   ls-functions      $(gettext 'List TazBerry functions')
   rpi_              $(gettext 'Execute any tazberry_function')
@@ -125,14 +126,14 @@ linux_update() {
 		spk-add linux-${kvers}.tazpkg --forced >/dev/null 2>&1 || exit 1
 		
 		echo "XXX" && echo 100
-		echo -e "\n$(gettext 'cleaning installing files...')"
+		echo -e "\n$(gettext 'Cleaning installing files...')"
 		echo "XXX" && sleep 2
 		rm -f ${cache}/linux-version.txt
 		
 	} | dialog --title "{ Kernel Update }" \
 		--gauge "" 8 ${width} 0
 	# Reboot ?
-	reboot_ox \
+	reboot_box \
 		"$(gettext 'You must reboot to use your new Linux Kernel.')"
 }
 
@@ -474,6 +475,9 @@ gauge_box() {
 case "$1" in
 	oclock)
 		oclock_box ;;
+	
+	linux-up)
+		linux_update ;;
 	
 	cam-setup)
 		picam_setup ;;
