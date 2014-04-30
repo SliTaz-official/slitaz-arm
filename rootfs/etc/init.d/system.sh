@@ -37,10 +37,10 @@ tz=$(cat /etc/TZ)
 echo -n "Setting time zone to: $tz"
 export TZ=${tz}; status
 
-# Rdate for device without HW clock
-if fgrep -q ' rdate ' /proc/cmdline; then
+# For device without HW clock
+if [ "$NTPD_HOST" ]; then
 	echo "Syncing system time..."
-	rdate -s tick.greyware.com 2>/dev/null; status
+	ntpd -q -p ${$NTPD_HOST}; status
 fi
 
 # DEPRECATED: Xorg dont need any config file anymore but the 60-Keyboard.conf
