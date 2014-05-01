@@ -186,10 +186,10 @@ case "$1" in
 		status
 		
 		# Kernel at last
-		. $cache/linux-*/receipt
+		. $cache/linux-*-arm/receipt
 		kvers="$VERSION"
 		kpkg="$rootfs/var/lib/tazpkg/installed/linux"
-		fs="$cache/linux-$kvers/fs"
+		fs="$cache/linux-$kvers-arm/fs"
 		ksize=$(du -sh $fs | awk '{print $1}')
 		if [ -d "$fs" ]; then
 			echo -n "Copying: kernel $kvers ($ksize)"
@@ -197,7 +197,7 @@ case "$1" in
 			cp -rf ${fs}/lib/* ${rootfs}/lib
 			cp -f  ${fs}/boot/* ${boot}
 			mkdir -p ${kpkg}
-			cd ${cache}/linux-${kvers}
+			cd ${cache}/linux-${kvers}-arm
 			cp -f files.list md5sum receipt ${kpkg}
 			status
 		else
@@ -270,29 +270,33 @@ case "$1" in
 		# Kernel
 		pkg="linux"
 		[ "$fbtft" ] && pkg="linux-fbtft"
-		fs="$cache/$pkg-$kvers/fs"
+		fs="$cache/$pkg-$kvers-arm/fs"
 		echo "Kernel version: $kvers"
 		if [ -d "$install" ]; then
-			rm -rf ${cache}/${pkg}-${kvers}
-			mkdir -p ${cache}/${pkg}-${kvers}
-			cp -a ${install} ${fs}
+			rm -rf ${cache}/${pkg}-${kvers}-arm
+			mkdir -p ${fs}
+			cp -a ${install}/* ${fs}
 			rm -f ${fs}/lib/modules/*/build \
 				${fs}/lib/modules/*/source
+		else
+			echo "Kernel is not built..." && exit 1
 		fi
 		
 		# Pack .tazpkg
 		cd ${cache}
 		echo "Creating package: receipt"
-		cat > ${pkg}-$kvers/receipt << EOT
+		cat > ${pkg}-${kvers}-arm/receipt << EOT
 # SliTaz package receipt
 
 PACKAGE="${pkg}"
 VERSION="$kvers"
 SHORT_DESC="SliTaz GNU/Linux Kernel for the Raspberry Pi."
+MAINTAINER="pankso@slitaz.org"
 WEB_SITE="http://www.kernel.org"
+HOST_ARCH="arm"
 
 EOT
-		tazpkg pack ${pkg}-$kvers ;;
+		tazpkg pack ${pkg}-${kvers}-arm ;;
 	
 	clone-fw)
 		clone_fw ;;

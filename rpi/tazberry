@@ -105,6 +105,7 @@ linux_update() {
 			exit 1
 		fi
 		kvers=$(cat $cache/linux-version.txt)
+		pkg="linux-${kvers}-arm.tazpkg"
 		
 		echo "XXX" && echo 50
 		echo -e "\n$(gettext 'Last Kernel version:') $kvers"
@@ -115,15 +116,14 @@ linux_update() {
 		echo "XXX" && echo 60
 		echo -e "\n$(gettext 'Fetching latest Linux package...')"
 		echo "XXX"
-		wget -q ${rpi_mirror}/packages/linux-${kvers}.tazpkg \
-			-O ${cache}/linux-${kvers}.tazpkg || exit 1
+		wget -q ${rpi_mirror}/packages/${pkg} -O ${cache}/${pkg} || exit 1
 		
 		# Install
 		echo "XXX" && echo 80
-		echo -e "\n$(gettext 'Installing:') linux-${kvers}.tazpkg"
+		echo -e "\n$(gettext 'Installing:') ${pkg}"
 		echo "XXX"
 		cd ${cache}
-		spk-add linux-${kvers}.tazpkg --forced >/dev/null 2>&1 || exit 1
+		spk-add ${pkg} --forced >/dev/null 2>&1 || exit 1
 		
 		echo "XXX" && echo 100
 		echo -e "\n$(gettext 'Cleaning installing files...')"
@@ -319,7 +319,7 @@ picam_setup() {
 			echo "XXX" && echo $((${pct} + 20))
 			echo -e "\nInstalling: $pkg"
 			echo "XXX"
-			[ -d "$db/$pkg" ] || spk-add ${pkg} >/dev/null 2>/dev/null
+			[ -d "$db/$pkg" ] || spk-add ${pkg} >/dev/null 2>&1
 			sleep 1
 		done
 		
