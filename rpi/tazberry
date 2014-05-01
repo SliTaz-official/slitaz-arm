@@ -355,7 +355,7 @@ EOT
 		--gauge "" 8 ${width} 0
 	
 	# Reboot ?
-	reboot_ox \
+	reboot_box \
 		"$(gettext 'SliTaz is configured for the PiCam but you need a reboot to use it.')"
 }
 

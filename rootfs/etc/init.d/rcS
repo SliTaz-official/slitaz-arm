@@ -81,6 +81,11 @@ done
 # Start X session
 if [ "$LOGIN_MANAGER" ] && [ -x "/etc/init.d/$LOGIN_MANAGER" ]; then
 	colorize 36 "Starting X environment..."
+	# We need Xorg 40-Keyboard.conf and SliTaz applications.conf
+	if [ ! -s "/etc/X11/xorg.conf.d/40-Keyboard.conf" ]; then
+		echo "Configuring Xorg server..." && HOME="/root" 
+		tazx init
+	fi
 	/etc/init.d/$LOGIN_MANAGER start >/dev/null &
 fi
 

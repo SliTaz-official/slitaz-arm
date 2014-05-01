@@ -23,7 +23,7 @@ slitaz-config add_user
 #dialog --yesno "$user account was created. Do you want X autologin ?"
 
 # Wireless ?
-if ifconfig -a | grep "wlan[0-9]"; then
+if ifconfig -a | grep -q "wlan[0-9]"; then
 	dialog --title "{ Network config }" \
 		--yesno "\nDo you wish to setup a Wi-Fi network connection ?" 10 72
 	[ "$?" == "0" ] && slitaz-config wifi_setup
@@ -32,6 +32,9 @@ fi
 # No post install on next boot.
 mkdir -p /var/lib/slitaz
 echo "$ARCH" > /var/lib/slitaz/post-install
+
+# Stop networking since it will be restarted by /etc/init.d/network.sh
+stopd network.sh >/dev/null && rm -rf /run/wpa_supplicant
 
 # Run packages post_install since when we generate a distro from
 # an i486 machine we can't chroot and run ARM binaries. If we don't

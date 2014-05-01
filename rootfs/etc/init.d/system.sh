@@ -42,9 +42,3 @@ if [ "$NTPD_HOST" ]; then
 	echo "Syncing system time..."
 	ntpd -q -p ${$NTPD_HOST}; status
 fi
-
-# We need Xorg 40-Keyboard.conf and SliTaz applications.conf
-if [ ! -s "/etc/X11/xorg.conf" ] && [ -x "/usr/bin/Xorg" ]; then
-	echo "Configuring Xorg server..." && 
-	HOME="/root" tazx init
-fi
