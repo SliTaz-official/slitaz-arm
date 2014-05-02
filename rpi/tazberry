@@ -367,8 +367,8 @@ boards_box() {
 		--ok-label "Exec" \
 		--cancel-label "TazBerry" \
 		--menu "\nSetup or use a breakout board" ${height} ${width} 14 \
-"cam-setup"      "$(gettext 'Configure your Pi to use a Camera')" \
-"piglow"          "$(gettext 'Setup your Pi to use PiGlow')" 2>${tmp}
+"camera"         "$(gettext 'Configure your Pi to use a Camera')" \
+"piglow"         "$(gettext 'Setup your Pi to use PiGlow')" 2>${tmp}
 	
 	# Handle options
 	case "$?" in
@@ -378,7 +378,7 @@ boards_box() {
 	# Handle actions
 	action=$(cat $tmp)
 	case "$action" in
-		cam-setup)
+		camera)
 			 picam_setup ;;
 		piglow)
 			for pkg in python-rpi-pyglow wiringpi-piglow; do
