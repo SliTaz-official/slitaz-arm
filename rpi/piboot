@@ -12,7 +12,7 @@
 
 # Check for depends ...
 LOG=/var/log/$(basename $0).log
-mv -f $LOG $LOG.0 /dev/null
+mv -f $LOG $LOG.0 >/dev/null
 while read file pkg ; do
 	[ "$(which $file)" ] && continue
 	echo "Can't find $file. Please install $pkg." >> $LOG
