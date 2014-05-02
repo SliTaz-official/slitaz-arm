@@ -23,6 +23,7 @@
 		</Menu>
 		
 		<Menu icon="applications-multimedia.png" label="Multimedia">
+			<Program icon="mpl123.png" label="Audio Player">terminal -e mpl123</Program>
 			<Program icon="audio-x-generic.png" label="Audio Mixer">terminal -e alsamixer</Program>
 		</Menu>
 		
@@ -42,12 +43,14 @@
 		<Menu icon="text-x-generic.png" label="Documentation">
 			<Program icon="slitaz-icon.png" label="SliTaz ARM Codex">browser /usr/share/doc/slitaz-arm/codex/index.html</Program>
 			<Program icon="spk.png" label="Packages Toolkit">browser /usr/share/doc/spk/spk.html</Program>
+			<Program icon="raspberrypi.png" label="SliTaz PiBook">browser http://arm.slitaz.org/codex/pibook.html</Program>
 		</Menu>
 		
 		<Menu icon="applications-system.png" label="System Tools">
 			<Program icon="file-manager.png" label="File Manager">PathFinder</Program>
 			<Program icon="spk.png" label="Packages Manager">terminal -e 'su -c spk-dialog'</Program>
 			<Program icon="htop.png" label="HTop Monitor">terminal -e htop</Program>
+			<Program icon="raspberrypi.png" label="TazBerry Tool">terminal -e 'su -c tazberry'</Program>
 			<Program icon="gnome-settings.png" label="System Config">terminal -e 'su -c slitaz-config'</Program>
 			<Program icon="slitaz-icon.png" label="Web Admin">browser http://localhost/adm</Program>
 		</Menu>

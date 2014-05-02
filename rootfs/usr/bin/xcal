@@ -1,6 +1,0 @@
-#!/bin/sh
-# Xterm Calendar in one command!
-#
-
-xterm -T "Calendar" -geometry 20x10-0+30 \
-	-bg grey92 -fg black -hold -e "cal" &

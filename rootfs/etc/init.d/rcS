@@ -79,7 +79,7 @@ for script in ${RUN_SCRIPTS}; do
 done
 
 # Start X session
-if [ "$LOGIN_MANAGER" ] && [ -x "/etc/init.d/$LOGIN_MANAGER" ]; then
+if [ -x "/etc/init.d/$LOGIN_MANAGER" ]; then
 	colorize 36 "Starting X environment..."
 	# We need Xorg 40-Keyboard.conf and SliTaz applications.conf
 	if [ ! -s "/etc/X11/xorg.conf.d/40-Keyboard.conf" ]; then
