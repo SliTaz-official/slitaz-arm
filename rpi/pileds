@@ -9,14 +9,12 @@ check_root
 usage() {
 	cat << EOT
 
-$(boldify "Usage:") $(basename $0) [ledtype] [--option]
+$(boldify "Usage:") $(basename $0) [command]
 
-$(boldify "Types:")
+$(boldify "Commands:")
   act          Turn on/off the on board ACT green led
   7-clock      Adafruit 7-segment LED Backpack clock example
-  ada-clean    Clean: Adafruit 7-segment or 8x8 Matrix
-
-$(boldify "Types:")    
+  ada-clean    Clean: Adafruit 7-segment or 8x8 Matrix  
 
 EOT
 #8x8          Adafruit 8x8 LED Matrix Backpack example
@@ -40,7 +38,13 @@ adafruit_clean() {
 
 case "$1" in
 
-	act) ;;
+	act)
+		status="$(cat /sys/class/leds/led0/brightness)"
+		if [ "$status" == 0 ]; then
+			echo "1" > ${brightness}
+		else
+			echo "0" > ${brightness}
+		fi ;;
 
 	7-clock) 
 		scripts="/usr/share/adafruit/LEDBackpack"

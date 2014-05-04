@@ -403,7 +403,7 @@ main_box() {
 "rpi-stats"      "$(gettext 'Show some RPi system stats')" \
 "gpu-mem"        "$(gettext 'Set memory split between ARM and GPU')" \
 "boards"         "$(gettext 'Boards settings and tools (Camera, PyGlow)')" \
-"act-led"        "$(gettext 'Test the RPi onboard ACT green led')" \
+"act-led"        "$(gettext 'Turn on/off RPi onboard ACT green led')" \
 "oclock"         "$(gettext 'Overclocking configuration')" \
 "rpi-turbo"      "$(gettext 'Enable or disable RPi turbo on next boot')" \
 "boot-cmdline"   "$(gettext 'View boot args /boot/cmdline.txt')" \
@@ -426,13 +426,11 @@ main_box() {
 		rpi-stats)
 			msg_box "RPi Stats" "$(rpi_stats)" ;;
 		gpu-mem)
-			 gpu_mem_box ;;
+			gpu_mem_box ;;
 		boards)
-			 boards_box ;;
-		act-led)
-			brightness="/sys/class/leds/led0/brightness"
-			(echo "1" > ${brightness}
-			sleep 3; echo "0" > ${brightness}) & ;;
+			boards_box ;;
+		act-led) 
+			pileds act ;;
 		oclock)
 			oclock_box ;;
 		rpi-turbo)
