@@ -14,9 +14,12 @@ $(boldify "Usage:") $(basename $0) [ledtype] [--option]
 $(boldify "Types:")
   act          Turn on/off the on board ACT green led
   7-clock      Adafruit 7-segment LED Backpack clock example
-  #8x8          Adafruit 8x8 LED Matrix Backpack example
-  
+  ada-clean    Clean: Adafruit 7-segment or 8x8 Matrix
+
+$(boldify "Types:")    
+
 EOT
+#8x8          Adafruit 8x8 LED Matrix Backpack example
 }
 
 load_modules() {
@@ -31,6 +34,10 @@ check_packages() {
 	done
 }
 
+adafruit_clean() {
+	python /usr/lib/python2.7/Adafruit_LEDBackpack.py
+}
+
 case "$1" in
 
 	act) ;;
@@ -41,7 +48,6 @@ case "$1" in
 		check_packages "python-rpi-adafruit"
 		if [ -f "${scripts}/ex_7segment_clock.py" ]; then
 			python ${scripts}/ex_7segment_clock.py
-			python /usr/lib/python2.7/Adafruit_LEDBackpack.py
 		else
 			echo "Missing: ${scripts}/ex_7segment_clock.py"
 		fi ;;
@@ -51,6 +57,9 @@ case "$1" in
 		#load_modules
 		#check_packages "python-rpi-adafruit"
 		echo "TODO: $scripts" ;;
+		
+	ada-clean)
+		ada_clean ;;
 	
 	*) usage ;;
 	
