@@ -178,7 +178,7 @@ case "$1" in
 		for tool in tazberry piboot pileds
 		do
 			echo -n "Copying utility: $tool"
-			cp -f ${rpi}/${tool} ${rootfs}/usr/bin
+			cp -f ${rpi}/${tool} ${rootfs}/usr/sbin
 			status
 		done
 		
