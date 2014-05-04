@@ -41,6 +41,7 @@ case "$1" in
 	act)
 		brightness="/sys/class/leds/led0/brightness"
 		status="$(cat $brightness)"
+		[ "$quiet" ] || gettext "Current status:"; echo " '$status'"
 		if [ "$status" == 0 ]; then
 			echo "1" > ${brightness}
 		else
@@ -54,7 +55,7 @@ case "$1" in
 		if [ -f "${scripts}/ex_7segment_clock.py" ]; then
 			python ${scripts}/ex_7segment_clock.py
 		else
-			echo "Missing: ${scripts}/ex_7segment_clock.py"
+			gettext "Missing:"; echo " ${scripts}/ex_7segment_clock.py"
 		fi ;;
 	
 	8x8)
