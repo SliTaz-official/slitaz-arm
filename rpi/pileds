@@ -14,10 +14,10 @@ $(boldify "Usage:") $(basename $0) [command]
 $(boldify "Commands:")
   act          Turn on/off the on board ACT green led
   7-clock      Adafruit 7-segment LED Backpack clock example
+  8x8          Adafruit 8x8 LED Matrix Backpack example
   ada-clean    Clean: Adafruit 7-segment or 8x8 Matrix  
 
 EOT
-#8x8          Adafruit 8x8 LED Matrix Backpack example
 }
 
 load_modules() {
@@ -43,6 +43,7 @@ case "$1" in
 		status="$(cat $brightness)"
 		[ "$quiet" ] || gettext "Current status:"; echo " '$status'"
 		if [ "$status" == 0 ]; then
+			echo "0" > ${brightness}; usleep 50000
 			echo "1" > ${brightness}
 		else
 			echo "0" > ${brightness}
@@ -60,9 +61,13 @@ case "$1" in
 	
 	8x8)
 		scripts="/usr/share/adafruit/LEDBackpack"
-		#load_modules
-		#check_packages "python-rpi-adafruit"
-		echo "TODO: $scripts" ;;
+		load_modules
+		check_packages "python-rpi-adafruit"
+		if [ -f "${scripts}/ex_7segment_clock.py" ]; then
+			python ${scripts}/ex_8x8_pixels.py
+		else
+			gettext "Missing:"; echo " ${scripts}/ex_8x8_pixels.py"
+		fi ;;
 		
 	ada-clean)
 		adafruit_clean ;;
