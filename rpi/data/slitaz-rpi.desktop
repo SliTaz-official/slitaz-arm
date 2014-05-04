@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=SliTaz RPi Devices
+Icon=raspberrypi.png
+Exec=slitaz-rpi box
+Categories=System;

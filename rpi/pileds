@@ -59,7 +59,7 @@ case "$1" in
 		echo "TODO: $scripts" ;;
 		
 	ada-clean)
-		ada_clean ;;
+		adafruit_clean ;;
 	
 	*) usage ;;
 	

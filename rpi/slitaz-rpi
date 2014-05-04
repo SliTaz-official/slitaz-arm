@@ -16,6 +16,8 @@
 #
 . /lib/libtaz.sh
 
+pilist="$HOME/.config/slitaz/rpi.list"
+
 usage() {
 	cat << EOT
 
@@ -24,8 +26,53 @@ $(boldify "Usage:") $(basename $0) [command] [host]
 $(boldify "Commands:")
   netmap    Search and map R-Pis on the wired local network
   pscan     Scan one or all Raspberry Pi hosts open ports
+  box       Run the GTK/Yad graphical user interface
 
 EOT
+}
+
+ssh_term() {
+	xterm -e "echo 'Connecting: $@'; ssh $@ || read"
+}
+
+netmap_term() {
+	xterm -e "$0 netmap; echo -n 'Press ENTER to continue...'; read"
+	$0 box
+}
+
+pscan_term() {
+	local host="$1"
+	echo $0 pscan $host
+	xterm -e "$0 pscan $1; echo -n 'Press ENTER to continue...'; read"
+	$0 box
+}
+
+rpi_list() {
+	for host in $(cat $pilist); do
+		echo -n "$host!"
+	done
+	echo "Clean list"
+}
+
+rpi_box() {
+	count=$(cat $pilist | wc -l)
+	logo="/usr/share/pixmaps/raspberrypi.png"
+	text="<b>Connect to you local Raspberry Pi devices</b>\nRaspberry Pi: $count\n"
+	# Have a config file, store RPi IPs, have button to launch an SSH
+	# connection or an sftp connexion with gftp.
+	yad --form --borders=4 \
+		--window-icon="$logo" \
+		--title="SliTaz RPi" --center \
+		--image="$logo" --image-on-top \
+		--text "$text" --width=520 --height=240 \
+		--button="Web admin!gtk-properties:4" \
+		--button="Netmap!find:2" \
+		--button="Connect!insert-link:0" \
+		--button="Cancel!gtk-close:1" \
+		--field="$(gettext "Raspberry Pi host:")":CB \
+		--field="$(gettext "New device IP:")" \
+		--field="$(gettext "User name:")" \
+		"$(rpi_list)" "" "$USER"
 }
 
 case "$1" in
@@ -54,7 +101,9 @@ case "$1" in
 		newline ;;
 	
 	pscan)
-		[ "$2" ] && pscan ${2} && exit 0
+		if [ "$2" ]; then
+			pscan ${2} && exit 0
+		fi
 		arp -a | grep -i "b8:27:eb" | awk '{print $2}' | while read line
 		do
 			ip=$(echo "$line" | tr -d '()')
@@ -65,9 +114,46 @@ case "$1" in
 			separator; newline
 		done ;;
 	
-	backup) ;;
+	box)
+		# Store box results
+		main=$(rpi_box)
+		action="$?"
+		
+		host=$(echo $main | cut -d "|" -f 1)
+		new=$(echo $main | cut -d "|" -f 2)
+		user=$(echo $main | cut -d "|" -f 3)
+		
+		# New host
+		[ "$new" ] && host="$new" && main="$new"
+		if [ "$new" ] && ! grep "^$new" ${pilist}; then
+			echo "$new" >> ${pilist}
+		fi
+		
+		# Deal with --button actions
+		case "$action" in
+			0) ssh_term "$user@$host" ;;
+			1) exit 0 ;;
+			2) netmap_term ;;
+			4) tazweb --notoolbar ${host}/adm ;;
+			*) continue ;;
+		esac
+		
+		# Deal with $main values
+		case "$main" in
+			Clean*) 
+				echo "Cleaning: $pilist" 
+				rm -f ${pilist} && touch ${pilist} 
+				$0 box ;;
+		esac ;;
 	
-	restore) ;;
+	backup) 
+		# dd an SD card with time stamp
+		;;
+	
+	restore) 
+		# Restore a previwsly backup up SD card
+		;;
 	
 	*) usage ;;
+	
 esac && exit 0
