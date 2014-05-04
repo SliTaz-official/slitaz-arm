@@ -38,7 +38,7 @@ case "$1" in
 	7-clock) 
 		scripts="/usr/share/adafruit/LEDBackpack"
 		load_modules 
-		check_packages "python-rpi-adafruit-leds"
+		check_packages "python-rpi-adafruit"
 		if [ -f "${scripts}/ex_7segment_clock.py" ]; then
 			python ${scripts}/ex_7segment_clock.py
 			python /usr/lib/python2.7/Adafruit_LEDBackpack.py
@@ -49,7 +49,7 @@ case "$1" in
 	8x8)
 		scripts="/usr/share/adafruit/LEDBackpack"
 		#load_modules
-		#check_packages "python-rpi-adafruit-leds"
+		#check_packages "python-rpi-adafruit"
 		echo "TODO: $scripts" ;;
 	
 	*) usage ;;
