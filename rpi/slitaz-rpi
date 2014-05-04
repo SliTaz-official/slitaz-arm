@@ -57,9 +57,9 @@ rpi_list() {
 rpi_box() {
 	count=$(cat $pilist | wc -l)
 	logo="/usr/share/pixmaps/raspberrypi.png"
-	text="<b>Connect to you local Raspberry Pi devices</b>\nRaspberry Pi: $count\n"
+	text="<b>Connect to your local Raspberry Pi devices</b>\nRaspberry Pi: $count\n"
 	# Have a config file, store RPi IPs, have button to launch an SSH
-	# connection or an sftp connexion with gftp.
+	# connection or an sftp connection with gftp.
 	yad --form --borders=4 \
 		--window-icon="$logo" \
 		--title="SliTaz RPi" --center \
@@ -151,7 +151,7 @@ case "$1" in
 		;;
 	
 	restore) 
-		# Restore a previwsly backup up SD card
+		# Restore a previous backup SD card
 		;;
 	
 	*) usage ;;

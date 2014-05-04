@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# PiLeds - Let play with leds has a kid :-)
+# PiLeds - Let's play with leds as a kid :-)
 # (C) 2014 SliTaz GNU/Linux - BSD License
 #
 . /lib/libtaz.sh
