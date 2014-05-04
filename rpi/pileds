@@ -39,7 +39,8 @@ adafruit_clean() {
 case "$1" in
 
 	act)
-		status="$(cat /sys/class/leds/led0/brightness)"
+		brightness="/sys/class/leds/led0/brightness"
+		status="$(cat $brightness)"
 		if [ "$status" == 0 ]; then
 			echo "1" > ${brightness}
 		else
