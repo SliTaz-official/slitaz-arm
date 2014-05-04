@@ -174,15 +174,17 @@ case "$1" in
 			status
 		fi
 		
-		# TazBerry
-		echo -n "Copying utility: TazBerry..."
-		cp -f ${rpi}/tazberry ${rootfs}/usr/bin
-		cp -a ${rpi}/cgi-adm/* ${rootfs}/var/www/adm
-		status
+		# TazBerry, Piboot, Pileds, ...
+		for tool in tazberry piboot pileds
+		do
+			echo -n "Copying utility: $tool"
+			cp -f ${rpi}/${tool} ${rootfs}/usr/bin
+			status
+		done
 		
-		# PiBoot
-		echo -n "Copying bootloader: PiBoot..."
-		cp -f ${rpi}/piboot ${rootfs}/sbin
+		# CGI Plugins
+		echo -n "Copying CGI/adm plugins..."
+		cp -a ${rpi}/cgi-adm/* ${rootfs}/var/www/adm
 		status
 		
 		# Kernel at last
@@ -225,7 +227,9 @@ case "$1" in
 		# FBtft drivers for small touchscreens such PiTFT, PiScreen
 		if [ "$fbtft" ] && [ ! -d "${kernel}/drivers/video/fbtft" ]; then
 			cd ${kernel}/drivers/video
-			git clone git://github.com/notro/fbtft.git
+			#git clone git://github.com/notro/fbtft.git
+			git clone https://github.com/adafruit/adafruit-rpi-fbtft
+			mv adafruit-rpi-fbtft fbtft
 			cd ${kernel}
 			echo 'source "drivers/video/fbtft/Kconfig"' >> drivers/video/Kconfig
 			echo 'obj-y += fbtft/' >> drivers/video/Makefile

@@ -1,0 +1,57 @@
+#!/bin/sh
+#
+# PiLeds - Let play with leds has a kid :-)
+# (C) 2014 SliTaz GNU/Linux - BSD License
+#
+. /lib/libtaz.sh
+check_root
+
+usage() {
+	cat << EOT
+
+$(boldify "Usage:") $(basename $0) [ledtype] [--option]
+
+$(boldify "Types:")
+  act          Turn on/off the on board ACT green led
+  7-clock      Adafruit 7-segment LED Backpack clock example
+  #8x8          Adafruit 8x8 LED Matrix Backpack example
+  
+EOT
+}
+
+load_modules() {
+	modprobe i2c-bcm2708
+	modprobe i2c-dev
+}
+
+check_packages() {
+	db="/var/lib/tazpkg/installed"
+	for pkg in i2c-tools $@; do
+		[ -f "$db/$pkg/receipt" ] || spk-add ${pkg}
+	done
+}
+
+case "$1" in
+
+	act) ;;
+
+	7-clock) 
+		scripts="/usr/share/adafruit/LEDBackpack"
+		load_modules 
+		check_packages "python-rpi-adafruit-leds"
+		if [ -f "${scripts}/ex_7segment_clock.py" ]; then
+			python ${scripts}/ex_7segment_clock.py
+			python /usr/lib/python2.7/Adafruit_LEDBackpack.py
+		else
+			echo "Missing: ${scripts}/ex_7segment_clock.py"
+		fi ;;
+	
+	8x8)
+		scripts="/usr/share/adafruit/LEDBackpack"
+		#load_modules
+		#check_packages "python-rpi-adafruit-leds"
+		echo "TODO: $scripts" ;;
+	
+	*) usage ;;
+	
+esac && exit 0
