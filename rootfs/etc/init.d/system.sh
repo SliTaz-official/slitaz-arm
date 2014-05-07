@@ -40,5 +40,5 @@ export TZ=${tz}; status
 # For device without HW clock
 if [ "$NTPD_HOST" ]; then
 	echo "Syncing system time..."
-	ntpd -q -p ${$NTPD_HOST}; status
+	ntpd -q -p ${NTPD_HOST}; status
 fi

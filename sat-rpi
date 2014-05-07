@@ -327,13 +327,13 @@ EOT
 		# Download
 		if [ ! -f "$cache/linux-$kvers.tazpkg" ]; then
 			echo -n "Fetching latest Linux package..."
-			wget -q ${rpi_mirror}/packages/linux-${kvers}.tazpkg \
-				-O ${cache}/linux-${kvers}.tazpkg; status
+			wget -q ${rpi_mirror}/packages/linux-${kvers}-arm.tazpkg \
+				-O ${cache}/linux-${kvers}-arm.tazpkg; status
 		fi
 		
 		# Extract
 		if [ ! -d "$cache/linux-$kvers" ]; then
-			cd ${cache} && tazpkg extract linux-${kvers}.tazpkg
+			cd ${cache} && tazpkg extract linux-${kvers}-arm.tazpkg
 		fi 
 		rm -f ${cache}/linux-version.txt ;;
 		
