@@ -71,7 +71,7 @@ case "$1" in
 			check_packages "python-rpi-adafruit"
 		else
 			script_name="${2#--}.py"
-			script="/usr/share/piclass/leds/8x8/$script_name"
+			script="/usr/share/piclass/code/leds/8x8/$script_name"
 			check_packages "python-rpi-adafruit piclass-code-examples"
 		fi
 		load_modules
