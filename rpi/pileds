@@ -66,7 +66,7 @@ case "$1" in
 		fi ;;
 	
 	8x8)
-		if [ "$2" == "--test" ]; then
+		if [ "$2" == "--test" ]|| [ ! "$2" ]; then
 			script="/usr/share/adafruit/LEDBackpack/ex_8x8_pixels.py"
 			check_packages "python-rpi-adafruit"
 		else
