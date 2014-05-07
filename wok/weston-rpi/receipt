@@ -1,0 +1,45 @@
+# SliTaz package receipt.
+
+PACKAGE="weston-rpi"
+VERSION="1.4.0"
+CATEGORY="x-window"
+SHORT_DESC="Implementation of a Wayland compositor for the Raspberry Pi."
+MAINTAINER="pankso@slitaz.org"
+LICENSE="MIT"
+TARBALL="$PACKAGE-$VERSION.tar.xz"
+WEB_SITE="http://www.slitaz.org/"
+WGET_URL="http://wayland.freedesktop.org/releases/$TARBALL"
+HOST_ARCH="arm"
+
+DEPENDS="wayland mesa-wayland cairo-gl libxkbcommon libunwind mtdev \
+xorg-libXcursor pam liblzma"
+BUILD_DEPENDS="wayland-dev mesa-wayland-dev cairo-gl-dev libxkbcommon-dev \
+libunwind-dev mtdev-dev xorg-libXcursor-dev pam-dev liblzma-dev \
+gegl-dev libdrm-dev xorg-libXxf86vm-dev udev-dev pkg-config jpeg-dev"
+
+# WARNING: Weston for the Rpi needs the official firmware in /opt/vc.
+# They are not packaged in i486 so install all firmware by hand.
+# DL: https://github.com/raspberrypi/firmware
+
+# Rules to configure and make the package.
+compile_rules()
+{
+	./configure \
+		--prefix=/usr \
+		--libexec=/usr/lib/weston \
+		--disable-documentation \
+		--enable-fbdev-compositor &&
+	make && make install
+}
+
+# Rules to gen a SliTaz package suitable for Tazpkg.
+genpkg_rules()
+{
+	mkdir -p $fs/usr/lib/weston $fs/usr/share
+	cp -a $install/usr/bin $fs/usr
+	cp -a $install/usr/lib/weston/*.so* $fs/usr/lib/weston
+	cp -a $install/usr/lib/weston/weston-* $fs/usr/lib/weston
+	cp -a $install/usr/share/weston $fs/usr/share
+	# Custom weston-session
+	cp -f $stuff/weston-session $fs/usr/bin
+}
