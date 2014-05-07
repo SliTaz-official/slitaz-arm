@@ -107,9 +107,15 @@ EOT
 		html_footer && exit 0 ;;
 	
 	*\ oclock\ *)
+		cur_freq=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq)
+		cur=$(($cur_freq / 1000))
 		html_header "Overclocking"
 		cat << EOT
 <h1>RPi Overclocking</h1>
+
+<p>
+	Current CPU freq scaling value: $cur MHz
+</p>
 
 <pre>
 $(tazberry rpi_oclock)

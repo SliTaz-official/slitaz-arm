@@ -9,13 +9,19 @@ check_root
 usage() {
 	cat << EOT
 
-$(boldify "Usage:") $(basename $0) [command]
+$(boldify "Usage:") $(basename $0) [command] [--option]
 
 $(boldify "Commands:")
-  act          Turn on/off the on board ACT green led
-  7-clock      Adafruit 7-segment LED Backpack clock example
-  8x8          Adafruit 8x8 LED Matrix Backpack example
-  ada-clean    Clean: Adafruit 7-segment or 8x8 Matrix  
+  act          $(gettext "Turn on/off the on board ACT green led")
+  7-clock      $(gettext "Adafruit 7-segment LED Backpack clock example")
+  8x8          $(gettext "Adafruit 8x8 LED Matrix Backpack example")
+  ada-clean    $(gettext "Clean: Adafruit 7-segment or 8x8 Matrix")
+ 
+$(boldify "8x8 Options:")
+  --test       $(gettext "Test the 8x8 LED Matrix")
+  --boat       $(gettext "Draw a tiny boat")
+  --smile      $(gettext "Draw a smiley :-)")
+  --ovni       $(gettext "Draw an OVNI")
 
 EOT
 }
@@ -60,13 +66,19 @@ case "$1" in
 		fi ;;
 	
 	8x8)
-		scripts="/usr/share/adafruit/LEDBackpack"
-		load_modules
-		check_packages "python-rpi-adafruit"
-		if [ -f "${scripts}/ex_7segment_clock.py" ]; then
-			python ${scripts}/ex_8x8_pixels.py
+		if [ "$2" == "--test" ]; then
+			script="/usr/share/adafruit/LEDBackpack/ex_8x8_pixels.py"
+			check_packages "python-rpi-adafruit"
 		else
-			gettext "Missing:"; echo " ${scripts}/ex_8x8_pixels.py"
+			script_name="${$2#--}.py"
+			script="/usr/share/piclass/leds/8x8/$script_name"
+			check_packages "python-rpi-adafruit piclass-code-examples"
+		fi
+		load_modules
+		if [ -f "${script}" ]; then
+			python ${script}
+		else
+			gettext "Missing script:"; echo " ${script}"
 		fi ;;
 		
 	ada-clean)
