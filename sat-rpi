@@ -312,9 +312,9 @@ EOT
 		
 		# Last version
 		rm -f ${cache}/linux-version.txt
-		if busybox wget -q -s ${rpi_mirror}/last-linux.txt; then
+		if busybox wget -q -s ${rpi_mirror}/packages/last-linux.txt; then
 			echo -n "Fetching latest Kernel string..."
-			wget -q ${rpi_mirror}/last-linux.txt \
+			wget -q ${rpi_mirror}/packages/last-linux.txt \
 				-O ${cache}/linux-version.txt || exit 1
 			status
 		else
@@ -327,7 +327,7 @@ EOT
 		# Download
 		if [ ! -f "$cache/linux-$kvers.tazpkg" ]; then
 			echo -n "Fetching latest Linux package..."
-			wget -q ${rpi_mirror}/linux-${kvers}.tazpkg \
+			wget -q ${rpi_mirror}/packages/linux-${kvers}.tazpkg \
 				-O ${cache}/linux-${kvers}.tazpkg; status
 		fi
 		
