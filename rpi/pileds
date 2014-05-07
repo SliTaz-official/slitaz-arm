@@ -70,7 +70,7 @@ case "$1" in
 			script="/usr/share/adafruit/LEDBackpack/ex_8x8_pixels.py"
 			check_packages "python-rpi-adafruit"
 		else
-			script_name="${$2#--}.py"
+			script_name="${2#--}.py"
 			script="/usr/share/piclass/leds/8x8/$script_name"
 			check_packages "python-rpi-adafruit piclass-code-examples"
 		fi
