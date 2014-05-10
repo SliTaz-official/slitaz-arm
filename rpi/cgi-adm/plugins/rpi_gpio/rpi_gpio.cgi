@@ -69,7 +69,7 @@ $(ls -1p $sysfs)
 <h2>Export GPIO pin</h2>
 <div class="button">
 EOT
-for pin in 0 1 4 7 8 9 10 11 14 15 17 18 21 22 23 24 25
+for pin in 0 1 4 7 8 9 10 11 14 15 17 18 21 22 23 24 25 27
 do
 	echo -n "<a href='$script?rpi_gpio=export&amp;pin=$pin'>${pin}</a> "
 done

@@ -175,7 +175,7 @@ case "$1" in
 		fi
 		
 		# TazBerry, Piboot, Pileds, ...
-		for tool in tazberry piboot pileds
+		for tool in tazberry piboot pileds raspicomm
 		do
 			echo -n "Copying utility: $tool"
 			cp -f ${rpi}/${tool} ${rootfs}/usr/sbin

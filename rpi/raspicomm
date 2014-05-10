@@ -1,0 +1,109 @@
+#!/bin/sh
+#
+# rapicomm: A tiny utility to play with RaspiComm board and SliTaz
+# It can be used to initialize the board from cmdline or at boot time.
+# RaspiComm can also be used to run a testsuite to check the board.
+# Read the official RaspiComm user manual to found the GPIO pins map.
+# the utility is compatibel with Busybox Ash and sould be usable on
+# any GNU/Linux OS.
+#
+# (C) 2014 SliTaz Raspberry Pi - BSD License
+# AUTHORS: Christophe Lincoln <pankso@slitaz.org>
+#
+. /lib/libtaz.sh
+check_root
+
+gpio="/sys/class/gpio"
+
+#
+# TODO: RS-232 serial port + RS-485 motors control
+#
+
+# RTC initialization
+init_rtc() {
+	i2c="/sys/class/i2c-adapter/i2c-1"
+	new_device="$i2c/new_device"
+	if [ ! -d "$i2c/1-0068" ]; then
+		echo -n "Configuring real time clock..."
+		echo ds1307 0x68 > ${new_device}; status
+	fi
+	hwclock --hctosys
+}
+
+# Usage: read_pin_value pinNB
+read_pin_value() {
+	local pin="$1"
+	while true; do
+		value=$(cat ${gpio}/gpio${pin}/value)
+		usleep 500000
+		if [ "$value" == "1" ]; then
+			status && break
+		fi
+	done 
+}
+
+load_modules() {
+	modprobe i2c-bcm2708
+	modprobe i2c-dev
+}
+
+case "$1" in
+	init)
+		# Initialize all componments
+		colorize 35 "Initializing RaspiComm board..."
+		load_modules
+		
+		# Real Time Clock
+		init_rtc
+		
+		# Joystick gpio pins
+		echo -n "Activing the joystick..."
+		for pi in 4 22 23 24 25
+		do
+			echo ${pi} > ${gpio}/export
+			echo in > ${gpio}/gpio${pi}/direction
+		done; status
+		
+		# Output LEDs
+		echo -n "Configuring LEDs..."
+		for pi in 18 27
+		do
+			echo ${pi} > ${gpio}/export
+			echo out > ${gpio}/gpio${pi}/direction
+		done; status ;;
+	
+	init-rtc)
+		# Init only the RTC: boot time alternative to init
+		load_modules
+		init_rtc ;;
+	
+	testsuite)
+		colorize 35 "Testing RaspiComm board..."
+		
+		# Clock
+		echo -n "Hardware clock: "; hwclock -r
+		
+		# LEDs
+		echo -n "Turning on LED1..." 
+		echo 1 > ${gpio}/gpio18/value; status
+		sleep 2
+		echo -n "Turning on LED2..." 
+		echo 1 > ${gpio}/gpio27/value; status
+		sleep 2
+		echo -n "Turning off LED1..."
+		echo 0 > ${gpio}/gpio18/value; status
+		sleep 2
+		echo -n "Turning off LED2..."
+		echo 0 > ${gpio}/gpio27/value; status
+		
+		# Joystick
+		echo -n "Move joystick left (towards audio) "
+		read_pin_value 24 
+		echo -n "Move joystick top (towards usb) "
+		read_pin_value 25 ;;
+	
+	*) 
+		echo "Usage: $(basename $0) [init|init-rtc|testsuite]" ;;
+
+esac
+exit 0
