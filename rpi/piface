@@ -1,0 +1,83 @@
+#!/bin/sh
+#
+# PiFace - PiFace SHell utility using libpifacedigital and WiringPi
+#
+# (C) 2014 SliTaz GNU/Linux - BSD License
+#
+. /lib/libtaz.sh
+check_root
+
+wiringpi_exec="/usr/lib/wiringpi/piface"
+
+usage() {
+	cat << EOT
+
+$(boldify "Usage:") $(basename $0) [command] [beates]
+
+$(boldify "Commands:")
+  testsuite     $(gettext "Run official pifacedigital testsuite")
+  blink         $(gettext "Blink a Piface LED with WiringPi")
+  buttons       $(gettext "Reads buttons and toggle first 4 outputs")
+  motor         $(gettext "Motor control using WiringPi")
+  reaction      $(gettext "LEDs and buttons reaction timer game")
+  metronome     $(gettext "Turn on/off PiFace metronome [40-200 beates]")
+
+EOT
+}
+
+# Usage: load_modules "mod1" "modN"
+load_modules() {
+	for mod in $@
+	do
+		if ! lsmod | grep -q ${mod}; then
+			echo "Loading kernel module: $mod"
+			modprobe ${mod}
+		fi
+	done
+}
+
+# Usage: check_packages "pkg1" "pkg2"
+check_packages() {
+	db="/var/lib/tazpkg/installed"
+	for pkg in $@; do
+		[ -f "$db/$pkg/receipt" ] || spk-add ${pkg}
+	done
+}
+
+case "$1" in
+		
+	testsuite)
+		load_modules "i2c_bcm2708" "i2c_dev"
+		check_packages "libpifacedigital"
+		pifacedigital-test ;;
+	
+	blink|buttons|motor|reaction)
+		load_modules "i2c_bcm2708" "i2c_dev"
+		check_packages "wiringpi-piface"
+		newline
+		${wiringpi_exec}/${1} ;;
+	
+	metronome)
+		pid=$(pidof metro)
+		load_modules "i2c-bcm2708" "i2c-dev"
+		check_packages "wiringpi-piface"
+		# Off
+		if [ "$pid" ]; then
+			kill ${pid} && exit 0
+		fi
+		# On
+		beates="$2"
+		[ "$beates" ] || beates=80
+		if [ "$beates" -lt "40" ] || [ "$beates" -gt "200" ]; then
+			echo "Metronome beates is out of range: 40-200" && exit 0
+		fi
+		newline
+		colorize 35 "PiFace Metronome"
+		separator
+		echo "beates: $beates"
+		${wiringpi_exec}/metro ${beates} >/dev/null & 
+		newline ;;
+	
+	*) usage ;;
+	
+esac && exit 0
