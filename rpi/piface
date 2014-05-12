@@ -20,7 +20,7 @@ $(boldify "Commands:")
   buttons       $(gettext "Reads buttons and toggle first 4 outputs")
   motor         $(gettext "Motor control using WiringPi")
   reaction      $(gettext "LEDs and buttons reaction timer game")
-  metronome     $(gettext "Turn on/off PiFace metronome [40-200 beates]")
+  metronome     $(gettext "Turn on/off PiFace metronome [40-200 beats]")
 
 EOT
 }
@@ -69,12 +69,12 @@ case "$1" in
 		beates="$2"
 		[ "$beates" ] || beates=80
 		if [ "$beates" -lt "40" ] || [ "$beates" -gt "200" ]; then
-			echo "Metronome beates is out of range: 40-200" && exit 0
+			echo "Metronome beats is out of range: 40-200" && exit 0
 		fi
 		newline
 		colorize 35 "PiFace Metronome"
 		separator
-		echo "beates: $beates"
+		echo "beats: $beates"
 		${wiringpi_exec}/metro ${beates} >/dev/null & 
 		newline ;;
 	
