@@ -59,7 +59,7 @@ case "$1" in
 	
 	metronome)
 		pid=$(pidof metro)
-		load_modules "i2c-bcm2708" "i2c-dev"
+		load_modules "i2c_bcm2708" "i2c_dev"
 		check_packages "wiringpi-piface"
 		# Off
 		if [ "$pid" ]; then
