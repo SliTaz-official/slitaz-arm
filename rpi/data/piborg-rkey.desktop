@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=PiBorg Remote Keyboard
+Icon=piborg.png
+Exec=RemoteKeyBorgC.py
+Categories=Utility;

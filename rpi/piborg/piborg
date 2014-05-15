@@ -1,0 +1,45 @@
+#!/bin/sh
+#
+# SliTaz Raspberry PiBorg tiny utility
+#
+. /lib/libtaz.sh
+check_root
+
+usage() {
+	cat << EOT
+
+$(boldify 'Usage:') $(basename $0) [command] [movement] [seconds]
+
+$(boldify 'Commands:')
+  testsuite   Test PiBorg/PiCy motors and movements
+  turtle      Move PiCy like a turtle from scripts!
+  rkey        Remote control PiBorg with a keyboard
+
+$(boldify 'Turtle movements:')
+  fd          Move forward N seconds
+  lt          Move left N seconds
+  rt          Move right N seconds
+
+EOT
+}
+
+case "$1" in
+	
+	turtle)
+		move="$2"
+		time="$3"
+		TurtleBorg.py ${move} ${time} ;;
+	
+	rkey)
+		RemoteKeyBorgS.py & ;;
+	
+	testsuite)
+		TurtleBorg.py fd 0.5
+		TurtleBorg.py lt 0.5
+		TurtleBorg.py rt 0.5 ;;
+	
+	*)
+		usage ;;
+		
+esac
+exit 0
