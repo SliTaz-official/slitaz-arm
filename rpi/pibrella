@@ -1,0 +1,72 @@
+#!/bin/sh
+#
+# Pibrella - SliTaz Raspberry Pibrella SHell utility
+#
+# (C) 2014 SliTaz GNU/Linux - BSD License
+#
+. /lib/libtaz.sh
+check_root
+
+sysfs="/sys/class/gpio"
+
+# Pibrella Pins
+led_red=27
+led_yellow=17
+led_green=4
+
+buzzer=18
+
+usage() {
+	cat << EOT
+
+$(boldify 'Usage:') $(basename $0) [command] [color] [seconds|on|off]
+
+$(boldify 'Commands:')
+  testsuite   $(gettext 'Run a small testsuite on Pibrella')
+  led         $(gettext 'Turn on/off LEDs or on for N seconds')
+
+EOT
+}
+
+# Usage: export_pin NB --> librpigpio.sh
+export_pin() {
+	if [ ! -d "${sysfs}/gpio${1}" ]; then
+		echo ${1} > ${sysfs}/export
+	fi
+}
+
+case "$1" in
+	
+	testsuite)
+		# LEDs
+		for pin in ${led_red} ${led_yellow} ${led_green}
+		do
+			export_pin ${pin}
+			echo "out" > ${sysfs}/gpio${pin}/direction
+			echo "1" > ${sysfs}/gpio${pin}/value 
+			sleep 2 
+			echo "0" > ${sysfs}/gpio${pin}/value
+		done ;;
+	
+	led)
+		case "$2" in
+			r|red) pin=${led_red} ;;
+			y|yellow) pin=${led_yellow} ;;
+			g|green) pin= ${led_green} ;;
+		esac
+		case "$3" in
+			on) echo "1" > ${sysfs}/gpio${pin}/value ;;
+			off) echo "0" > ${sysfs}/gpio${pin}/value ;;
+			*)
+				sec="$3"
+				[ "$sec" ] || sec=1
+				echo "1" > ${sysfs}/gpio${pin}/value
+				sleep ${sec} 
+				echo "0" > ${sysfs}/gpio${pin}/value ;;
+		esac ;;
+		
+	*)
+		usage ;;
+		
+esac
+exit 0

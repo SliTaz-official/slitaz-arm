@@ -5,6 +5,11 @@
 . /lib/libtaz.sh
 check_root
 
+# TurtleBorg.py must be installed manually or via spk
+if [ ! -x "/usr/bin/TurtleBorg.py" ]; then
+	echo "Missing: TurtleBorg.py" && exit 1
+fi
+
 usage() {
 	cat << EOT
 
