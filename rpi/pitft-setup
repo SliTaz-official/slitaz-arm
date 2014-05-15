@@ -78,7 +78,7 @@ EOT
 fi
 
 echo "----"
-echo "PiTFT initiliazation finished: you can reboot"
+echo "PiTFT initialization finished: you can reboot"
 echo "----"
 
 exit 0
