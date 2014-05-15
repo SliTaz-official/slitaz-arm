@@ -368,7 +368,9 @@ boards_box() {
 		--cancel-label "TazBerry" \
 		--menu "\nSetup or use a breakout board" ${height} ${width} 14 \
 "camera"         "$(gettext 'Configure your Pi to use a Camera')" \
-"piglow"         "$(gettext 'Setup your Pi to use PiGlow')" 2>${tmp}
+"piglow"         "$(gettext 'Setup your Pi to use PiGlow')" \
+"raspicomm"      "$(gettext 'Initialize RaspiComm board')" \
+"pitft"          "$(gettext 'Setup PiTFT touchscreen')" 2>${tmp}
 	
 	# Handle options
 	case "$?" in
@@ -389,6 +391,11 @@ boards_box() {
 			if [ "$anser" == "y" ]; then 
 				echo "Enter a value between: 5-255" && pyglow test
 			fi ;;
+		raspicomm)
+			raspicomm init; read -t 4 ;;
+		pitft)
+			pitft-setup
+			echo -n "Press ENTER to continue..."; read ;;	
 	esac
 }
 

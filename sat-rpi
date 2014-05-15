@@ -175,7 +175,7 @@ case "$1" in
 		fi
 		
 		# TazBerry, Piboot, Pileds, ...
-		for tool in tazberry piboot pileds raspicomm
+		for tool in tazberry piboot pileds raspicomm piface pitft-setup
 		do
 			echo -n "Copying utility: $tool"
 			cp -f ${rpi}/${tool} ${rootfs}/usr/sbin
@@ -241,8 +241,8 @@ case "$1" in
 			cd ${kernel}
 			export PATH=$PATH:/cross/${arch}/tools/bin
 			export HOST_SYSTEM=${arch}-slitaz-linux-gnueabi
-			make mrproper &&
-			make ARCH=arm bcmrpi_defconfig
+			#make mrproper &&
+			#make ARCH=arm bcmrpi_defconfig
 			if [ ! "$nopatch" ]; then
 				echo "Patching SliTaz RPi Linux .config"
 				patch -p0 -i ${data}/linux-rpi.patch || exit 1

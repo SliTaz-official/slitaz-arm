@@ -1,0 +1,84 @@
+#!/bin/sh
+#
+# Setup Adafruit PiTFT on SliTaz Raspberry Pi
+#
+. /etc/slitaz/slitaz.conf
+
+linux="linux-pitft-3.10.32+-arm.tazpkg"
+mirror="http://mirror.slitaz.org/arm/rpi/packages"
+cache="/var/cache/tazpkg"
+
+module_conf="/etc/modprobe.d/pitft.conf"
+calibration_conf="/etc/X11/xorg.conf.d/99-calibration.conf"
+udev_rules="/etc/udev/rules.d/95-stmpe.rules"
+
+# Kernel
+if [ ! -d "$PKGS_DB/installed/linux-pitft" ]; then
+	cd ${cache}
+	if [ ! -f "$linux" ]; then
+		echo "Downloading custom Linux kernel..."
+		busybox wget ${mirror}/${linux}
+	fi
+	spk-add ${linux}
+fi
+
+# Modules
+if [ ! -f "$module_conf" ]; then
+	echo "Creating: $module_conf"
+	cat > ${module_conf} << EOT
+# PiTFT kernel module options
+#
+options fbtft_device name=adafruitts rotate=90 frequency=32000000
+options rpi_power_switch gpio_pin=23 mode=0
+EOT
+fi
+modprobe -v spi-bcm2708
+modprobe -v fbtft_device
+
+# Xorg calibration
+if [ ! -f "$calibration_conf" ]; then
+	echo "Creating: $calibration_conf"
+	cat > ${calibration_conf} << EOT
+Section "InputClass"
+	Identifier		"calibration"
+	MatchProduct	"stmpe-ts"
+	Option			"Calibration"	"3692 48 154 3892"
+	Option			"SwapAxes" "1"
+EndSection
+EOT
+fi
+
+# Udev
+if [ ! -f "$udev_rules" ]; then
+	echo "Creating: $udev_rules"
+	cat > ${udev_rules} << EOT
+SUBSYSTEM=="input", ATTRS{name}=="stmpe-ts", ENV{DEVNAME}=="*event*", SYMLINK+="input/touchscreen"
+EOT
+fi
+
+# Autologin and use PiTFT kernel
+echo "Configuring autologin..."
+sed -i s'/#auto_login.*/auto_login    yes/' /etc/slim.conf
+echo "Configuring bootloader..."
+sed -i s'/kernel=.*/kernel=kernel-pitft.img/' /boot/config.txt
+
+# Start on boot
+if ! grep -q 'FRAMEBUFFER' /etc/init.d/local.sh; then
+	echo "Enabling PiTFT at boot time..."
+	cat >> /etc/init.d/local.sh << EOT
+
+echo "Setting up PiTFT touchscreen..."
+modprobe -v spi-bcm2708
+modprobe -v fbtft_device
+#modprobe -v rpi_power_switch
+export FRAMEBUFFER=/dev/fb1
+startd slim
+
+EOT
+fi
+
+echo "----"
+echo "PiTFT initiliazation finished: you can reboot"
+echo "----"
+
+exit 0
