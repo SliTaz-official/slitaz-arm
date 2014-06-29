@@ -22,7 +22,6 @@ dialog	dialog
 EOT
 [ -s $LOG ] && exec /init
 
-
 cmdlinearg()
 {
 	grep -q $1= /proc/cmdline && sed "s/.*$1=\([^ ]*\).*/\1/" </proc/cmdline
@@ -110,16 +109,42 @@ web_boot()
 	/etc/init.d/network.sh start
 	webpath=$(get webpath $mnt/menu.txt)
 	[ "$webpath" ] || webpath=http://mirror.slitaz.org/pxe/arm/boot.php
-	wget -O /root/webboot.sh $webpath 2>&1 > /dev/null
+	wget -O /root/webboot.sh $webpath?mac=$(cat /sys/class/net/eth0/address) 2>&1 > /dev/null
 	[ -s /root/webboot.sh ] || return
 	. /root/webboot.sh
 	webprefix=$(dirname $webpath)
 	editbutton=""
 }
 
+web_get()
+{
+	case "$1" in
+	*torrent) # See http://sl-lab.it/dokuwiki/doku.php/tesi:boottorrent_en
+		[ -z "$(which aria2)" ] &&
+			echo "Can't find aria2." >> $LOG &&
+			exec /init
+
+		wget -O /root/webboot.torrent $1
+		aria2c --enable-dht=false --disable-ipv6=true --seed-time=0 \
+			--file-allocation=none -j5 /root/webboot.torrent
+
+		if ls | grep -q rootfs; then
+			file=$(ls | grep -q rootfs)
+			cat $file >> $2
+			rm -f $file
+		else
+			mv $(ls *mage* *linu* 2> /dev/null) $2
+		fi
+		rm -f /root/webboot.torrent ;;
+	*)
+		wget -O - $1 >> $2
+	esac
+}
+
 : ${DIALOG=dialog}
 
 mount -t proc proc /proc
+mount -t sysfs sys /sys
 BOOTDEV=$(cmdlinearg bootdev)
 mnt=/mnt
 mount -t devtmpfs /dev /dev
@@ -207,6 +232,7 @@ EOT
 			*timeout) break ;;
 			esac
 			umount $mnt
+			umount /sys
 			umount /proc
 			poweroff -f ;;
 		3)
@@ -220,9 +246,7 @@ done
 case "$KEYWORD" in
 
 ''|Continue)
-	umount $mnt
-	umount /proc
-	exec /init ;;
+	KEXEC= ;;
 
 *)
 	eval KERNEL="\$KERNEL_$n"
@@ -231,13 +255,14 @@ case "$KEYWORD" in
 
 	if [ "$webprefix" ]; then
 		cd /root
-		wget $webprefix/$KEYWORD/$KERNEL
+		web_get $webprefix/$KEYWORD/$KERNEL vmlinuz
+		KERNEL=vmlinuz
 		for i in ${INITRD//,/ }; do
-			wget -O - $webprefix/$KEYWORD/$i >> /root/rootfs.gz
-			n=$(stat -c %s /root/rootfs.gz)
+			web_get $webprefix/$KEYWORD/$i rootfs.gz
+			n=$(stat -c %s rootfs.gz)
 			n=$(($n % 4))
 			[ $n -eq 0 ] && continue
-			dd if=/dev/zero bs=1 count=$((4 - $n)) >> /root/rootfs.gz
+			dd if=/dev/zero bs=1 count=$((4 - $n)) >> rootfs.gz
 		done
 	else
 		cd $mnt/$KEYWORD
@@ -255,8 +280,12 @@ case "$KEYWORD" in
 	[ "$CMDLINE" ] && CMDLINE="--command-line \"$CMDLINE\""
 
 	kexec -l $(basename $KERNEL) $INITRD $CMDLINE --atags
-	umount $mnt
-	umount /proc
-	kexec -e ;;
+	KEXEC="kexec -e" ;;
 
 esac
+
+umount $mnt
+umount /sys
+umount /proc
+$KEXEC
+exec /init
