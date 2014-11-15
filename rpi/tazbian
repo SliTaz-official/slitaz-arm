@@ -2,7 +2,7 @@
 #
 # (C) 2014 SliTaz GNU/Linux - GPL2
 #
-# creates a debian package to install SliTaz on a RaspBian with
+# creates a debian package to install SliTaz on a RaspBian without
 # repartitionning.
 #
 # AUTHORS: Pascal Bellard <pascal.bellard@slitaz.org>
