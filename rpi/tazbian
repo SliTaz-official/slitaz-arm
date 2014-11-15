@@ -44,6 +44,7 @@ echo "entry=SliTaz desktop $VERSION in RAM" > fs/boot/slitaz-live/menu.txt
 BASE=$(ls -d slitaz-rpi-base-*/rootfs)
 [ ! -d "$BASE" ] && echo "Abort ($BASE) !" && exit 1
 wget http://hg.slitaz.org/slitaz-arm/raw-file/tip/rpi/piboot
+chmod +x piboot
 mv piboot $BASE/sbin
 wget http://cook.slitaz.org/cross/arm/packages/packages.list
 while read file pkg extra ; do
