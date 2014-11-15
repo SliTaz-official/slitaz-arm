@@ -1,0 +1,218 @@
+#!/bin/sh
+#
+# (C) 2014 SliTaz GNU/Linux - GPL2
+#
+# creates a debian package to install SliTaz on a RaspBian with
+# repartitionning.
+#
+# AUTHORS: Pascal Bellard <pascal.bellard@slitaz.org>
+#
+
+[ $(id -u) -ne 0 ] && echo "Must be root. Abort." && exit 1
+
+CURDIR=$PWD
+TMPDIR=/tmp/rasp$$
+mkdir -p $TMPDIR
+cd $TMPDIR
+DESTDIR=var/os/slitaz
+URL=http://mirror.slitaz.org/arm/rpi/
+wget -O - $URL | sed '/slitaz-rpi/!d;s/.*href=.\([a-zA-Z0-9._-]*\).*/\1/' | sort -r > index
+VERSION="$(sed '/rpi-desktop/!d' index | sed 's/.*-desktop-\([0-9_-]*\).*/\1/;q')"
+
+wget -O - $URL$(sed '/rpi-base/!d;q' index) | tar xjf -
+wget -O - $URL$(sed '/rpi-desktop/!d;q' index) | tar xjf -
+
+mkdir -p fs/$DESTDIR fs/boot/slitaz fs/boot/slitaz-base \
+	 fs/boot/raspbian
+
+# setup boot configuration 
+BASE=$(ls -d slitaz-rpi-base-*/boot)
+[ ! -d "$BASE" ] && echo "Abort ($BASE) !" && exit 1
+mv $BASE/kernel.img fs/boot/slitaz
+cp $BASE/config.txt fs/boot/slitaz
+cp $BASE/config.txt fs/boot/slitaz-base
+echo "initrd rootfs-base.gz" >> fs/boot/slitaz/config.txt
+echo "entry=SliTaz $VERSION on SD-card" > fs/boot/slitaz/menu.txt
+sed -i 's|kernel.img|../slitaz/&|' fs/boot/slitaz-base/config.txt
+cp -a fs/boot/slitaz-base fs/boot/slitaz-live
+echo "initrd ../slitaz/rootfs-base.gz" >> fs/boot/slitaz-base/config.txt
+echo "entry=SliTaz base $VERSION in RAM" > fs/boot/slitaz-base/menu.txt
+echo "initrd ../slitaz/rootfs-base.gz ../slitaz/rootfs-live.gz" >> fs/boot/slitaz-live/config.txt
+echo "entry=SliTaz desktop $VERSION in RAM" > fs/boot/slitaz-live/menu.txt
+
+# update base package
+BASE=$(ls -d slitaz-rpi-base-*/rootfs)
+[ ! -d "$BASE" ] && echo "Abort ($BASE) !" && exit 1
+wget http://hg.slitaz.org/slitaz-arm/raw-file/tip/rpi/piboot
+mv piboot $BASE/sbin
+wget http://cook.slitaz.org/cross/arm/packages/packages.list
+while read file pkg extra ; do
+	[ -s boot$file ] && continue
+	[ -n "$extra" ] && continue
+	pkg=$(grep ^$pkg- packages.list | sort | sed q).tazpkg
+	wget http://cook.slitaz.org/cross/arm/packages/$pkg
+	tazpkg install $pkg --root=$BASE/
+done <<EOT
+/usr/lib/libz.so		zlib
+/usr/sbin/kexec			kexec-tools
+/usr/bin/tset			ncursesw
+/usr/bin/dialog			dialog
+/usr/lib/libxml2.so		libxml2			aria2
+/usr/bin/gpg-error		libgpg-error		aria2
+/usr/lib/libgcrypt.so		libgcrypt		aria2
+/usr/lib/libgmp.so		gmp			aria2
+/usr/lib/libnettle.so		nettle			aria2
+/usr/share/terminfo/l/linux	ncurses-common		aria2
+/lib/libncurses.so		ncurses			aria2
+/usr/lib/libreadline.so		readline		aria2
+/usr/lib/libstdc++.so		gcc-lib-base p11-kit	aria2
+/usr/lib/libgnutls.so		libgnutls		aria2
+/usr/lib/libcrypto.so		libcrypto		aria2
+/usr/lib/libtasn1.so		libtasn1		aria2
+/usr/bin/gnutls-cli		gnutls			aria2
+/usr/bin/aria2c			aria2			aria2
+EOT
+
+# deduplicate base & live
+LIVE=$(ls -d slitaz-rpi-desktop-*/rootfs)
+[ ! -d "$LIVE" ] && echo "Abort ($LIVE) !" && exit 1
+LIVESZ=$(du -ks $LIVE | cut -f1)
+( cd $BASE/ ; find ! -type d ) | while read file; do
+	if [ -L $BASE/$file ]; then
+		[ -L $LIVE/$file ] &&
+		[ "$(readlink $BASE/$file)" == "$(readlink $LIVE/$file)" ] &&
+		rm -f $LIVE/$file
+	elif [ -f $BASE/$file ]; then
+		[ -f $LIVE/$file ] &&
+		cmp $BASE/$file $LIVE/$file > /dev/null 2>&1 &&
+		rm -f $LIVE/$file
+	elif [ -b $BASE/$file ]; then
+		[ -b $LIVE/$file ] &&
+		[ "$(stat -c '%a:%u:%g:%t:%T' $BASE/$file)" == \
+		  "$(stat -c '%a:%u:%g:%t:%T' $LIVE/$file)" ] &&
+		rm -f $LIVE/$file
+	elif [ -c $BASE/$file ]; then
+		[ -c $LIVE/$file ] &&
+		[ "$(stat -c '%a:%u:%g:%t:%T' $BASE/$file)" == \
+		  "$(stat -c '%a:%u:%g:%t:%T' $LIVE/$file)" ] &&
+		rm -f $LIVE/$file
+	fi
+done
+( cd $BASE/ ; find -type d ) | while read dir; do
+	rmdir $LIVE/$file 2> /dev/null
+done
+
+( cd $BASE ; find * | cpio -o -H newc ) | \
+	gzip -9 > fs/boot/slitaz/rootfs-base.gz
+( cd $LIVE ; find * | cpio -o -H newc ) | \
+	gzip -9 > fs/boot/slitaz/rootfs-live.gz
+
+
+# Create raspbian package
+echo "2.0" > debian-binary
+cat > control <<EOT
+Package: slitaz
+Version: $VERSION-1
+Architecture: armhf
+Maintainer: Pascal Bellard <pascal.bellard@slitaz.org>
+Installed-Size: $(($(du -ks fs | cut -f1) + $LIVESZ))
+Section: miscellaneous
+Priority: optional
+Homepage: http://arm.slitaz.org/
+Description: Tiny Linux distribution with multi boot feature
+ SliTaz can run fully in RAM or can be installed on the SD card in a
+ subdirectory of your Raspbian (example /$DESTDIR).
+EOT
+( cd fs ; find * -type f -exec md5sum {} \; ) > md5sums
+cat > postinst <<EOT
+#!/bin/sh
+
+set -e
+
+cd /$DESTDIR
+zcat /boot/slitaz/rootfs-base.gz | cpio -idmu
+zcat /boot/slitaz/rootfs-core.gz | cpio -idmu
+mkdir mnt/raspbian 2> /dev/null
+cat >> etc/inittab <<EOM
+\$RDEV	/mnt/raspbian	\$FSTYPE	defaults	0	0
+tmpfs	/mnt/raspbian/$DESTDIR	tmpfs	size=0	0	0
+EOM
+cd -
+
+if [ ! -f /boot/menu.txt ]; then
+
+for i in i18n keyboard ; di
+	[ -s /etc/sysconfig/\$i ] && . /etc/sysconfig/\$i
+done
+find /$DESTDIR/usr/share/kbd/keymaps | grep /\$KEYTABLE.map.gz\$ && KMAP=\$KEYTABLE
+cat > /boot/menu.txt <<EOM
+title=Raspberry PI boot menu
+subtitle=Select the OS with ARROW keys and hit RETURN
+timeout=30
+default=raspbian
+#kmap=\${KMAP:-us}
+edittitle=Edit menu
+#noedit
+#webpath=http://my.home.web.site/pxe/rpi/index.php
+EOM
+cp /boot/config.txt /boot/raspbian/
+mv /boot/\$(sed '/^kernel/!d;s/.*=//' /boot/config.txt) /boot/raspbian/
+echo "entry=Raspbian \$(cat /etc/debian_version)" > /boot/raspbian/menu.txt
+sed -i '/^kernel/d;/^initrd/d' /boot/config.txt
+echo "kernel=slitaz/kernel.img" >> /boot/config.txt
+echo "initrd=slitaz/rootfs-base.gz" >> /boot/config.txt
+set -- \$(awk '/ \/ / { if (\$1 != "rootfs") print \$1 " " \$3 }')
+RDEV=\$1
+FSTYPE=\$2
+echo "root=/dev/null rdinit=/sbin/piboot quiet" > /boot/cmdline.txt
+echo "root=/dev/null mount=\$RDEV subroot=$DESTDIR rootwait quiet" > /boot/slitaz/cmdline.txt
+if [ -s /$DESTDIR/usr/share/i18n/locales/\${LANG%.*} -a -n "\$KMAP" ]; then
+	echo "root=/dev/null lang=\${LANG%.*} kmap=\$KMAP quiet"
+else
+	echo "root=/dev/null quiet"
+fi > /boot/slitaz-base/cmdline.txt
+cp /boot/slitaz-base/cmdline.txt /boot/slitaz-live/cmdline.txt
+
+fi
+
+exit 0
+EOT
+cat > postrm <<EOT
+#!/bin/sh
+
+purge()
+{
+	rm -rf /$DESTDIR /boot/slitaz*
+}
+
+disable()
+{
+	if [ -d /boot/rasbian ]; then
+		mv -f /boot/rasbian/* /boot
+		rm -rf /boot/rasbian
+	fi
+	rm -f /boot/menu.txt
+}
+
+case "\$1" in
+purge)
+	disable
+	purge
+	;;
+remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+	disable
+	;;
+*)
+	echo "postrm called with unknown argument \\\`\$1'" >&2
+	exit 0
+esac
+EOT
+chmod +x postinst postrm
+tar czf control.tar.gz md5sums control postinst postrm
+rm -rf fs/$DESTDIR/*
+cd fs ; tar czf ../data.tar.gz . ; cd ..
+[ -x /usr/bin/ar ] || tazpkg get-install binutils
+ar rcs slitaz-$VERSION-1_armhf.deb debian-binary control.tar.gz data.tar.gz
+mv slitaz-$VERSION-1_armhf.deb $CURDIR
+cd $CURDIR
+ls -l slitaz-$VERSION-1_armhf.deb

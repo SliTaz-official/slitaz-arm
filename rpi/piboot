@@ -109,11 +109,15 @@ web_boot()
 	/etc/init.d/network.sh start
 	webpath=$(get webpath $mnt/menu.txt)
 	[ "$webpath" ] || webpath=http://mirror.slitaz.org/pxe/arm/boot.php
-	wget -O /root/webboot.sh $webpath?mac=$(cat /sys/class/net/eth0/address) 2>&1 > /dev/null
-	[ -s /root/webboot.sh ] || return
-	. /root/webboot.sh
-	webprefix=$(dirname $webpath)
-	editbutton=""
+	for url in ${webpath//,/ }; do
+		wget -O /root/webboot.sh \
+		  $url?mac=$(cat /sys/class/net/eth0/address) 2>&1 > /dev/null
+		[ -s /root/webboot.sh ] || continue
+		. /root/webboot.sh
+		webprefix=$(dirname $url)
+		editbutton=""
+		break
+	done
 }
 
 web_get()
