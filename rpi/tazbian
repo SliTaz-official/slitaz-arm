@@ -44,8 +44,10 @@ echo "entry=SliTaz desktop $VERSION in RAM" > fs/boot/slitaz-live/menu.txt
 BASE=$(ls -d slitaz-rpi-base-*/rootfs)
 [ ! -d "$BASE" ] && echo "Abort ($BASE) !" && exit 1
 wget http://hg.slitaz.org/slitaz-arm/raw-file/tip/rpi/piboot
-chmod +x piboot
+wget http://hg.slitaz.org/slitaz-boot-scripts/raw-file/tip/init
+chmod +x piboot init
 mv piboot $BASE/sbin
+mv init $BASE/sbin/pisubroot
 wget http://cook.slitaz.org/cross/arm/packages/packages.list
 while read file pkg extra ; do
 	[ -s boot$file ] && continue
@@ -63,12 +65,9 @@ done <<EOT
 /usr/lib/libgcrypt.so		libgcrypt		aria2
 /usr/lib/libgmp.so		gmp			aria2
 /usr/lib/libnettle.so		nettle			aria2
-/usr/share/terminfo/l/linux	ncurses-common		aria2
-/lib/libncurses.so		ncurses			aria2
 /usr/lib/libreadline.so		readline		aria2
-/usr/lib/libstdc++.so		gcc-lib-base p11-kit	aria2
+/usr/bin/p11-kit		p11-kit			aria2
 /usr/lib/libgnutls.so		libgnutls		aria2
-/usr/lib/libcrypto.so		libcrypto		aria2
 /usr/lib/libtasn1.so		libtasn1		aria2
 /usr/bin/gnutls-cli		gnutls			aria2
 /usr/bin/aria2c			aria2			aria2
@@ -100,14 +99,17 @@ LIVESZ=$(du -ks $LIVE | cut -f1)
 	fi
 done
 ( cd $BASE/ ; find -type d ) | while read dir; do
-	rmdir $LIVE/$file 2> /dev/null
+	rmdir $LIVE/$dir 2> /dev/null
 done
 
 ( cd $BASE ; find * | cpio -o -H newc ) | \
 	gzip -9 > fs/boot/slitaz/rootfs-base.gz
 ( cd $LIVE ; find * | cpio -o -H newc ) | \
 	gzip -9 > fs/boot/slitaz/rootfs-live.gz
-
+if [ -x /usr/bin/advdef ]; then
+	advdef -z4 fs/boot/slitaz/rootfs-base.gz
+	advdef -z4 fs/boot/slitaz/rootfs-live.gz
+fi
 
 # Create raspbian package
 echo "2.0" > debian-binary
@@ -130,6 +132,10 @@ cat > postinst <<EOT
 
 set -e
 
+set -- \$(awk '/ \/ / { if (\$1 != "rootfs") print \$1 " " \$3 }' < /proc/mounts)
+RDEV=\$1
+FSTYPE=\$2
+
 cd /$DESTDIR
 zcat /boot/slitaz/rootfs-base.gz | cpio -idmu
 zcat /boot/slitaz/rootfs-core.gz | cpio -idmu
@@ -142,19 +148,22 @@ cd -
 
 if [ ! -f /boot/menu.txt ]; then
 
-for i in i18n keyboard ; di
+for i in i18n keyboard ; do
 	[ -s /etc/sysconfig/\$i ] && . /etc/sysconfig/\$i
 done
-find /$DESTDIR/usr/share/kbd/keymaps | grep /\$KEYTABLE.map.gz\$ && KMAP=\$KEYTABLE
+KMAP=
+find /$DESTDIR/usr/share/kbd/keymaps | grep /\$KEYTABLE.map.gz\$ && KMAP=kmap=\$KEYTABLE
 cat > /boot/menu.txt <<EOM
 title=Raspberry PI boot menu
 subtitle=Select the OS with ARROW keys and hit RETURN
 timeout=30
 default=raspbian
-#kmap=\${KMAP:-us}
+\$KMAP
 edittitle=Edit menu
+readonly
 #noedit
-#webpath=http://my.home.web.site/pxe/rpi/index.php
+#nowebboot
+#webpath=http://my.home.web.site/pxe/rpi/index.php http://or.this.one/rpi.txt
 EOM
 cp /boot/config.txt /boot/raspbian/
 mv /boot/\$(sed '/^kernel/!d;s/.*=//' /boot/config.txt) /boot/raspbian/
@@ -162,19 +171,16 @@ echo "entry=Raspbian \$(cat /etc/debian_version)" > /boot/raspbian/menu.txt
 sed -i '/^kernel/d;/^initrd/d' /boot/config.txt
 echo "kernel=slitaz/kernel.img" >> /boot/config.txt
 echo "initrd=slitaz/rootfs-base.gz" >> /boot/config.txt
-set -- \$(awk '/ \/ / { if (\$1 != "rootfs") print \$1 " " \$3 }')
-RDEV=\$1
-FSTYPE=\$2
 echo "root=/dev/null rdinit=/sbin/piboot quiet" > /boot/cmdline.txt
-echo "root=/dev/null mount=\$RDEV subroot=$DESTDIR rootwait quiet" > /boot/slitaz/cmdline.txt
-if [ -s /$DESTDIR/usr/share/i18n/locales/\${LANG%.*} -a -n "\$KMAP" ]; then
-	echo "root=/dev/null lang=\${LANG%.*} kmap=\$KMAP quiet"
-else
-	echo "root=/dev/null quiet"
-fi > /boot/slitaz-base/cmdline.txt
+echo "root=/dev/null rdinit=/sbin/pisubroot mount=\$RDEV subroot=$DESTDIR rootwait quiet" > /boot/slitaz/cmdline.txt
+L=
+[ -s /$DESTDIR/usr/share/i18n/locales/\${LANG%.*} ] && L=lang=\${LANG%.*} 
+echo "root=/dev/null \$L \$KMAP quiet" > /boot/slitaz-base/cmdline.txt
 cp /boot/slitaz-base/cmdline.txt /boot/slitaz-live/cmdline.txt
 
 fi
+
+echo "The SliTaz boot menu is available for next (re)boot."
 
 exit 0
 EOT
@@ -216,4 +222,5 @@ cd fs ; tar czf ../data.tar.gz . ; cd ..
 ar rcs slitaz-$VERSION-1_armhf.deb debian-binary control.tar.gz data.tar.gz
 mv slitaz-$VERSION-1_armhf.deb $CURDIR
 cd $CURDIR
+rm -rf $TMPDIR
 ls -l slitaz-$VERSION-1_armhf.deb
