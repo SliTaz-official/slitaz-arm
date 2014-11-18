@@ -42,6 +42,9 @@ echo "entry=SliTaz desktop $VERSION in RAM" > fs/boot/slitaz-live/menu.txt
 
 # update base package
 BASE=$(ls -d slitaz-rpi-base-*/rootfs)
+LIVE=$(ls -d slitaz-rpi-desktop-*/rootfs)
+[ ! -d "$LIVE" ] && echo "Abort ($LIVE) !" && exit 1
+LIVESZ=$(du -ks $LIVE | cut -f1)
 [ ! -d "$BASE" ] && echo "Abort ($BASE) !" && exit 1
 wget http://hg.slitaz.org/slitaz-arm/raw-file/tip/rpi/piboot
 wget http://hg.slitaz.org/slitaz-boot-scripts/raw-file/tip/init
@@ -52,7 +55,7 @@ mv init $BASE/sbin/pisubroot
 mknod -m 660 $BASE/dev/mmcblk0 b 179 0
 mknod -m 660 $BASE/dev/mmcblk0p1 b 179 1
 mknod -m 660 $BASE/dev/mmcblk0p2 b 179 2
-sed -i 's/.*mmcblk0p[2-9].*/# &/;s/noatime/noauto,/' $BASE/etc/fstab
+sed -i 's/.*mmcblk0p[2-9].*/# &/;s/noatime/noauto,&/' $BASE/etc/fstab $LIVE/etc/fstab
 wget http://cook.slitaz.org/cross/arm/packages/packages.list
 while read file pkg extra ; do
 	[ -s boot$file ] && continue
@@ -79,9 +82,6 @@ done <<EOT
 EOT
 
 # deduplicate base & live
-LIVE=$(ls -d slitaz-rpi-desktop-*/rootfs)
-[ ! -d "$LIVE" ] && echo "Abort ($LIVE) !" && exit 1
-LIVESZ=$(du -ks $LIVE | cut -f1)
 ( cd $BASE/ ; find ! -type d ) | while read file; do
 	if [ -L $BASE/$file ]; then
 		[ -L $LIVE/$file ] &&
@@ -153,7 +153,7 @@ if ! grep -qs raspbian etc/fstab ; then
 tmpfs	/mnt/raspbian/$DESTDIR	tmpfs	size=0	0	0
 EOM
 fi
-cd -
+cd - > /dev/null
 
 if [ ! -f /boot/menu.txt ]; then
 
@@ -191,27 +191,27 @@ cp /boot/slitaz-base/cmdline.txt /boot/slitaz-live/cmdline.txt
 
 fi
 
-echo "The SliTaz boot menu is available for next (re)boot."
+echo "The SliTaz boot menu is available for the next (re)boot."
 
 exit 0
 EOT
-cat > postrm <<EOT
+cat > prerm <<EOT
 #!/bin/sh
 
 purge()
 {
-	echo "Remove /$DESTDIR /boot/slitaz* trees..."
+	echo "Remove /$DESTDIR & /boot/slitaz* trees..."
 	rm -rf /$DESTDIR /boot/slitaz*
 }
 
 disable()
 {
-	if [ -d /boot/rasbian ]; then
-		echo "Restore rasbian boot files..."
-		mv -f /boot/rasbian/* /boot
-		rm -rf /boot/rasbian
+	if [ -d /boot/raspbian ]; then
+		echo "Restore raspbian boot files..."
+		rm -f /boot/raspbian/menu.txt
+		mv -f /boot/raspbian/* /boot
 	fi
-	rm -f /boot/menu.txt
+	rm -f /boot/menu.txt /boot/slitaz*/cmdline.txt
 }
 
 case "\$1" in
@@ -223,12 +223,12 @@ remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
 	disable
 	;;
 *)
-	echo "postrm called with unknown argument \\\`\$1'" >&2
+	echo "prerm called with unknown argument \\\`\$1'" >&2
 	exit 0
 esac
 EOT
-chmod +x postinst postrm
-tar czf control.tar.gz md5sums control postinst postrm
+chmod +x postinst prerm
+tar czf control.tar.gz md5sums control postinst prerm
 rm -rf fs/$DESTDIR/*
 cd fs ; tar czf ../data.tar.gz . ; cd ..
 [ -x /usr/bin/ar ] || tazpkg get-install binutils
