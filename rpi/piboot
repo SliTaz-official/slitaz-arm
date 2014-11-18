@@ -12,7 +12,7 @@
 
 # Check for depends ...
 LOG=/var/log/$(basename $0).log
-mv -f $LOG $LOG.0 >/dev/null
+mv -f $LOG $LOG.0 2>/dev/null
 while read file pkg ; do
 	[ "$(which $file)" ] && continue
 	echo "Can't find $file. Please install $pkg." >> $LOG
@@ -122,7 +122,7 @@ web_boot()
 	[ "$webpath" ] || webpath=http://mirror.slitaz.org/pxe/arm/boot.php
 	for url in ${webpath//,/ }; do
 		wget -O /root/webboot.sh \
-		  $url?mac=$(cat /sys/class/net/eth0/address) 2>&1 > /dev/null
+		  "$url?mac=$(cat /sys/class/net/eth0/address)" 2>&1 > /dev/null
 		[ -s /root/webboot.sh ] || continue
 		. /root/webboot.sh
 		webprefix=$(dirname $url)
@@ -139,7 +139,7 @@ web_get()
 			echo "Can't find aria2." >> $LOG &&
 			exec /init
 
-		wget -O /root/webboot.torrent $1
+		wget -O /root/webboot.torrent "$1"
 		aria2c --enable-dht=false --disable-ipv6=true --seed-time=0 \
 			--file-allocation=none -j5 /root/webboot.torrent
 
@@ -152,7 +152,7 @@ web_get()
 		fi
 		rm -f /root/webboot.torrent ;;
 	*)
-		wget -O - $1 >> $2
+		wget -O - "$1" >> $2
 	esac
 }
 
@@ -174,47 +174,49 @@ umount /dev
 
 # Get global variables
 
-title=$(get title $mnt/menu.txt)
-subtitle=$(get subtitle $mnt/menu.txt)
+title="$(get title $mnt/menu.txt)"
+subtitle="$(get subtitle $mnt/menu.txt)"
 
-timeout=$(get timeout $mnt/menu.txt)
-timeout=${timeout:-30}
+timeout="$(get timeout $mnt/menu.txt)"
+timeout="${timeout:-30}"
 
-default=$(get default $mnt/menu.txt)
+default="$(get default $mnt/menu.txt)"
 
 editbutton='--extra-button --extra-label "Edit"'
-grep -qs ^noedit i$mnt/menu.txt && editbutton=
+grep -qs ^noedit $mnt/menu.txt && editbutton=
 
 READONLY=
-grep -qs ^readonly i$mnt/menu.txt && READONLY=ON
+grep -qs ^readonly $mnt/menu.txt && READONLY=ON
 
 USING_WEBBOOT=
-grep -qs ^nowebboot i$mnt/menu.txt && USING_WEBBOOT=1
+grep -qs ^nowebboot $mnt/menu.txt && USING_WEBBOOT=1
 
-kmap=$(get kmap $mnt/menu.txt)
+kmap="$(get kmap $mnt/menu.txt)"
 [ "$kmap" ] && ! loadkeys $kmap && loadkmap < /usr/share/kmap/$kmap.kmap
 
-edittitle=$(get edittitle $mnt/menu.txt)
+edittitle="$(get edittitle $mnt/menu.txt)"
 
 # Get locale
 
-msgsave=$(get msgsave $mnt/menu.txt)
-msgedit=$(get msgedit $mnt/menu.txt)
-msgdone=$(get msgdone $mnt/menu.txt)
-msgboot=$(get msgboot $mnt/menu.txt)
-msghalt=$(get msghalt $mnt/menu.txt)
-msgselectkernel=$(get msgselectkernel $mnt/menu.txt)
-msgselectinitrd=$(get msgselectinitrd $mnt/menu.txt)
-msgeditcmdline=$(get msgeditcmdline $mnt/menu.txt)
-msgkexec=$(get msgkexec $mnt/menu.txt)
+msgsave="$(get msgsave $mnt/menu.txt)"
+msgedit="$(get msgedit $mnt/menu.txt)"
+msgdone="$(get msgdone $mnt/menu.txt)"
+msgboot="$(get msgboot $mnt/menu.txt)"
+msghalt="$(get msghalt $mnt/menu.txt)"
+msgselectkernel="$(get msgselectkernel $mnt/menu.txt)"
+msgselectinitrd="$(get msgselectinitrd $mnt/menu.txt)"
+msgeditcmdline="$(get msgeditcmdline $mnt/menu.txt)"
+msgkexec="$(get msgkexec $mnt/menu.txt)"
 
 # Get OS variables
 
 n=0
 for i in $mnt/*/ ; do
-	grep -qs ^kernel $i/config.txt || continue
+	KERNEL="$(get kernel $i/config.txt)"
+	[ -z "$KERNEL" ] && [ -s $i/kernel.img ] && KERNEL="kernel.img"
+	[ "$KERNEL" ] || continue
 	n=$(($n+1))
-	eval KERNEL_$n="\$(get kernel \$i/config.txt)"
+	eval KERNEL_$n="\$KERNEL"
 	eval INITRD_$n="\$(get initramfs \$i/config.txt)"
 	eval CMDLINE_$n="\$(cat \$i/cmdline.txt)"
 	eval SAVEDEFAULT_$n="\$(get savedefault \$i/config.txt)"
@@ -319,9 +321,9 @@ case "$KEYWORD" in
 		cp /tmp/menu.txt $mnt/menu.txt
 	fi
 	[ "$INITRD" ] && INITRD="--initrd rootfs.gz"
-	[ "$CMDLINE" ] && CMDLINE="--command-line \"$CMDLINE\""
 
-	kexec -l $(basename $KERNEL) $INITRD $CMDLINE --atags
+	kexec -l $(basename $KERNEL) $INITRD --command-line \
+		"$(sed 's|  .*||' /proc/cmdline)  $CMDLINE" --atags
 	KEXEC="kexec -e" ;;
 
 esac

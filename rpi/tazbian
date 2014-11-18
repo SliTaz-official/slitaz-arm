@@ -47,6 +47,7 @@ wget http://hg.slitaz.org/slitaz-arm/raw-file/tip/rpi/piboot
 wget http://hg.slitaz.org/slitaz-boot-scripts/raw-file/tip/init
 chmod +x piboot init
 mv piboot $BASE/sbin
+sed -i 's|mnt /mnt|mnt "/mnt -o noatime"|' init
 mv init $BASE/sbin/pisubroot
 wget http://cook.slitaz.org/cross/arm/packages/packages.list
 while read file pkg extra ; do
@@ -142,7 +143,7 @@ zcat /boot/slitaz/rootfs-live.gz | cpio -idmu
 if ! grep -qs raspbian etc/fstab ; then
 	sed -i 's/.*mmcblk0p[2-9].*/#&/' etc/fstab
 	cat >> etc/fstab <<EOM
-\$RDEV	/mnt/raspbian	\$FSTYPE	defaults	0	0
+\$RDEV	/mnt/raspbian	\$FSTYPE	noatime	0	0
 tmpfs	/mnt/raspbian/$DESTDIR	tmpfs	size=0	0	0
 EOM
 fi
@@ -153,8 +154,8 @@ if [ ! -f /boot/menu.txt ]; then
 for i in keyboard locale ; do
 	[ -s /etc/default/\$i ] && . /etc/default/\$i
 done
-KMAP=
-find /$DESTDIR/usr/share/kbd/keymaps | grep /\$XKBLAYOUT.map.gz\$ && KMAP=kmap=\$XKBLAYOUT
+KMAP=\$(find /$DESTDIR/usr/share/kbd/keymaps | grep /\$XKBLAYOUT[.-] | head -n1)
+[ "\$KMAP" ] && KMAP="kmap=\$(basename \$KMAP .map.gz)"
 cat > /boot/menu.txt <<EOM
 title=Raspberry PI boot menu
 subtitle=Select the OS with ARROW keys and hit RETURN
@@ -170,15 +171,14 @@ EOM
 KERNEL=\$(sed '/^kernel/!d;s/.*=//' /boot/config.txt)
 cp /boot/config.txt /boot/cmdline.txt /boot/raspbian/
 mv /boot/\${KERNEL:-kernel.img} /boot/raspbian/
-[ "\$KERNEL" ] || echo "kernel=kernel.img" >> /boot/raspbian/config.txt
 echo "entry=Raspbian \$(cat /etc/debian_version)" > /boot/raspbian/menu.txt
 sed -i '/^kernel/d;/^initramfs/d' /boot/config.txt
 echo "kernel=slitaz/kernel.img" >> /boot/config.txt
 echo "initramfs slitaz/rootfs-base.gz" >> /boot/config.txt
 echo "root=/dev/null rdinit=/sbin/piboot quiet" > /boot/cmdline.txt
-echo "root=/dev/null rdinit=/sbin/pisubroot mount=\$RDEV subroot=$DESTDIR rootwait quiet" > /boot/slitaz/cmdline.txt
 L=
 [ -s /$DESTDIR/usr/share/i18n/locales/\${LANG%.*} ] && L=lang=\${LANG%.*} 
+echo "root=/dev/null \$L \$KMAP rdinit=/sbin/pisubroot mount=\$RDEV subroot=$DESTDIR rootwait quiet" > /boot/slitaz/cmdline.txt
 echo "root=/dev/null \$L \$KMAP quiet" > /boot/slitaz-base/cmdline.txt
 cp /boot/slitaz-base/cmdline.txt /boot/slitaz-live/cmdline.txt
 
