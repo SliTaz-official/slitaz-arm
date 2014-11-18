@@ -49,6 +49,10 @@ chmod +x piboot init
 mv piboot $BASE/sbin
 sed -i 's|mnt /mnt|mnt "/mnt -o noatime"|' init
 mv init $BASE/sbin/pisubroot
+mknod -m 660 $BASE/dev/mmcblk0 b 179 0
+mknod -m 660 $BASE/dev/mmcblk0p1 b 179 1
+mknod -m 660 $BASE/dev/mmcblk0p2 b 179 2
+sed -i 's/.*mmcblk0p[2-9].*/# &/;s/noatime/noauto,/' $BASE/etc/fstab
 wget http://cook.slitaz.org/cross/arm/packages/packages.list
 while read file pkg extra ; do
 	[ -s boot$file ] && continue
@@ -136,12 +140,14 @@ set -e
 RDEV=\$(sed 's/.*root=\([^ ]*\).*/\1/' /boot/cmdline.txt)
 FSTYPE=\$(awk '/ \/ / { if (\$1 != "rootfs") print \$3 }' < /proc/mounts)
 
+echo "Extracting /$DESTDIR ..."
 cd /$DESTDIR
 zcat /boot/slitaz/rootfs-base.gz | cpio -idmu
 zcat /boot/slitaz/rootfs-live.gz | cpio -idmu
-[ -d mnt/raspbian ] || mkdir -p mnt/raspbian
 if ! grep -qs raspbian etc/fstab ; then
-	sed -i 's/.*mmcblk0p[2-9].*/#&/' etc/fstab
+	echo "Update /$DESTDIR/etc/fstab ..."
+	mkdir -p mnt/raspbian
+	sed -i 's/noauto,//' etc/fstab
 	cat >> etc/fstab <<EOM
 \$RDEV	/mnt/raspbian	\$FSTYPE	noatime	0	0
 tmpfs	/mnt/raspbian/$DESTDIR	tmpfs	size=0	0	0
@@ -151,6 +157,7 @@ cd -
 
 if [ ! -f /boot/menu.txt ]; then
 
+echo "Update /boot ..."
 for i in keyboard locale ; do
 	[ -s /etc/default/\$i ] && . /etc/default/\$i
 done
@@ -193,12 +200,14 @@ cat > postrm <<EOT
 
 purge()
 {
+	echo "Remove /$DESTDIR /boot/slitaz* trees..."
 	rm -rf /$DESTDIR /boot/slitaz*
 }
 
 disable()
 {
 	if [ -d /boot/rasbian ]; then
+		echo "Restore rasbian boot files..."
 		mv -f /boot/rasbian/* /boot
 		rm -rf /boot/rasbian
 	fi
