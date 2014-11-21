@@ -2,8 +2,8 @@
 #
 # (C) 2014 SliTaz GNU/Linux - GPL2
 #
-# creates a debian package to install SliTaz on a RaspBian without
-# repartitionning.
+# Creates a Debian package to install SliTaz on a Raspbian without
+# repartitioning.
 #
 # AUTHORS: Pascal Bellard <pascal.bellard@slitaz.org>
 #
@@ -127,7 +127,7 @@ Installed-Size: $(($(du -ks fs | cut -f1) + $LIVESZ))
 Section: miscellaneous
 Priority: optional
 Homepage: http://arm.slitaz.org/
-Description: Tiny Linux distribution with multi boot feature
+Description: Tiny Linux distribution with multi boot features
  SliTaz can run fully in RAM or can be installed on the SD card in a
  subdirectory of your Raspbian (example /$DESTDIR).
 EOT
