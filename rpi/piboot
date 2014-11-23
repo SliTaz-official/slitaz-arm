@@ -237,6 +237,7 @@ while true; do
 		--ok-label "${msgboot:-Boot}" \
 		--cancel-label "${msghalt:-Halt}" \
 		--timeout $timeout \
+		--default-item ${default:-$KEYWORD_1} \
 		--menu "${subtitle:-Default boot in $timeout seconds}" 20 72 14 \
 		$(list_entry) $(web_boot_entry) \
 		Continue "${msgkexec:-Execute SliTaz boot sequence}"
