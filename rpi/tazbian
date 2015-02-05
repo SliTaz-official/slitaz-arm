@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# (C) 2014 SliTaz GNU/Linux - GPL2
+# (C) 2014-2015 SliTaz GNU/Linux - GPL2
 #
 # Creates a Debian package to install SliTaz on a Raspbian without
 # repartitioning.
@@ -10,7 +10,36 @@
 
 [ $(id -u) -ne 0 ] && echo "Must be root. Abort." && exit 1
 
+tazpkg()
+{
+	if [ -x /usr/bin/tazpkg ]; then
+		/usr/bin/tazpkg "$@"
+		exit $?
+	fi
+	[ "$1" == "get-install" ] && echo "abort: can't find $2" && exit 1
+	mkdir -p tazpkg$$
+	cd tazpkg$$
+	cpio -i < ../$2
+	gunzip fs.cpio.gz 2> /dev/null
+	[ -s fs.cpio ] || unlzma fs.cpio.lzma
+	cpio -idmu < fs.cpio
+	cd ..
+	sh <<EOT
+. tazpkg$$/receipt
+mkdir -p ${3#--root=}/var/lib/tazpkg/installed/\$PACKAGE
+grep -qs ^pre_install tazpkg$$/receipt && pre_install ${3#--root=}
+cp -a tazpkg$$/fs/. ${3#--root=}
+grep -qs ^post_install tazpkg$$/receipt && post_install ${3#--root=}
+rm -rf tazpkg$$/fs*
+mv tazpkg$$/* ${3#--root=}/var/lib/tazpkg/installed/\$PACKAGE
+EOT
+	md5sum $2 >> ${3#--root=}/var/lib/tazpkg/installed.md5
+	rm -rf tazpkg$$
+}
+
+[ -x /usr/bin/ar -o -x /bin/ar ] || tazpkg get-install binutils
 CURDIR=$PWD
+EXE=$(cd $(dirname $0); pwd)/$(basename $0)
 TMPDIR=/tmp/rasp$$
 mkdir -p $TMPDIR
 cd $TMPDIR
@@ -103,6 +132,7 @@ EOT
 		rm -f $LIVE/$file
 	fi
 done
+cp $EXE $BASE/root/
 ( cd $BASE/ ; find -type d ) | while read dir; do
 	rmdir $LIVE/$dir 2> /dev/null
 done
@@ -126,7 +156,7 @@ Maintainer: Pascal Bellard <pascal.bellard@slitaz.org>
 Installed-Size: $(($(du -ks fs | cut -f1) + $LIVESZ))
 Section: miscellaneous
 Priority: optional
-Homepage: http://arm.slitaz.org/
+Homepage: http://arm.slitaz.org/rpi/
 Description: Tiny Linux distribution with multi boot features
  SliTaz can run fully in RAM or can be installed on the SD card in a
  subdirectory of your Raspbian (example /$DESTDIR).
@@ -231,7 +261,6 @@ chmod +x postinst prerm
 tar czf control.tar.gz md5sums control postinst prerm
 rm -rf fs/$DESTDIR/*
 cd fs ; tar czf ../data.tar.gz . ; cd ..
-[ -x /usr/bin/ar ] || tazpkg get-install binutils
 ar rcs slitaz-$VERSION-1_armhf.deb debian-binary control.tar.gz data.tar.gz
 mv slitaz-$VERSION-1_armhf.deb $CURDIR
 cd $CURDIR
