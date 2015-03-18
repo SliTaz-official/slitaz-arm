@@ -10,11 +10,15 @@
 
 [ $(id -u) -ne 0 ] && echo "Must be root. Abort." && exit 1
 
+DESCRIPTION="Tiny Linux distribution with multi boot features"
+WEB_SITE="http://arm.slitaz.org/rpi/"
+MAINTAINER="Pascal Bellard <pascal.bellard@slitaz.org>"
+
 tazpkg()
 {
 	if [ -x /usr/bin/tazpkg ]; then
 		/usr/bin/tazpkg "$@"
-		exit $?
+		return $?
 	fi
 	[ "$1" == "get-install" ] && echo "abort: can't find $2" && exit 1
 	mkdir -p tazpkg$$
@@ -37,7 +41,8 @@ EOT
 	rm -rf tazpkg$$
 }
 
-[ -x /usr/bin/ar -o -x /bin/ar ] || tazpkg get-install binutils
+buildfs()
+{
 CURDIR=$PWD
 EXE=$(cd $(dirname $0); pwd)/$(basename $0)
 TMPDIR=/tmp/rasp$$
@@ -52,7 +57,7 @@ wget -O - $URL$(sed '/rpi-base/!d;q' index) | tar xjf -
 wget -O - $URL$(sed '/rpi-desktop/!d;q' index) | tar xjf -
 
 mkdir -p fs/$DESTDIR fs/boot/slitaz fs/boot/slitaz-base \
-	 fs/boot/raspbian
+	 fs/boot/$raspos
 
 # setup boot configuration 
 BASE=$(ls -d slitaz-rpi-base-*/boot)
@@ -145,28 +150,11 @@ if [ -x /usr/bin/advdef ]; then
 	advdef -z4 fs/boot/slitaz/rootfs-base.gz
 	advdef -z4 fs/boot/slitaz/rootfs-live.gz
 fi
+}
 
-# Create raspbian package
-echo "2.0" > debian-binary
-cat > control <<EOT
-Package: slitaz
-Version: $VERSION-1
-Architecture: armhf
-Maintainer: Pascal Bellard <pascal.bellard@slitaz.org>
-Installed-Size: $(($(du -ks fs | cut -f1) + $LIVESZ))
-Section: miscellaneous
-Priority: optional
-Homepage: http://arm.slitaz.org/rpi/
-Description: Tiny Linux distribution with multi boot features
- SliTaz can run fully in RAM or can be installed on the SD card in a
- subdirectory of your Raspbian (example /$DESTDIR).
-EOT
-( cd fs ; find * -type f -exec md5sum {} \; ) > md5sums
-cat > postinst <<EOT
-#!/bin/sh
-
-set -e
-
+mkpostinst()
+{
+	cat <<EOT
 RDEV=\$(sed 's/.*root=\([^ ]*\).*/\1/' /boot/cmdline.txt)
 FSTYPE=\$(awk '/ \/ / { if (\$1 != "rootfs") print \$3 }' < /proc/mounts)
 
@@ -174,13 +162,13 @@ echo "Extracting /$DESTDIR ..."
 cd /$DESTDIR
 zcat /boot/slitaz/rootfs-base.gz | cpio -idmu
 zcat /boot/slitaz/rootfs-live.gz | cpio -idmu
-if ! grep -qs raspbian etc/fstab ; then
+if ! grep -qs $raspos etc/fstab ; then
 	echo "Update /$DESTDIR/etc/fstab ..."
-	mkdir -p mnt/raspbian
+	mkdir -p mnt/$raspos
 	sed -i 's/noauto,//' etc/fstab
 	cat >> etc/fstab <<EOM
-\$RDEV	/mnt/raspbian	\$FSTYPE	noatime	0	0
-tmpfs	/mnt/raspbian/$DESTDIR	tmpfs	size=0	0	0
+\$RDEV	/mnt/$raspos	\$FSTYPE	noatime	0	0
+tmpfs	/mnt/$raspos/$DESTDIR	tmpfs	size=0	0	0
 EOM
 fi
 cd - > /dev/null
@@ -197,7 +185,7 @@ cat > /boot/menu.txt <<EOM
 title=Raspberry PI boot menu
 subtitle=Select the OS with ARROW keys and hit RETURN
 timeout=30
-default=raspbian
+default=$raspos
 \$KMAP
 edittitle=Edit menu
 readonly
@@ -206,9 +194,9 @@ readonly
 #webpath=http://my.home.web.site/pxe/rpi/index.php http://or.this.one/rpi.txt
 EOM
 KERNEL=\$(sed '/^kernel/!d;s/.*=//' /boot/config.txt)
-cp /boot/config.txt /boot/cmdline.txt /boot/raspbian/
-mv /boot/\${KERNEL:-kernel.img} /boot/raspbian/
-echo "entry=Raspbian \$(cat /etc/debian_version)" > /boot/raspbian/menu.txt
+cp /boot/config.txt /boot/cmdline.txt /boot/$raspos/
+mv /boot/\${KERNEL:-kernel.img} /boot/$raspos/
+echo "entry=$menustr" > /boot/$raspos/menu.txt
 sed -i '/^kernel/d;/^initramfs/d' /boot/config.txt
 echo "kernel=slitaz/kernel.img" >> /boot/config.txt
 echo "initramfs slitaz/rootfs-base.gz" >> /boot/config.txt
@@ -222,26 +210,67 @@ cp /boot/slitaz-base/cmdline.txt /boot/slitaz-live/cmdline.txt
 fi
 
 echo "The SliTaz boot menu is available for the next (re)boot."
+EOT
+}
+
+mkpurge()
+{
+	cat <<EOT
+	echo "Remove /$DESTDIR & /boot/slitaz* trees..."
+	rm -rf /$DESTDIR /boot/slitaz*
+EOT
+}
+
+mkdisable()
+{
+	cat <<EOT
+	if [ -d /boot/$raspos ]; then
+		echo "Restore $raspos boot files..."
+		rm -f /boot/$raspos/menu.txt
+		mv -f /boot/$raspos/* /boot
+	fi
+	rm -f /boot/menu.txt /boot/slitaz*/cmdline.txt
+EOT
+}
+
+pkgdebian()
+{
+	# Create raspbian package
+	echo "2.0" > debian-binary
+	cat > control <<EOT
+Package: slitaz
+Version: $VERSION-1
+Architecture: armhf
+Maintainer: $MAINTAINER
+Installed-Size: $(($(du -ks fs | cut -f1) + $LIVESZ))
+Section: miscellaneous
+Priority: optional
+Homepage: $WEB_SITE
+Description: $DESCRIPTION
+ SliTaz can run fully in RAM or can be installed on the SD card in a
+ subdirectory of your Raspbian (example /$DESTDIR).
+EOT
+	( cd fs ; find * -type f -exec md5sum {} \; ) > md5sums
+	cat > postinst <<EOT
+#!/bin/sh
+
+set -e
+
+$(mkpostinst)
 
 exit 0
 EOT
-cat > prerm <<EOT
+	cat > prerm <<EOT
 #!/bin/sh
 
 purge()
 {
-	echo "Remove /$DESTDIR & /boot/slitaz* trees..."
-	rm -rf /$DESTDIR /boot/slitaz*
+$(mkpurge)
 }
 
 disable()
 {
-	if [ -d /boot/raspbian ]; then
-		echo "Restore raspbian boot files..."
-		rm -f /boot/raspbian/menu.txt
-		mv -f /boot/raspbian/* /boot
-	fi
-	rm -f /boot/menu.txt /boot/slitaz*/cmdline.txt
+$(mkdisable)
 }
 
 case "\$1" in
@@ -257,12 +286,83 @@ remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
 	exit 0
 esac
 EOT
-chmod +x postinst prerm
-tar czf control.tar.gz md5sums control postinst prerm
-rm -rf fs/$DESTDIR/*
-cd fs ; tar czf ../data.tar.gz . ; cd ..
-ar rcs slitaz-$VERSION-1_armhf.deb debian-binary control.tar.gz data.tar.gz
-mv slitaz-$VERSION-1_armhf.deb $CURDIR
-cd $CURDIR
-rm -rf $TMPDIR
-ls -l slitaz-$VERSION-1_armhf.deb
+	chmod +x postinst prerm
+	tar czf control.tar.gz md5sums control postinst prerm
+	rm -rf fs/$DESTDIR/*
+	cd fs ; tar czf ../data.tar.gz . ; cd ..
+	ar rcs slitaz-$VERSION-1_armhf.deb debian-binary control.tar.gz data.tar.gz
+	mv slitaz-$VERSION-1_armhf.deb $CURDIR
+	cd $CURDIR
+	rm -rf $TMPDIR
+	ls -l slitaz-$VERSION-1_armhf.deb
+}
+
+mkmtree()
+{
+	echo "#mtree"
+	echo "/set type=file uid=0 gid=0 mode=644"
+	find .??* * | while read file; do
+		echo -n "$file $(stat -c "time=%Y.000000" "$file")"
+		n="$(stat -c "%a" "$file")"; [ "$n" == "644" ] || echo -n " mode=$n"
+		n="$(stat -c "%u" "$file")"; [ "$n" == "0" ] || echo -n " uid=$n"
+		n="$(stat -c "%g" "$file")"; [ "$n" == "0" ] || echo -n " gid=$n"
+		if [ -f "$file" ]; then
+			echo -n " $(stat -c "size=%s" "$file")"
+			echo -n " md5digest=$(md5sum "$file" | sed 's/ .*//')"
+			echo -n " sha256digest=$(sha256sum "$file" | sed 's/ .*//')"
+		fi
+		[ -d "$file" ] && echo -n " type=dir"
+		echo ""
+	done
+}
+
+pkgarch()
+{
+	cd fs
+	VERSION=$VERSION-1
+	# Create arch package
+	cat > .PKGINFO <<EOT
+pkgname = slitaz
+pkgver = $VERSION
+pkgdesc = $DESCRIPTION
+url = $WEB_SITE
+builddate = $(date +%s)
+packager = $MAINTAINER
+size = $(du -s . | awk "{ print \$1*1024+$LIVESZ }")
+arch = armv6h
+license = GPL
+EOT
+	cat > .INSTALL <<EOT
+post_install() {
+$(mkpostinst)
+}
+
+post_remove() {
+$(mkdisable)
+$(mkpurge)
+}
+EOT
+	mkmtree | gzip -9 > ../.MTREE
+	mv ../.MTREE .
+	tar cvzf ../slitaz-$VERSION-armv6h.pkg.tar.gz .??* *
+	mv ../slitaz-$VERSION-armv6h.pkg.tar.gz $CURDIR
+	cd $CURDIR
+	rm -rf $TMPDIR
+	ls -l slitaz-$VERSION-armv6h.pkg.tar.gz
+}
+
+case "$(basename $0)" in
+tazarch)
+	raspos=archarm
+	menustr="Arch Linux ARM \\\$(uname -r)"
+	buildfs
+	pkgarch
+	;;
+*)
+	[ -x /usr/bin/ar -o -x /bin/ar ] || tazpkg get-install binutils
+	raspos=raspbian
+	menustr="Raspbian \\\$(cat /etc/debian_version)"
+	buildfs
+	pkgdebian
+	;;
+esac
