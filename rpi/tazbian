@@ -10,7 +10,10 @@
 
 [ $(id -u) -ne 0 ] && echo "Must be root. Abort." && exit 1
 
+DESTDIR=var/os/slitaz
 DESCRIPTION="Tiny Linux distribution with multi boot features"
+LONG_DESCRIPTION="SliTaz can run fully in RAM or can be installed \
+on the SD card in a\nsubdirectory of your Raspbian (example /$DESTDIR)."
 WEB_SITE="http://arm.slitaz.org/rpi/"
 MAINTAINER="Pascal Bellard <pascal.bellard@slitaz.org>"
 
@@ -48,7 +51,6 @@ EXE=$(cd $(dirname $0); pwd)/$(basename $0)
 TMPDIR=/tmp/rasp$$
 mkdir -p $TMPDIR
 cd $TMPDIR
-DESTDIR=var/os/slitaz
 URL=http://mirror.slitaz.org/arm/rpi/
 wget -O - $URL | sed '/slitaz-rpi/!d;s/.*href=.\([a-zA-Z0-9._-]*\).*/\1/' | sort -r > index
 VERSION="$(sed '/rpi-desktop/!d' index | sed 's/.*-desktop-\([0-9_-]*\).*/\1/;q')"
@@ -173,7 +175,11 @@ EOM
 fi
 cd - > /dev/null
 
-if [ ! -f /boot/menu.txt ]; then
+if ! grep -qs ARMv6-compatible /proc/cpuinfo ; then
+
+echo "CPU unknown. Can't update /boot. Not RPI model 1?"
+
+elif [ ! -f /boot/menu.txt ]; then
 
 echo "Update /boot ..."
 for i in keyboard locale ; do
@@ -206,10 +212,9 @@ L=
 echo "root=/dev/null \$L \$KMAP rdinit=/sbin/pisubroot mount=\$RDEV subroot=$DESTDIR rootwait quiet" > /boot/slitaz/cmdline.txt
 echo "root=/dev/null \$L \$KMAP quiet" > /boot/slitaz-base/cmdline.txt
 cp /boot/slitaz-base/cmdline.txt /boot/slitaz-live/cmdline.txt
+echo "The SliTaz boot menu is available for the next (re)boot."
 
 fi
-
-echo "The SliTaz boot menu is available for the next (re)boot."
 EOT
 }
 
@@ -247,8 +252,7 @@ Section: miscellaneous
 Priority: optional
 Homepage: $WEB_SITE
 Description: $DESCRIPTION
- SliTaz can run fully in RAM or can be installed on the SD card in a
- subdirectory of your Raspbian (example /$DESTDIR).
+$(echo $LONG_DESCRIPTION | sed 's/^/ /')
 EOT
 	( cd fs ; find * -type f -exec md5sum {} \; ) > md5sums
 	cat > postinst <<EOT
