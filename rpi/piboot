@@ -2,7 +2,7 @@
 #
 # /sbin/piboot: SliTaz Raspberry Pi bootloader and web boot!
 #
-# (C) 2014 SliTaz GNU/Linux - ...
+# (C) 2014-2016 SliTaz GNU/Linux - ...
 #
 # usage: insert 'rdinit=/sbin/piboot' (if you load an initramfs)
 # or 'init=/sbin/piboot' in the kernel command line /boot/cmdline.txt
@@ -121,8 +121,9 @@ web_boot()
 	webpath=$(get webpath $mnt/menu.txt)
 	[ "$webpath" ] || webpath=http://mirror.slitaz.org/pxe/arm/boot.php
 	for url in ${webpath//,/ }; do
-		wget -O /root/webboot.sh \
-		  "$url?mac=$(cat /sys/class/net/eth0/address)" 2>&1 > /dev/null
+		wget -O /root/webboot.sh "$url?mac=$(cat \
+			/sys/class/net/eth0/address /sys/class/net/*/address \
+			| sed q)" 2>&1 > /dev/null
 		[ -s /root/webboot.sh ] || continue
 		. /root/webboot.sh
 		webprefix=$(dirname $url)
@@ -163,11 +164,6 @@ mount -t sysfs sys /sys
 BOOTDEV=$(cmdlinearg bootdev)
 mnt=/mnt
 mount -t devtmpfs /dev /dev
-
-# A dirty hack: why devtmpfs does not mount ? 
-# pankso@20140421: It mount fine on my side
-[ -b /dev/mmcblk0p1 ] || mknod -m 660 /dev/mmcblk0p1 b 179 1
-
 mount -r /dev/${BOOTDEV:-mmcblk0p1} $mnt
 umount /dev
 
@@ -214,6 +210,7 @@ n=0
 for i in $mnt/*/ ; do
 	KERNEL="$(get kernel $i/config.txt)"
 	[ -z "$KERNEL" ] && [ -s $i/kernel.img ] && KERNEL="kernel.img"
+	[ -z "$KERNEL" ] && [ -s $i/menu.txt ] && KERNEL="../kernel.img"
 	[ "$KERNEL" ] || continue
 	n=$(($n+1))
 	eval KERNEL_$n="\$KERNEL"
@@ -289,6 +286,11 @@ case "$KEYWORD" in
 	eval INITRD="\$INITRD_$n"
 	eval CMDLINE="\$CMDLINE_$n"
 	eval SAVEDEFAULT="\$SAVEDEFAULT_$n"
+
+	grep -qs ARMv6 /proc/cpuinfo || case "$KERNEL" in
+	*BCM*|*7*)	;;
+	*)	KERNEL=${KERNEL/.img/7.img}
+	esac
 
 	if [ "$webprefix" ]; then
 		cd /root
