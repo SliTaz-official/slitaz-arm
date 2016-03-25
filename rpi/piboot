@@ -10,21 +10,16 @@
 # AUTHORS: Pascal Bellard <pascal.bellard@slitaz.org>
 #
 
-# Check for depends ...
-LOG=/var/log/$(basename $0).log
-mv -f $LOG $LOG.0 2>/dev/null
-while read file pkg ; do
-	[ "$(which $file)" ] && continue
-	echo "Can't find $file. Please install $pkg." >> $LOG
-done <<EOT
-kexec	kexec-tools
-dialog	dialog
-EOT
-[ -s $LOG ] && exec /init
+[ -z "$(which dialog)" ] && echo "Please install dialog." && exec /init
 
 cmdlinearg()
 {
-	grep -q $1= /proc/cmdline && sed "s/.*$1=\([^ ]*\).*/\1/" </proc/cmdline
+	sed "/$1=/!d;s/.*$1=\([^ ]*\).*/\1/" < /proc/cmdline
+}
+
+cmdvararg()
+{
+	echo " $CMDLINE" | sed "/ $1=/!d;s/.* $1=\([^ ]*\).*/\1/"
 }
 
 get()
@@ -61,7 +56,7 @@ while true; do
 		--ok-label "${msgedit:-Edit}" \
 		--cancel-label "${msgdone:-Done}" \
 		$extra \
-		--menu "" 20 72 14 \
+		--menu "$msgmenu" 20 72 14 \
 		Kernel "$KERNEL" \
 		Initramfs "$INITRD" \
 		Cmdline "$CMDLINE" 2>&1 1>&3 )
@@ -71,11 +66,12 @@ while true; do
 	case $retval in
 	1|255) return ;;
 	3)	cp $mnt/$KEYWORD/config.txt /tmp/config.txt
-		sed -i '/^kernel/d;/^initrd/d;/^cmdline/d' /tmp/config.txt
+		sed -i '/^kernel\|^initrd/d' /tmp/config.txt
 		echo "kernel=$KERNEL" >> /tmp/config.txt
 		[ "$INITRD" ] && echo "initrd $INITRD" >> /tmp/config.txt
-		[ "$CMDLINE" ] && echo "cmdline=$CMDLINE" >> /tmp/config.txt
 		mount -o remount,rw $mnt
+		[ "$CMDLINE" ] && echo "$CMDLINE" > $mnt/$KEYWORD/cmdline.txt ||
+		rm -f $mnt/$KEYWORD/cmdline.txt
 		cp /tmp/config.txt $mnt/$KEYWORD/config.txt
 		mount -o remount,ro $mnt ;;
 	esac
@@ -134,13 +130,17 @@ web_boot()
 
 web_get()
 {
+	if [ -z "$webprefix" ]; then
+		cat $mnt/$1 >> $2
+		return
+	fi
 	case "$1" in
 	*torrent) # See http://sl-lab.it/dokuwiki/doku.php/tesi:boottorrent_en
 		[ -z "$(which aria2)" ] &&
 			echo "Can't find aria2." >> $LOG &&
 			exec /init
 
-		wget -O /root/webboot.torrent "$1"
+		wget -O /root/webboot.torrent "$webprefix/$1"
 		aria2c --enable-dht=false --disable-ipv6=true --seed-time=0 \
 			--file-allocation=none -j5 /root/webboot.torrent
 
@@ -153,7 +153,7 @@ web_get()
 		fi
 		rm -f /root/webboot.torrent ;;
 	*)
-		wget -O - "$1" >> $2
+		wget -O - "$webprefix/$1" >> $2
 	esac
 }
 
@@ -196,6 +196,7 @@ edittitle="$(get edittitle $mnt/menu.txt)"
 
 msgsave="$(get msgsave $mnt/menu.txt)"
 msgedit="$(get msgedit $mnt/menu.txt)"
+msgmenu="$(get msgmenu $mnt/menu.txt)"
 msgdone="$(get msgdone $mnt/menu.txt)"
 msgboot="$(get msgboot $mnt/menu.txt)"
 msghalt="$(get msghalt $mnt/menu.txt)"
@@ -208,14 +209,14 @@ msgkexec="$(get msgkexec $mnt/menu.txt)"
 
 n=0
 for i in $mnt/*/ ; do
+	[ -s "$i/menu.txt" ] || continue
 	KERNEL="$(get kernel $i/config.txt)"
-	[ -z "$KERNEL" ] && [ -s $i/kernel.img ] && KERNEL="kernel.img"
-	[ -z "$KERNEL" ] && [ -s $i/menu.txt ] && KERNEL="../kernel.img"
-	[ "$KERNEL" ] || continue
+	[ -z "$KERNEL" ] && [ -s "$i/kernel.img" ] && KERNEL="kernel.img"
+	[ -z "$KERNEL" ] && [ -s "$i/cmdline.txt" ] && KERNEL="../kernel.img"
 	n=$(($n+1))
 	eval KERNEL_$n="\$KERNEL"
 	eval INITRD_$n="\$(get initramfs \$i/config.txt)"
-	eval CMDLINE_$n="\$(cat \$i/cmdline.txt)"
+	eval CMDLINE_$n="\$(cat \$i/cmdline.txt 2> /dev/null)"
 	eval SAVEDEFAULT_$n="\$(get savedefault \$i/config.txt)"
 	eval KEYWORD_$n="\$(basename \$i)"
 	eval ENTRY_$n="\$(get entry \$i/menu.txt)"
@@ -250,7 +251,7 @@ EOT
 		[ "$KEYWORD" ] || break
 		[ "$KEYWORD" == "$value" ] && break
 		case $value in
-		*timeout)	[ "$KEYWORD" == "$default" ] && break ;;
+		*timeout)	[ "$KEYWORD" == "${default:-$KEYWORD}" ] && break ;;
 		esac
 	done
 	
@@ -276,11 +277,10 @@ done
 
 # Start OS
 
+KEXEC=
 case "$KEYWORD" in
 
-''|Continue)
-	KEXEC= ;;
-
+''|Continue)	;;
 *)
 	eval KERNEL="\$KERNEL_$n"
 	eval INITRD="\$INITRD_$n"
@@ -292,29 +292,6 @@ case "$KEYWORD" in
 	*)	KERNEL=${KERNEL/.img/7.img}
 	esac
 
-	if [ "$webprefix" ]; then
-		cd /root
-		web_get $webprefix/$KEYWORD/$KERNEL vmlinuz
-		KERNEL=vmlinuz
-		for i in ${INITRD//,/ }; do
-			web_get $webprefix/$KEYWORD/$i rootfs.gz
-			n=$(stat -c %s rootfs.gz)
-			n=$(($n % 4))
-			[ $n -eq 0 ] && continue
-			dd if=/dev/zero bs=1 count=$((4 - $n)) >> rootfs.gz
-		done
-	else
-		cd $mnt/$KEYWORD
-		cp $KERNEL /root
-		for i in ${INITRD//,/ }; do
-			cat $i >> /root/rootfs.gz
-			n=$(stat -c %s /root/rootfs.gz)
-			n=$(($n % 4))
-			[ $n -eq 0 ] && continue
-			dd if=/dev/zero bs=1 count=$((4 - $n)) >> /root/rootfs.gz
-		done
-		cd /root
-	fi
 	if [ -z "$READONLY" ] && [ "$SAVEDEFAULT" ] &&
 	   [ -s $mnt/$SAVEDEFAULT/config.txt ]; then
 	   	cp $mnt/menu.txt /tmp
@@ -323,15 +300,52 @@ case "$KEYWORD" in
 		mount -o remount,rw $mnt
 		cp /tmp/menu.txt $mnt/menu.txt
 	fi
-	[ "$INITRD" ] && INITRD="--initrd rootfs.gz"
 
-	kexec -l $(basename $KERNEL) $INITRD --command-line \
-		"$(sed 's|  .*||' /proc/cmdline)  $CMDLINE" --atags
-	KEXEC="kexec -e" ;;
+	for i in ${INITRD//,/ }; do
+		web_get $KEYWORD/$i /rootfs
+		if ! kexec -u; then
+			( zcat /rootfs || unlzma < /rootfs ) | cpio -idmu
+			rm -f /rootfs
+		else
+			n=$(stat -c %s /rootfs)
+			n=$(($n % 4))
+			[ $n -ne 0 ] &&
+			dd if=/dev/zero bs=1 count=$((4 - $n)) >> /rootfs
+		fi 2> /dev/null
+	done
 
+	if ! kexec -u 2> /dev/null; then
+		ROOTDIR=$(cmdvararg "subroot")
+		TMPDIR=$ROOTDIR/dev/shm
+		TMPDIR=${TMPDIR#/}
+		ROOTDEV=$(cmdvararg "root")
+		[ "$ROOTDEV" == "/dev/null" ] && ROOTDEV=$(cmdvararg "mount")
+		K=$(cmdvararg "kmap")
+		[ "$K" ] && echo $K > /etc/keymap.conf
+		L=$(cmdvararg "lang")
+		[ "$L" ] && echo -e "LANG=$L\nLC_ALL=$L" > /etc/locale.conf
+		TZ=$(cmdvararg "tz")
+		[ "$TZ" ] && echo $TZ > /etc/TZ
+		umount $mnt
+		if [ "$ROOTDEV" ] && mount $ROOTDEV $mnt &&
+		   mount -t tmpfs tmpfs $mnt/$TMPDIR ; then
+			CHROOT=/usr/sbin/chroot
+			cp $(LD_TRACE_LOADED_OBJECTS=1 /lib/ld*.so $CHROOT \
+			     | sed 's|.*=> \(/lib/l[^ ]*\).*|\1|;/^\//!d') \
+				$CHROOT $mnt/$TMPDIR
+			CHROOT="$(cd $mnt ; ls $TMPDIR/ld-*so) $TMPDIR/chroot"
+			export LD_LIBRARY_PATH=/$TMPDIR:/lib
+			KEXEC="exec /sbin/switch_root $mnt $CHROOT $ROOTDIR/ /sbin/init"
+		fi
+	else
+		web_get $KEYWORD/$KERNEL /vmlinuz
+		umount $mnt
+		kexec -l /vmlinuz ${INITRD+=--initrd /rootfs} --command-line \
+			"$(sed 's|  .*||' /proc/cmdline) $CMDLINE" --atags
+		KEXEC="kexec -e"
+	fi ;;
 esac
 
-umount $mnt
 umount /sys
 umount /proc
 $KEXEC
