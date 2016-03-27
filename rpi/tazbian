@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# (C) 2014-2015 SliTaz GNU/Linux - GPL2
+# (C) 2014-2016 SliTaz GNU/Linux - GPL2
 #
 # Creates a Debian package to install SliTaz on a Raspbian without
 # repartitioning.
@@ -10,6 +10,7 @@
 
 [ $(id -u) -ne 0 ] && echo "Must be root. Abort." && exit 1
 
+REVISION=2
 DESTDIR=var/os/slitaz
 DESCRIPTION="Tiny Linux distribution with multi boot features"
 LONG_DESCRIPTION="SliTaz can run fully in RAM or can be installed \
@@ -19,17 +20,17 @@ MAINTAINER="Pascal Bellard <pascal.bellard@slitaz.org>"
 
 tazpkg()
 {
-	if [ -x /usr/bin/tazpkg ]; then
+	if [ -x /usr/bin/tazpkg -a "$1" == "get-install" ]; then
 		/usr/bin/tazpkg "$@"
 		return $?
 	fi
 	[ "$1" == "get-install" ] && echo "abort: can't find $2" && exit 1
 	mkdir -p tazpkg$$
 	cd tazpkg$$
-	cpio -i < ../$2
+	cpio -i < ../$2 > /dev/null 2>&1
 	gunzip fs.cpio.gz 2> /dev/null
 	[ -s fs.cpio ] || unlzma fs.cpio.lzma
-	cpio -idmu < fs.cpio
+	cpio -idmu < fs.cpio > /dev/null 2>&1
 	cd ..
 	sh <<EOT
 . tazpkg$$/receipt
@@ -47,50 +48,72 @@ EOT
 buildfs()
 {
 CURDIR=$PWD
-EXE=$(cd $(dirname $0); pwd)/$(basename $0)
 TMPDIR=/tmp/rasp$$
 mkdir -p $TMPDIR
 cd $TMPDIR
 URL=http://mirror.slitaz.org/arm/rpi/
+echo "Read $URL"
 wget -O - $URL | sed '/slitaz-rpi/!d;s/.*href=.\([a-zA-Z0-9._-]*\).*/\1/' | sort -r > index
 VERSION="$(sed '/rpi-desktop/!d' index | sed 's/.*-desktop-\([0-9_-]*\).*/\1/;q')"
 
-wget -O - $URL$(sed '/rpi-base/!d;q' index) | tar xjf -
-wget -O - $URL$(sed '/rpi-desktop/!d;q' index) | tar xjf -
+for file in $(sed '/rpi-base/!d;q' index) $(sed '/rpi-desktop/!d;q' index); do
+	echo "Get $file "
+	wget -O - $URL$file | tar xjf -
+done
 
-mkdir -p fs/$DESTDIR fs/boot/slitaz fs/boot/slitaz-base \
+mkdir -p fs/$DESTDIR fs/boot/slitaz fs/boot/slitaz-base fs/boot/slitaz-live \
 	 fs/boot/$raspos
 
+BOOT=$(ls -d slitaz-rpi-base-*/boot)
+[ ! -d "$BOOT" ] && echo "Abort ($BOOT) !" && exit 1
+
 # setup boot configuration 
-BASE=$(ls -d slitaz-rpi-base-*/boot)
-[ ! -d "$BASE" ] && echo "Abort ($BASE) !" && exit 1
-mv $BASE/kernel.img fs/boot/slitaz
-cp $BASE/config.txt fs/boot/slitaz
-cp $BASE/config.txt fs/boot/slitaz-base
-echo "initramfs rootfs-base.gz" >> fs/boot/slitaz/config.txt
 echo "entry=SliTaz $VERSION on SD-card" > fs/boot/slitaz/menu.txt
-sed -i 's|kernel.img|../slitaz/&|' fs/boot/slitaz-base/config.txt
-cp -a fs/boot/slitaz-base fs/boot/slitaz-live
-echo "initramfs ../slitaz/rootfs-base.gz" >> fs/boot/slitaz-base/config.txt
 echo "entry=SliTaz base $VERSION in RAM" > fs/boot/slitaz-base/menu.txt
-echo "initramfs ../slitaz/rootfs-base.gz ../slitaz/rootfs-live.gz" >> fs/boot/slitaz-live/config.txt
 echo "entry=SliTaz desktop $VERSION in RAM" > fs/boot/slitaz-live/menu.txt
+cp $BOOT/config.txt fs/boot/slitaz
+grep -q ^kernel= fs/boot/slitaz/config.txt ||
+echo "kernel=kernel.img >> fs/boot/slitaz/config.txt"
+sed -i '/^initramfs/d' fs/boot/slitaz/config.txt
+cp fs/boot/slitaz/config.txt fs/boot/slitaz-base
+cp fs/boot/slitaz/config.txt fs/boot/slitaz-live
+echo "initramfs rootfs-base.gz" >> fs/boot/slitaz/config.txt
+echo "initramfs ../slitaz/rootfs-base.gz" >> fs/boot/slitaz-base/config.txt
+echo "initramfs ../slitaz/rootfs-base.gz,../slitaz/rootfs-live.gz" >> fs/boot/slitaz-live/config.txt
+
+if [ -s $BOOT/kernel7.img ]; then
+	mv $BOOT/kernel*.img fs/boot/slitaz
+	sed -i 's|kernel.img|../slitaz/&|' fs/boot/slitaz-*/config.txt
+else
+	rm -rf	slitaz-rpi-*/boot/kernel.img \
+		slitaz-rpi-*/rootfs/lib/modules/* \
+		slitaz-rpi-*/rootfs/lib/firmware/*
+	sed -i 's|kernel.img|../&|' fs/boot/slitaz-*/config.txt
+fi
 
 # update base package
 BASE=$(ls -d slitaz-rpi-base-*/rootfs)
+[ ! -d "$BASE" ] && echo "Abort ($BASE) !" && exit 1
 LIVE=$(ls -d slitaz-rpi-desktop-*/rootfs)
 [ ! -d "$LIVE" ] && echo "Abort ($LIVE) !" && exit 1
 LIVESZ=$(du -ks $LIVE | cut -f1)
-[ ! -d "$BASE" ] && echo "Abort ($BASE) !" && exit 1
 wget http://hg.slitaz.org/slitaz-arm/raw-file/tip/rpi/piboot
 wget http://hg.slitaz.org/slitaz-boot-scripts/raw-file/tip/init
 chmod +x piboot init
 mv piboot $BASE/sbin
 sed -i 's|mnt /mnt|mnt "/mnt -o noatime"|' init
-mv init $BASE/sbin/pisubroot
+sed -i 's#.*remount,ro#grep -q "tmpfs /mnt tmpfs" /proc/mounts || &#' init
 mknod -m 660 $BASE/dev/mmcblk0 b 179 0
-mknod -m 660 $BASE/dev/mmcblk0p1 b 179 1
-mknod -m 660 $BASE/dev/mmcblk0p2 b 179 2
+for i in $(seq 1 5); do
+	mknod -m 660 $BASE/dev/mmcblk0p$i b 179 $i
+done
+grep /dev/pts $BASE/etc/fstab || cat >> $BASE/etc/fstab <<EOT
+devpts	/dev/pts	devpts	rw,gid=5,mode=0620	0	0
+EOT
+
+[ -s slitaz-rpi-base*/boot/kernel7.img ] ||
+sed -i 's#.*d /proc/sys/dev/cdrom#grep -q subroot= /proc/cmdline || for d in /dev/mmc*p[2-9]; do\n\tumount /mnt\n\tmount -r $d /mnt \&\&\n\tcp -a /mnt/lib/firmware /lib/ \&\&\n\tcp -a /mnt/lib/modules/$(uname -r) /lib/modules/ \&\& break\ndone 2> /dev/null\numount /mnt\n\n&#' init
+mv init $BASE/rdinit
 sed -i 's/.*mmcblk0p[2-9].*/# &/;s/noatime/noauto,&/' $BASE/etc/fstab $LIVE/etc/fstab
 wget http://cook.slitaz.org/cross/arm/packages/packages.list
 while read file pkg extra ; do
@@ -117,7 +140,7 @@ done <<EOT
 /usr/bin/aria2c			aria2			aria2
 EOT
 
-# deduplicate base & live
+echo "Deduplicate base & live"
 ( cd $BASE/ ; find ! -type d ) | while read file; do
 	if [ -L $BASE/$file ]; then
 		[ -L $LIVE/$file ] &&
@@ -139,31 +162,45 @@ EOT
 		rm -f $LIVE/$file
 	fi
 done
-cp $EXE $BASE/root/
 ( cd $BASE/ ; find -type d ) | while read dir; do
 	rmdir $LIVE/$dir 2> /dev/null
 done
 
-( cd $BASE ; find * | cpio -o -H newc ) | \
-	gzip -9 > fs/boot/slitaz/rootfs-base.gz
-( cd $LIVE ; find * | cpio -o -H newc ) | \
-	gzip -9 > fs/boot/slitaz/rootfs-live.gz
-if [ -x /usr/bin/advdef ]; then
-	advdef -z4 fs/boot/slitaz/rootfs-base.gz
-	advdef -z4 fs/boot/slitaz/rootfs-live.gz
-fi
+while read dir suffix ; do
+	echo "Build $suffix archive"
+	( cd $dir ; find * | cpio -o -H newc ) | if [ -x /usr/bin/zopfli ]; then
+		cat > fs/boot/slitaz/rootfs-$suffix
+		zopfli fs/boot/slitaz/rootfs-$suffix
+		rm -f fs/boot/slitaz/rootfs-$suffix
+	else
+		gzip -9 > fs/boot/slitaz/rootfs-$suffix.gz
+	fi
+	[ -x /usr/bin/advdef ] && advdef -z4 fs/boot/slitaz/rootfs-$suffix.gz
+	r=$(($(stat -c %s fs/boot/slitaz/rootfs-$suffix.gz) % 4))
+	[ $r -eq 0 ] || dd if=/dev/zero bs=1 count=$((4 - $r)) \
+		>> fs/boot/slitaz/rootfs-$suffix.gz 2> /dev/null
+done <<EOT
+$BASE	base
+$LIVE	live
+EOT
 }
 
 mkpostinst()
 {
 	cat <<EOT
-RDEV=\$(sed 's/.*root=\([^ ]*\).*/\1/' /boot/cmdline.txt)
+RDEV=\$(sed 's/^\(\|.* \)root=\([^ ]*\).*/\2/' /boot/cmdline.txt)
 FSTYPE=\$(awk '/ \/ / { if (\$1 != "rootfs") print \$3 }' < /proc/mounts)
 
 echo "Extracting /$DESTDIR ..."
 cd /$DESTDIR
 zcat /boot/slitaz/rootfs-base.gz | cpio -idmu
 zcat /boot/slitaz/rootfs-live.gz | cpio -idmu
+EOT
+	[ -s slitaz-rpi-base*/boot/kernel7.img ] || cat <<EOT
+echo "Get modules & firmwares ..."
+cp -a /lib/modules /lib/firmware lib
+EOT
+	cat <<EOT
 if ! grep -qs $raspos etc/fstab ; then
 	echo "Update /$DESTDIR/etc/fstab ..."
 	mkdir -p mnt/$raspos
@@ -175,11 +212,7 @@ EOM
 fi
 cd - > /dev/null
 
-if ! grep -qs ARMv6-compatible /proc/cpuinfo ; then
-
-echo "CPU unknown. Can't update /boot. Not RPI model 1?"
-
-elif [ ! -f /boot/menu.txt ]; then
+if [ ! -f /boot/menu.txt ]; then
 
 echo "Update /boot ..."
 for i in keyboard locale ; do
@@ -190,7 +223,7 @@ KMAP=\$(find /$DESTDIR/usr/share/kbd/keymaps | grep /\$XKBLAYOUT[.-] | head -n1)
 cat > /boot/menu.txt <<EOM
 title=Raspberry PI boot menu
 subtitle=Select the OS with ARROW keys and hit RETURN
-timeout=30
+timeout=10
 default=$raspos
 \$KMAP
 edittitle=Edit menu
@@ -199,18 +232,27 @@ readonly
 #nowebboot
 #webpath=http://my.home.web.site/pxe/rpi/index.php http://or.this.one/rpi.txt
 EOM
+echo "entry=$menustr" > /boot/$raspos/menu.txt
 KERNEL=\$(sed '/^kernel/!d;s/.*=//' /boot/config.txt)
 cp /boot/config.txt /boot/cmdline.txt /boot/$raspos/
-mv /boot/\${KERNEL:-kernel.img} /boot/$raspos/
-echo "entry=$menustr" > /boot/$raspos/menu.txt
-sed -i '/^kernel/d;/^initramfs/d' /boot/config.txt
-echo "kernel=slitaz/kernel.img" >> /boot/config.txt
+sed -i '/^initramfs/d' /boot/config.txt
 echo "initramfs slitaz/rootfs-base.gz" >> /boot/config.txt
-echo "root=/dev/null rdinit=/sbin/piboot quiet" > /boot/cmdline.txt
+EOT
+	[ -s slitaz-rpi-base*/boot/kernel7.img ] && cat <<EOT
+mv /boot/\${KERNEL:-kernel.img} /boot/$raspos/
+sed -i '/^kernel/d' /boot/config.txt
+echo "kernel=slitaz/kernel.img" >> /boot/config.txt
+EOT
+	cat <<EOT
 L=
-[ -s /$DESTDIR/usr/share/i18n/locales/\${LANG%.*} ] && L=lang=\${LANG%.*} 
-echo "root=/dev/null \$L \$KMAP rdinit=/sbin/pisubroot mount=\$RDEV subroot=$DESTDIR rootwait quiet" > /boot/slitaz/cmdline.txt
-echo "root=/dev/null \$L \$KMAP quiet" > /boot/slitaz-base/cmdline.txt
+for i in \$LANG \${LANG%.*} \${LANG%@*} \${LANG%_*} ; do
+	[ -s /$DESTDIR/usr/share/i18n/locales/\$i ] && L=lang=\$i
+done
+TZ=\$(cat /etc/timezone 2> /dev/null || true)
+X="\$L \$KMAP \${TZ:+tz=\$TZ} quiet"
+echo "\$(cat /boot/cmdline.txt) \$X rdinit=/sbin/piboot" > /boot/cmdline.txt
+echo "root=/dev/null \$X rdinit=/rdinit mount=\$RDEV subroot=$DESTDIR rootwait" > /boot/slitaz/cmdline.txt
+echo "root=/dev/null \$X" > /boot/slitaz-base/cmdline.txt
 cp /boot/slitaz-base/cmdline.txt /boot/slitaz-live/cmdline.txt
 echo "The SliTaz boot menu is available for the next (re)boot."
 
@@ -233,6 +275,7 @@ mkdisable()
 		echo "Restore $raspos boot files..."
 		rm -f /boot/$raspos/menu.txt
 		mv -f /boot/$raspos/* /boot
+		rmdir /boot/$raspos
 	fi
 	rm -f /boot/menu.txt /boot/slitaz*/cmdline.txt
 EOT
@@ -244,7 +287,7 @@ pkgdebian()
 	echo "2.0" > debian-binary
 	cat > control <<EOT
 Package: slitaz
-Version: $VERSION-1
+Version: $VERSION-$REVISION
 Architecture: armhf
 Maintainer: $MAINTAINER
 Installed-Size: $(($(du -ks fs | cut -f1) + $LIVESZ))
@@ -252,7 +295,7 @@ Section: miscellaneous
 Priority: optional
 Homepage: $WEB_SITE
 Description: $DESCRIPTION
-$(echo $LONG_DESCRIPTION | sed 's/^/ /')
+$(echo -e $LONG_DESCRIPTION | sed 's/^/ /')
 EOT
 	( cd fs ; find * -type f -exec md5sum {} \; ) > md5sums
 	cat > postinst <<EOT
@@ -294,11 +337,11 @@ EOT
 	tar czf control.tar.gz md5sums control postinst prerm
 	rm -rf fs/$DESTDIR/*
 	cd fs ; tar czf ../data.tar.gz . ; cd ..
-	ar rcs slitaz-$VERSION-1_armhf.deb debian-binary control.tar.gz data.tar.gz
-	mv slitaz-$VERSION-1_armhf.deb $CURDIR
+	ar rcs slitaz-$VERSION-${REVISION}_armhf.deb debian-binary control.tar.gz data.tar.gz
+	mv slitaz-$VERSION-${REVISION}_armhf.deb $CURDIR
 	cd $CURDIR
 	rm -rf $TMPDIR
-	ls -l slitaz-$VERSION-1_armhf.deb
+	ls -l slitaz-$VERSION-${REVISION}_armhf.deb
 }
 
 mkmtree()
@@ -323,7 +366,7 @@ mkmtree()
 pkgarch()
 {
 	cd fs
-	VERSION=$VERSION-1
+	VERSION=$VERSION-$REVISION
 	# Create arch package
 	cat > .PKGINFO <<EOT
 pkgname = slitaz
@@ -358,14 +401,14 @@ EOT
 case "$(basename $0)" in
 tazarch)
 	raspos=archarm
-	menustr="Arch Linux ARM \\\$(uname -r)"
+	menustr="Arch Linux ARM \$(uname -r)"
 	buildfs
 	pkgarch
 	;;
 *)
 	[ -x /usr/bin/ar -o -x /bin/ar ] || tazpkg get-install binutils
 	raspos=raspbian
-	menustr="Raspbian \\\$(cat /etc/debian_version)"
+	menustr="Raspbian \$(cat /etc/debian_version)"
 	buildfs
 	pkgdebian
 	;;
