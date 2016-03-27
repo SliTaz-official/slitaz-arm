@@ -301,10 +301,14 @@ case "$KEYWORD" in
 		cp /tmp/menu.txt $mnt/menu.txt
 	fi
 
+	[ "$INITRD" ] && ! kexec -u 2> /dev/null && mount -t tmpfs tmpfs /media
+
 	for i in ${INITRD//,/ }; do
+		echo "Loading $(basename $i)"
 		web_get $KEYWORD/$i /rootfs
 		if ! kexec -u; then
-			( zcat /rootfs || unlzma < /rootfs ) | cpio -idmu
+			( zcat /rootfs || unlzma < /rootfs ) | \
+			( cd /media ; cpio -idmu )
 			rm -f /rootfs
 		else
 			n=$(stat -c %s /rootfs)
@@ -315,6 +319,7 @@ case "$KEYWORD" in
 	done
 
 	if ! kexec -u 2> /dev/null; then
+		umount $mnt
 		ROOTDIR=$(cmdvararg "subroot")
 		TMPDIR=$ROOTDIR/dev/shm
 		TMPDIR=${TMPDIR#/}
@@ -326,18 +331,34 @@ case "$KEYWORD" in
 		[ "$L" ] && echo -e "LANG=$L\nLC_ALL=$L" > /etc/locale.conf
 		TZ=$(cmdvararg "tz")
 		[ "$TZ" ] && echo $TZ > /etc/TZ
-		umount $mnt
-		if [ "$ROOTDEV" ] && mount $ROOTDEV $mnt &&
-		   mount -t tmpfs tmpfs $mnt/$TMPDIR ; then
+		RDINIT=$(cmdvararg "rdinit")
+		INIT=$(cmdvararg "init")
+		INIT=${INIT:-/sbin/init}
+		if [ -z "$ROOTDEV" ] || ! mount $ROOTDEV $mnt; then
+			INIT=${RDINIT:-/init}
+			mnt=/media
+			for i in $(seq 2 5); do
+				mount -r /dev/mmcblk0p$i /tmp || continue
+				echo "Get modules from /dev/mmcblk0p$i"
+				cp -a /tmp/lib/modules /tmp/lib/firmware \
+					$mnt/$ROOTDIR/lib
+				umount /tmp
+				break
+			done
+		fi
+		KEXEC="exec /sbin/switch_root $mnt $INIT"
+		if [ "$ROOTDIR" ] && mount -t tmpfs tmpfs $mnt/$TMPDIR ; then
 			CHROOT=/usr/sbin/chroot
 			cp $(LD_TRACE_LOADED_OBJECTS=1 /lib/ld*.so $CHROOT \
 			     | sed 's|.*=> \(/lib/l[^ ]*\).*|\1|;/^\//!d') \
 				$CHROOT $mnt/$TMPDIR
 			CHROOT="$(cd $mnt ; ls $TMPDIR/ld-*so) $TMPDIR/chroot"
 			export LD_LIBRARY_PATH=/$TMPDIR:/lib
-			KEXEC="exec /sbin/switch_root $mnt $CHROOT $ROOTDIR/ /sbin/init"
+			KEXEC="exec /sbin/switch_root $mnt $CHROOT $ROOTDIR/ $INIT"
 		fi
+		stat $mnt/$ROOTDIR/$INIT > /dev/null || KEXEC="echo 'No $ROOTDIR/$INIT'"
 	else
+		echo "Loading $(basename $KERNEL)"
 		web_get $KEYWORD/$KERNEL /vmlinuz
 		umount $mnt
 		kexec -l /vmlinuz ${INITRD+=--initrd /rootfs} --command-line \
