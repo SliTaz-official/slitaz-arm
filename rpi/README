@@ -54,7 +54,7 @@ To enable overclocking you must use tazberry directly on your Raspberry Pi.
 
 SliTaz RPi Kernel
 -----------------
-To build the Slitaz RPi Linux Kernel, Sat RPi uses a SliTaz prebuilt ARM cross 
+To build the SliTaz RPi Linux Kernel, Sat RPi uses a SliTaz prebuilt ARM cross 
 toolchain and a small patch to modify the kernel configuration. You can browse
 the RPi SliTaz Mirror for preview versions or get the latest toolchain with sat-rpi
 and build the kernel:
