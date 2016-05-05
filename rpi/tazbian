@@ -10,13 +10,14 @@
 
 [ $(id -u) -ne 0 ] && echo "Must be root. Abort." && exit 1
 
-REVISION=2
+REVISION=3
 DESTDIR=var/os/slitaz
 DESCRIPTION="Tiny Linux distribution with multi boot features"
 LONG_DESCRIPTION="SliTaz can run fully in RAM or can be installed \
 on the SD card in a\nsubdirectory of your Raspbian (example /$DESTDIR)."
 WEB_SITE="http://arm.slitaz.org/rpi/"
 MAINTAINER="Pascal Bellard <pascal.bellard@slitaz.org>"
+LICENSE=GPL
 
 tazpkg()
 {
@@ -59,6 +60,7 @@ VERSION="$(sed '/rpi-desktop/!d' index | sed 's/.*-desktop-\([0-9_-]*\).*/\1/;q'
 for file in $(sed '/rpi-base/!d;q' index) $(sed '/rpi-desktop/!d;q' index); do
 	echo "Get $file "
 	wget -O - $URL$file | tar xjf -
+	WGET_URL=$URL$file
 done
 
 mkdir -p fs/$DESTDIR fs/boot/slitaz fs/boot/slitaz-base fs/boot/slitaz-live \
@@ -230,7 +232,7 @@ edittitle=Edit menu
 readonly
 #noedit
 #nowebboot
-#webpath=http://my.home.web.site/pxe/rpi/index.php http://or.this.one/rpi.txt
+#webpath=http://my.home.web.site/pxe/rpi/index.php,http://or.this.one/rpi.txt
 EOM
 echo "entry=$menustr" > /boot/$raspos/menu.txt
 KERNEL=\$(sed '/^kernel/!d;s/.*=//' /boot/config.txt)
@@ -377,7 +379,7 @@ builddate = $(date +%s)
 packager = $MAINTAINER
 size = $(du -s . | awk "{ print \$1*1024+$LIVESZ }")
 arch = armv6h
-license = GPL
+license = $LICENSE
 EOT
 	cat > .INSTALL <<EOT
 post_install() {
@@ -398,12 +400,63 @@ EOT
 	ls -l slitaz-$VERSION-armv6h.pkg.tar.gz
 }
 
+pkgrpm()
+{
+	cat > rpm.spec <<EOT
+%define desktop_vendor newrpms
+%{!?_dist: %{expand: %%define dist rhfc14}}
+
+Name:		slitaz
+Version:	$VERSION
+Release:	$REVISION
+Summary:	$DESCRIPTION
+License:	$LICENSE
+Group:		System Environment/Boot loader
+URL:		$WEB_SITE
+Source0:	$WGET_URL
+ExclusiveArch:	arm
+Distribution:	$raspos
+Packager:	$MAINTAINER
+BuildRoot:	$PWD/fs
+
+%description
+$(echo -e "$LONG_DESCRIPTION")
+
+%post
+$(mkpostinst)
+
+%postun
+$(mkdisable)
+$(mkpurge)
+
+%files
+
+%defattr(0755, root, root)
+/boot
+/var/os/slitaz
+EOT
+	rpmbuild -bb --target=arm --buildroot=$PWD/fs rpm.spec
+	mv ~/rpmbuild/RPMS/arm/slitaz-$VERSION-$REVISION-arm.rpm $CURDIR
+	cd $CURDIR
+	rm -rf $TMPDIR
+	ls -l slitaz-$VERSION-$REVISION-arm.rpm
+
+}
+
 case "$(basename $0)" in
 tazarch)
 	raspos=archarm
 	menustr="Arch Linux ARM \$(uname -r)"
 	buildfs
 	pkgarch
+	;;
+tazrpm)
+	[ -x /usr/bin/rpmbuild ] || tazpkg get-install rpm4
+	[ -e /usr/share/misc/magic.mgc ] || tazpkg get-install file
+	raspos=pidora
+	menustr="\$(cat /etc/pidora-release)"
+	buildfs
+	pkgrpm
 	;;
 *)
 	[ -x /usr/bin/ar -o -x /bin/ar ] || tazpkg get-install binutils
