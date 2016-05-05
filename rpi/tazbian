@@ -436,10 +436,10 @@ $(mkpurge)
 /var/os/slitaz
 EOT
 	rpmbuild -bb --target=arm --buildroot=$PWD/fs rpm.spec
-	mv ~/rpmbuild/RPMS/arm/slitaz-$VERSION-$REVISION-arm.rpm $CURDIR
+	mv ~/rpmbuild/RPMS/arm/slitaz-$VERSION-$REVISION.arm.rpm $CURDIR
 	cd $CURDIR
 	rm -rf $TMPDIR
-	ls -l slitaz-$VERSION-$REVISION-arm.rpm
+	ls -l slitaz-$VERSION-$REVISION.arm.rpm
 
 }
 
