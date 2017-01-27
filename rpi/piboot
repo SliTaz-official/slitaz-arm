@@ -341,6 +341,9 @@ case "$KEYWORD" in
 				mount -r /dev/mmcblk0p$i /tmp || continue
 				echo "Get modules from /dev/mmcblk0p$i"
 				cp -a /tmp/lib/modules /tmp/lib/firmware \
+					$mnt/$ROOTDIR/lib ||
+				cp -a /tmp/shared/lib/modules \
+					/tmp/shared/lib/firmware \
 					$mnt/$ROOTDIR/lib
 				umount /tmp
 				break

@@ -114,7 +114,7 @@ devpts	/dev/pts	devpts	rw,gid=5,mode=0620	0	0
 EOT
 
 [ -s slitaz-rpi-base*/boot/kernel7.img ] ||
-sed -i 's#.*d /proc/sys/dev/cdrom#grep -q subroot= /proc/cmdline || for d in /dev/mmc*p[2-9]; do\n\tumount /mnt\n\tmount -r $d /mnt \&\&\n\tcp -a /mnt/lib/firmware /lib/ \&\&\n\tcp -a /mnt/lib/modules/$(uname -r) /lib/modules/ \&\& break\ndone 2> /dev/null\numount /mnt\n\n&#' init
+sed -i 's#.*d /proc/sys/dev/cdrom#grep -q subroot= /proc/cmdline || for d in /dev/mmc*p[2-9]; do\n\tumount /mnt\n\tmount -r $d /mnt \&\&\n\tcp -a /mnt/lib/firmware /lib/ \&\&\n\tcp -a /mnt/lib/modules/$(uname -r) /lib/modules/ \&\& break\n\tcp -a /mnt/shared/lib/firmware /lib/ \&\&\n\tcp -a /mnt/shared/lib/modules/$(uname -r) /lib/modules/ \&\& break\ndone 2> /dev/null\numount /mnt\n\n&#' init
 mv init $BASE/rdinit
 sed -i 's/.*mmcblk0p[2-9].*/# &/;s/noatime/noauto,&/' $BASE/etc/fstab $LIVE/etc/fstab
 wget http://cook.slitaz.org/cross/arm/packages/packages.list
