@@ -2,7 +2,7 @@
 #
 # /sbin/piboot: SliTaz Raspberry Pi bootloader and web boot!
 #
-# (C) 2014-2016 SliTaz GNU/Linux - ...
+# (C) 2014-2017 SliTaz GNU/Linux - ...
 #
 # usage: insert 'rdinit=/sbin/piboot' (if you load an initramfs)
 # or 'init=/sbin/piboot' in the kernel command line /boot/cmdline.txt
@@ -119,7 +119,9 @@ web_boot()
 	for url in ${webpath//,/ }; do
 		wget -O /root/webboot.sh "$url?mac=$(cat \
 			/sys/class/net/eth0/address /sys/class/net/*/address \
-			| sed q)" 2>&1 > /dev/null
+			| sed q)&amp;serial=$(sed '/Serial/!d;s/.*: //' \
+			/proc/cpuinfo)&amp;cpu=$(sed '/Hardware/!d;s/.*: //' \
+			/proc/cpuinfo)" 2>&1 > /dev/null
 		[ -s /root/webboot.sh ] || continue
 		. /root/webboot.sh
 		webprefix=$(dirname $url)
@@ -161,11 +163,14 @@ web_get()
 
 mount -t proc proc /proc
 mount -t sysfs sys /sys
-BOOTDEV=$(cmdlinearg bootdev)
-mnt=/mnt
-mount -t devtmpfs /dev /dev
-mount -r /dev/${BOOTDEV:-mmcblk0p1} $mnt
-umount /dev
+mnt=$PWD
+if [ ! -s "$mnt/menu.txt" ]; then
+	BOOTDEV=$(cmdlinearg bootdev)
+	mnt=/mnt
+	mount -t devtmpfs /dev /dev
+	mount -r /dev/${BOOTDEV:-mmcblk0p1} $mnt
+	umount /dev
+fi
 
 
 # Get global variables
@@ -311,13 +316,13 @@ case "$KEYWORD" in
 			( cd /media ; cpio -idmu )
 			rm -f /rootfs
 		else
-			n=$(stat -c %s /rootfs)
-			n=$(($n % 4))
+			n=$(($(ls -l /rootfs | awk '{ print $5 }') % 4))
 			[ $n -ne 0 ] &&
 			dd if=/dev/zero bs=1 count=$((4 - $n)) >> /rootfs
 		fi 2> /dev/null
 	done
 
+	cd /
 	if ! kexec -u 2> /dev/null; then
 		umount $mnt
 		ROOTDIR=$(cmdvararg "subroot")
@@ -338,7 +343,7 @@ case "$KEYWORD" in
 			INIT=${RDINIT:-/init}
 			mnt=/media
 			for i in $(seq 2 5); do
-				mount -r /dev/mmcblk0p$i /tmp || continue
+				mount -r /dev/mmcblk0p$i /tmp 2> /dev/null || continue
 				echo "Get modules from /dev/mmcblk0p$i"
 				cp -a /tmp/lib/modules /tmp/lib/firmware \
 					$mnt/$ROOTDIR/lib ||
@@ -359,7 +364,7 @@ case "$KEYWORD" in
 			export LD_LIBRARY_PATH=/$TMPDIR:/lib
 			KEXEC="exec /sbin/switch_root $mnt $CHROOT $ROOTDIR/ $INIT"
 		fi
-		stat $mnt/$ROOTDIR/$INIT > /dev/null || KEXEC="echo 'No $ROOTDIR/$INIT'"
+		[ -s $mnt/$ROOTDIR/$INIT ] || KEXEC="echo 'No $ROOTDIR/$INIT'"
 	else
 		echo "Loading $(basename $KERNEL)"
 		web_get $KEYWORD/$KERNEL /vmlinuz
