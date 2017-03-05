@@ -66,7 +66,7 @@ check_mirror_id() {
 	[ "$forced" ] && rm -f ID
 	[ -f "ID" ] || echo $$ > ID
 	mv ID ID.bak
-	if busybox wget -qs ${mirror%/}/ID 2>/dev/null; then
+	if busybox wget -q --spider ${mirror%/}/ID 2>/dev/null; then
 		busybox wget -q ${mirror%/}/ID
 	else
 		echo "Mirror is unreachable"; newline
