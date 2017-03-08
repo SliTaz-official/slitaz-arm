@@ -47,7 +47,6 @@ $(boldify "Options:")
   --spk      Clean or include Spk package manager in the distro
   --noinit   Don't create the compressed initramfs
   --work=    Path to work dir with packages and rootfs
-  --size=    Specify optional vdisk size (default 50Mb)
   --init=    Specify the initramfs compression: gz bz2 xz
   --flavor=  Generate specific SliTaz ARM flavor
   --append=  SliTaz and Kernel bootime arguments for Qemu
