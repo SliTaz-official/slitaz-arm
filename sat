@@ -177,7 +177,7 @@ case "$1" in
 
 		# Update modules.dep
 		if [ -f "var/lib/tazpkg/installed/linux/receipt" ]; then
-			. var/lib/tazpkg/installed/linux/receipt
+			. ./var/lib/tazpkg/installed/linux/receipt
 			depmod -b . ${VERSION}-slitaz
 		fi
 		
